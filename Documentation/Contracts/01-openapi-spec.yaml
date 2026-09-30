@@ -1,0 +1,219 @@
+openapi: 3.1.0
+info:
+  title: Unix Tamagotchi API
+  version: 1.1.0
+  description: REST API contract for cloud sync, dynamic plugin manifests, and IAP verification.
+servers:
+  - url: https://api.tamagotchi.internal/v1
+    description: Production Edge Gateway
+paths:
+  /plugins/manifest:
+    get:
+      summary: Retrieve the active capability manifest for action and scenario plugins
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PluginManifest'
+
+  /profile:
+    get:
+      summary: Get user profile, credits, and active pet
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+  /pets:
+    get:
+      summary: List all owned pets (dynamic capacity)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+
+  /pets/{petId}/action:
+    post:
+      summary: Commit an interaction action plugin
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actionId]
+              properties:
+                actionId:
+                  type: string
+                  example: practice_basketball
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+  /store/purchase:
+    post:
+      summary: Spend credits to adopt a new digital pet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [petType]
+              properties:
+                petType:
+                  type: string
+                  enum: [bunny, cat]
+                nickname:
+                  type: string
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+  /iap/verify:
+    post:
+      summary: Verify native Google Play or Apple StoreKit purchase receipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform, sku, purchaseToken]
+              properties:
+                platform:
+                  type: string
+                  enum: [android, ios]
+                sku:
+                  type: string
+                purchaseToken:
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  creditsAdded:
+                    type: integer
+                  newBalance:
+                    type: integer
+
+components:
+  schemas:
+    PluginManifest:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionPluginConfig'
+        scenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScenarioPluginConfig'
+
+    ActionPluginConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          example: practice_basketball
+        displayName:
+          type: string
+          example: Basketball
+        actionType:
+          type: string
+          enum: [USER_TRIGGERED, AUTONOMOUS]
+        isEnabled:
+          type: boolean
+        validFrom:
+          type: string
+          format: date-time
+          nullable: true
+        validUntil:
+          type: string
+          format: date-time
+          nullable: true
+        targetScenarioId:
+          type: string
+          example: basketball_court
+        parameters:
+          type: object
+
+    ScenarioPluginConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          example: hospital_bed
+        displayName:
+          type: string
+          example: Clinic Recovery Ward
+        isEnabled:
+          type: boolean
+        parameters:
+          type: object
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        credits:
+          type: integer
+          example: 240
+        maxPetsAllowed:
+          type: integer
+          nullable: true
+          example: null
+
+    Pet:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        petType:
+          type: string
+        nickname:
+          type: string
+        isActive:
+          type: boolean
+        activeScenarioId:
+          type: string
+        hunger:
+          type: integer
+        energy:
+          type: integer
+        happiness:
+          type: integer
