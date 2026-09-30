@@ -2,6 +2,10 @@
 
 This document consolidates the security posture of Unix Tamagotchi across client hardening, backend access control, and anti-abuse mechanisms. It supplements the payment-specific security covered in `Payments/04-security-and-anti-cheat.md`.
 
+**Related documents in this section:**
+- [02-supabase-self-hosted.md](02-supabase-self-hosted.md) — Docker network isolation, TLS, PostgreSQL hardening, secrets, backups
+- [03-attack-prevention.md](03-attack-prevention.md) — Credit manipulation, DDoS, SQL injection, auth security, audit logging
+
 ---
 
 ## 1. Defense Layers Summary
@@ -11,10 +15,17 @@ This document consolidates the security posture of Unix Tamagotchi across client
 | Client | Flutter AOT obfuscation + `--split-debug-info` | PoC → Production |
 | Client | `flutter_secure_storage` for JWT tokens (Keystore / Keychain) | Phase 2 |
 | Client | Clock tamper heuristic (monotonic vs wall clock) | PoC — first-line only |
+| Infrastructure | VPS firewall — only ports 80/443 exposed | Phase 2 |
+| Infrastructure | Docker internal network — PostgreSQL never internet-facing | Phase 2 |
+| Infrastructure | Cloudflare WAF — L3/L7 DDoS absorption | Phase 2 |
+| Infrastructure | Nginx rate limiting — 20 req/s per IP | Phase 2 |
 | Backend | Server-side timestamp validation (authoritative guard) | Phase 2 |
-| Backend | Supabase RLS — per-table access policies | Phase 2 |
+| Backend | Supabase RLS — deny-first, per-table access policies | Phase 2 |
+| Backend | `add_credits` server function — client cannot write credit balance | Phase 2 |
+| Backend | Immutable `credit_ledger` — append-only audit trail | Phase 2 |
 | Backend | Pet action rate limiting (cooldown enforcement) | Phase 2 |
-| Backend | IAP receipt server-side verification (Google RTDN / Apple V2) | Phase 4 |
+| Backend | IAP receipt idempotency via `store_order_id` UNIQUE | Phase 4 |
+| Backend | IAP server-side verification (Google RTDN / Apple App Store V2) | Phase 4 |
 | Pairing | One-time NFC/BLE tokens with 60s TTL | Phase 4 |
 
 ---

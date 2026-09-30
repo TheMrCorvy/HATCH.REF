@@ -80,7 +80,9 @@ Documentation/
 │   └── 01-notification-system.md          # FCM/APNs strategy, partner alerts & emergency care notifications
 │
 ├── Security/                              # Security architecture & hardening
-│   └── 01-security-overview.md            # RLS policies, rate limiting, anti-tamper & token security
+│   ├── 01-security-overview.md            # Defense layers summary, RLS, rate limiting, token security
+│   ├── 02-supabase-self-hosted.md         # Docker self-hosting: network isolation, TLS, secrets, backups
+│   └── 03-attack-prevention.md           # Credits hacking, DDoS, SQL injection, auth & audit logging
 │
 ├── Contracts/                             # Data and communication specifications
 │   ├── 01-openapi-spec.yaml               # REST API specification with plugin endpoints
