@@ -34,6 +34,7 @@ import 'package:flutter/foundation.dart';
 @immutable
 class PetInstance {
   final String id;
+  final String groupId; // maps to groups.id; 'solo_<userId>' during PoC offline phase
   final String petType; // 'bunny' | 'cat'
   final String nickname;
   final int hunger;     // 0 - 100
@@ -46,6 +47,7 @@ class PetInstance {
 
   const PetInstance({
     required this.id,
+    required this.groupId,
     required this.petType,
     required this.nickname,
     this.hunger = 80,
@@ -68,6 +70,7 @@ class PetInstance {
   }) {
     return PetInstance(
       id: id,
+      groupId: groupId,
       petType: petType,
       nickname: nickname,
       hunger: hunger ?? this.hunger,

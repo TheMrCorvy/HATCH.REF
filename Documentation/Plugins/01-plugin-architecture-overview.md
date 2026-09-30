@@ -27,7 +27,7 @@ flowchart TD
     end
 
     subgraph Backend["Backend Management (Supabase / Config)"]
-        ActionTable["pet_action_plugins Table"]
+        ActionTable["action_plugins Table"]
         ScenarioTable["scenario_plugins Table"]
         Manager["Game Operations Manager\n(Toggles is_enabled & params)"]
         Manager --> ActionTable

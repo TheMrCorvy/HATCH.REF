@@ -15,7 +15,7 @@ Care Groups are the fundamental social unit. The group creation process involves
 ## 3. Shared Pet Ownership
 The digital pet entity is bound to the *group*, not an individual user.
 - Any group member can execute care actions (e.g., `[ FEED ]`, `[ CLEAN ]`, `[ PLAY ]`).
-- Items, currency, and inventory are shared across the entire group, creating a collaborative resource pool.
+- Pet care interactions and shared habitat furniture are accessible to all group members. **Credits (the in-game currency) are always per-user and are never pooled or shared.** Each member's credit balance is independent of group membership.
 - The pet's lifecycle, evolution, and health status are mutually managed.
 
 ## 4. Real-Time Sync Architecture

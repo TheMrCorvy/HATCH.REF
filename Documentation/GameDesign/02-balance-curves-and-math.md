@@ -38,6 +38,8 @@ $$\Delta H = -\lfloor \text{Shift Hours} \times 4.0 \rfloor$$
 
 ### Deterministic Hydration Algorithm
 
+> **PoC Only — Scheduled for Removal in Phase 2**: This algorithm runs entirely client-side and uses `lastInteractionTimestamp` from local Hive storage as the source of truth. Once the Supabase backend is live, all stat decay and `last_interaction_at` updates will be computed server-side via PostgreSQL triggers and Supabase Edge Functions. This client-side implementation will be deleted at that point.
+
 When resuming the game, the deterministic calculation applying offline stat decay is:
 
 ```text

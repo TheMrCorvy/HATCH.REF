@@ -21,7 +21,7 @@ This document establishes the strict boundaries of the Initial Proof of Concept 
 | **Furniture & Habitat** | 🟢 **Furniture Store, catalog, placement, and stat modifiers** | 🟡 **Advanced room layouts, seasonal furniture** | Core habitat customization validated early. |
 | **Customization** | 🟢 **Room palette themes, boot messages** | 🟡 **Pet accessories, skins** | Per-user visual personalization. |
 | **Ownership Model** | 🟢 **Solo-as-group-of-1 data model** | 🟡 **Multiplayer group creation UI** | Foundation for seamless solo ↔ multiplayer transition. |
-| **iOS Platform** | 🔴 Excluded | — **Android-first for PoC. iOS deferred to future phase.** | Android-only reduces Day 1 complexity. |
+| **iOS Platform** | 🔴 Excluded | 🟢 Phase 3 — before Couple Mode | Android-first for PoC. iOS planned for Phase 3, before multiplayer launch. |
 
 ---
 
@@ -42,14 +42,16 @@ gantt
     Social Auth (Google/Apple)       :p2_2, 2026-12, 2027-01
     Remote Plugin Manifest Sync      :p2_3, 2027-01, 2027-02
 
-    section Phase 3: Autonomous Actions
-    Pet Aging & Career Studying      :p3_1, 2027-02, 2027-03
-    Office Work Shift Plugin         :p3_2, 2027-03, 2027-04
-    Hospital Bed Recovery Scenario   :p3_3, 2027-03, 2027-04
+    section Phase 3: iOS & Autonomous Actions
+    iOS Platform Support             :p3_0, 2027-02, 2027-03
+    Pet Aging & Career Studying      :p3_1, 2027-03, 2027-04
+    Office Work Shift Plugin         :p3_2, 2027-04, 2027-05
+    Hospital Bed Recovery Scenario   :p3_3, 2027-04, 2027-05
 
-    section Phase 4: Multiplayer & IAP
-    Couple Mode (Primary UX)         :p4_1, 2027-04, 2027-05
-    Shared Pet Care Sync             :p4_2, 2027-05, 2027-06
-    Flutter in_app_purchase          :p4_3, 2027-06, 2027-07
-    Argentine SWIFT Repatriation     :p4_4, 2027-07, 2027-08
+    section Phase 4: Couple Mode (Flagship) & IAP
+    Couple Mode — NFC/BLE Pairing    :crit, p4_0, 2027-05, 2027-06
+    Couple Milestones & Anniversaries :crit, p4_1, 2027-06, 2027-07
+    Shared Pet Care Realtime Sync    :p4_2, 2027-07, 2027-08
+    Flutter in_app_purchase          :p4_3, 2027-08, 2027-09
+    Argentine SWIFT Repatriation     :p4_4, 2027-09, 2027-10
 ```

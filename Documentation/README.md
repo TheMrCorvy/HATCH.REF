@@ -37,7 +37,8 @@ Documentation/
 │
 ├── Multiplayer/                           # Shared Pet Care & Social Play
 │   ├── 01-shared-pet-care-architecture.md # Co-op care logic — primarily for couples; families and friends also supported
-│   └── 02-group-types-and-targeting.md    # Real-time state sync across clients
+│   ├── 02-group-types-and-targeting.md    # Group personality system & real-time state sync
+│   └── 03-pair-bond-connection.md         # NFC/BLE physical pairing for couple onboarding
 │
 ├── Features/                              # PoC functional specification & future roadmap
 │   ├── 01-core-pet-actions.md             # Eat, Sleep, Play as initial user-triggered plugins
@@ -73,6 +74,12 @@ Documentation/
 ├── GameDesign/                            # Game Design Document (GDD) & game mechanics
 │   ├── 01-game-design-document.md         # Emotional pillars, loops, moods & sound FX
 │   └── 02-balance-curves-and-math.md      # Hunger, Energy, Happiness decay math & work calculations
+│
+├── Notifications/                         # Push notification system
+│   └── 01-notification-system.md          # FCM/APNs strategy, partner alerts & emergency care notifications
+│
+├── Security/                              # Security architecture & hardening
+│   └── 01-security-overview.md            # RLS policies, rate limiting, anti-tamper & token security
 │
 ├── Contracts/                             # Data and communication specifications
 │   ├── 01-openapi-spec.yaml               # REST API specification with plugin endpoints

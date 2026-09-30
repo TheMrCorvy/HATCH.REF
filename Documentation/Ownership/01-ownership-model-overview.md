@@ -87,10 +87,11 @@ CREATE TABLE groups (
 );
 
 -- Group Members Table
+-- PARENT/CHILD are dialogue labels for FAMILY groups; they do not alter app permissions
 CREATE TABLE group_members (
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    role TEXT NOT NULL DEFAULT 'MEMBER',
+    role TEXT NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('ADMIN', 'MEMBER', 'PARENT', 'CHILD')),
     joined_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (group_id, user_id)
 );

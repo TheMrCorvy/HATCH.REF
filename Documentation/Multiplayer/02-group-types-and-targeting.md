@@ -14,13 +14,13 @@ Care Groups in the Unix Tamagotchi ecosystem are divided into three distinct cat
 The shared digital pet's 1-bit dithered animations and behavioral logic shift depending on the active group type.
 
 ### Couple Pets
-- **Nomenclature**: Recognizes both members as "parents" (e.g., Mom/Dad, Mamá/Papá).
+- **Nomenclature**: Addresses both members using parental terms (e.g., Mom/Dad, Mamá/Papá) in its dialogue and reactions. This is a **narrative/dialogue label only** — both members in a `COUPLE` group share equal `ADMIN`-level permissions. The `PARENT`/`CHILD` role distinction in `group_members.role` is only relevant for `FAMILY` groups.
 - **Behavior**: Expresses dual affection and demonstrates romantic-themed reactions (e.g., heart particle effects rendered with stippling dispersal).
 - **Events**: Acknowledges real-world couple milestones, such as relationship anniversaries.
 
 ### Family Pets
-- **Nomenclature**: Distinguishes between Parent and Child user roles.
-- **Behavior**: Adapts its reaction based on who is interacting. It displays calmer, more compliant behavior with "Parent" accounts, and highly energetic, playful behavior with "Child" accounts.
+- **Nomenclature**: Uses `PARENT` and `CHILD` role labels stored in `group_members.role`. These labels are **dialogue and behavioral cues only** — they determine how the pet addresses each caretaker and how it reacts to them, but they do not constitute a permission system. A `PARENT` member has the same app-level permissions as any `MEMBER`.
+- **Behavior**: Adapts its reaction based on who is interacting. It displays calmer, more compliant behavior with `PARENT` accounts, and highly energetic, playful behavior with `CHILD` accounts.
 - **Events**: Triggers family-themed cooperative events. *No romantic theming is present.*
 
 ### Friend Pets
@@ -59,8 +59,20 @@ The industrial terminal interface subtly reconfigures its display based on the g
 To ensure flexibility without requiring constant client updates, personality traits are driven by backend configurations.
 
 - **State Storage**: The active group type is stored as a string field (`group_type`) within the PostgreSQL `groups` table.
-- **Behavior Rules**: Pet parameters (affection rate, energy decay, animation pools) are loaded from a dedicated `group_type_config` table.
+- **Behavior Rules**: Pet parameters (affection rate, energy decay, animation pools, dialogue labels) are loaded from the `group_type_config` table (defined in `Architecture/05`).
 - **Server-Side Tuning**: Administrators can tweak personality traits per group type dynamically by adjusting the backend config, ensuring live behavioral updates without deploying new app versions.
+
+### `group_type_config` DDL Reference
+See full DDL in [Architecture/05-database-and-auth.md](../Architecture/05-database-and-auth.md). Key columns:
+
+| Column | Type | Purpose |
+|---|---|---|
+| `group_type` | TEXT PK | `SOLO`, `COUPLE`, `FAMILY`, `FRIENDS` |
+| `affection_rate` | NUMERIC | Multiplier for affection-based animations |
+| `energy_decay_modifier` | NUMERIC | Adjusts stat decay speed per group type |
+| `animation_pool` | JSONB | List of animation IDs available for this group type |
+| `dialogue_labels` | JSONB | Caretaker address strings, e.g. `{"caretaker_a": "Mom", "caretaker_b": "Dad"}` |
+| `special_events` | JSONB | Event definitions (anniversaries, milestones) |
 
 ## 6. Diagrams
 
