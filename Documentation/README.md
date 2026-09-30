@@ -2,7 +2,7 @@
 
 Welcome to the comprehensive technical documentation for the **Unix Tamagotchi** project.
 
-This project is a multiplayer digital pet mobile game built **100% in Flutter and Flame (Dart 3.x)** with a "Tactical 1-Bit Cyber-Specimen OS" aesthetic. The application features an extensible **Action & Scenario Plugin Engine**, a unique visual style combining 1-bit dithered pixel art with an industrial terminal UI, and dynamic backend orchestration.
+This project is a multiplayer digital pet mobile game built **100% in Flutter and Flame (Dart 3.x)** with a "Tactical 1-Bit Cyber-Specimen OS" aesthetic, **primarily marketed toward couples** who share a virtual pet together. The application features an extensible **Action & Scenario Plugin Engine**, a unique visual style combining 1-bit dithered pixel art with an industrial terminal UI, and dynamic backend orchestration.
 
 ---
 
@@ -36,7 +36,7 @@ Documentation/
 │   └── 06-1bit-dithering-rendering-pipeline.md # Compositing Flame viewport with Flutter UI
 │
 ├── Multiplayer/                           # Shared Pet Care & Social Play
-│   ├── 01-shared-pet-care-architecture.md # Couples, families, and friends co-op care logic
+│   ├── 01-shared-pet-care-architecture.md # Co-op care logic — primarily for couples; families and friends also supported
 │   └── 02-group-types-and-targeting.md    # Real-time state sync across clients
 │
 ├── Features/                              # PoC functional specification & future roadmap
@@ -97,7 +97,7 @@ Documentation/
 2. **Unified Visual Style: Tactical 1-Bit Cyber-Specimen OS**:
    - A singular, cohesive aesthetic combining a low-resolution Flame viewport with 1-bit dithered bitmap sprites (using Bayer matrix shaders) and a native-resolution Flutter UI mimicking an industrial diagnostic terminal.
 3. **Multiplayer Shared Pet Care**:
-   - Designed for couples, families, and friend groups who collaboratively care for shared digital pets.
+   - **Primarily designed and marketed for couples** who co-manage a shared digital pet together. Solo play and larger groups (families, friends) are also fully supported, but the product identity and UX are centered on the two-player couple experience.
 4. **Dormant Action & Scenario Plugin Architecture**:
    - Actions and environments are compiled into the app as modular plugins.
    - Plugins remain dormant until the backend enables them and supplies runtime parameters.

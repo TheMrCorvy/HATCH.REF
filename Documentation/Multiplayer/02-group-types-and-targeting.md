@@ -3,8 +3,10 @@
 ## 1. Group Types Overview
 Care Groups in the Unix Tamagotchi ecosystem are divided into three distinct categories. When an Admin initializes a new `SECURED_SESSION`, they must designate the group's topology. This classification dictates the pet's behavioral algorithms, UI presentation, and event triggers.
 
+> **Primary Marketing Target — `COUPLE`**: While all three topologies are fully supported, the game is **marketed primarily as an experience for couples**. The `COUPLE` group type is the flagship mode; it drives the default app store copy, onboarding illustrations, and promotional communications. `FAMILY` and `FRIENDS` are real, supported features — they are simply not the product's primary identity.
+
 ### The Three Topologies
-1. **Couple (2 members)**: Designed for romantic partnerships co-managing a shared entity.
+1. **Couple (2 members)** ⭐ *Primary marketed experience*: Designed for romantic partnerships co-managing a shared entity.
 2. **Family (2-6 members)**: Designed for family units with explicit "parent" and "child" permission roles.
 3. **Friends (2-6 members)**: Designed for social squads with flat, equal permission roles.
 

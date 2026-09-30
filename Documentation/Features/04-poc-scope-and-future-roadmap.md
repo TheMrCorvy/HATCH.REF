@@ -17,7 +17,7 @@ This document establishes the strict boundaries of the Initial Proof of Concept 
 | **Scenarios** | 🟢 Default Room Plugin | 🟡 Hospital Bed, Sports Arena | Proves scenario viewport rendering. |
 | **Pet Lifecycle** | 🟡 **Static UI teaser with mock data (EVO_MGR screen)** | 🟢 **Aging, Autonomous Work, Illness logic** | Keeps early state models minimal. |
 | **Visual System** | 🟢 1-Bit Dithered Visual System | 🟡 Additional stippling effects | Proves the core dithering and terminal UI aesthetics. |
-| **Social** | 🔴 Solo play only | 🟢 Collaborative Multiplayer Care | Delays complex state sync (couples, families, friends) to Phase 4. |
+| **Social** | 🔴 Solo play only | 🟢 Collaborative Multiplayer Care (couple-first) | Delays complex state sync to Phase 4. Primary target: couples. Families & friends also supported. |
 | **Furniture & Habitat** | 🟢 **Furniture Store, catalog, placement, and stat modifiers** | 🟡 **Advanced room layouts, seasonal furniture** | Core habitat customization validated early. |
 | **Customization** | 🟢 **Room palette themes, boot messages** | 🟡 **Pet accessories, skins** | Per-user visual personalization. |
 | **Ownership Model** | 🟢 **Solo-as-group-of-1 data model** | 🟡 **Multiplayer group creation UI** | Foundation for seamless solo ↔ multiplayer transition. |
@@ -48,7 +48,7 @@ gantt
     Hospital Bed Recovery Scenario   :p3_3, 2027-03, 2027-04
 
     section Phase 4: Multiplayer & IAP
-    Multiplayer Group Creation       :p4_1, 2027-04, 2027-05
+    Couple Mode (Primary UX)         :p4_1, 2027-04, 2027-05
     Shared Pet Care Sync             :p4_2, 2027-05, 2027-06
     Flutter in_app_purchase          :p4_3, 2027-06, 2027-07
     Argentine SWIFT Repatriation     :p4_4, 2027-07, 2027-08

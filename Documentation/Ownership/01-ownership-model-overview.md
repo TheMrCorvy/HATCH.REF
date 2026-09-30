@@ -9,12 +9,14 @@ Every user in the Unix Tamagotchi ecosystem gets a personal `SOLO` group upon re
 This unified 'group of 1' ownership model reconciles solo and multiplayer gameplay. Instead of separate `pets` and `shared_pets` concepts, all pets exist within a group context.
 
 ## 2. Group Types
-The `group_type` dictates not only capacity but also subtle shifts in pet personality and behavior:
+The `group_type` dictates not only capacity but also subtle shifts in pet personality and behavior.
+
+> **Marketing Note**: The game is **primarily marketed as a couple experience**. `COUPLE` is the flagship group type. `SOLO`, `FAMILY`, and `FRIENDS` are fully supported but are not the product's primary audience.
 
 | Type | Capacity | Description |
 |---|---|---|
 | `SOLO` | 1 member | Auto-created upon registration. The foundation of ownership. |
-| `COUPLE` | 2 members | Intimate sharing, synchronized push notifications. |
+| `COUPLE` | 2 members | **Primary marketed experience.** Intimate sharing, synchronized push notifications. |
 | `FAMILY` | 2-6 members | Shared responsibility, asynchronous care schedules. |
 | `FRIENDS` | 2-6 members | Casual interaction, competitive care mechanics. |
 

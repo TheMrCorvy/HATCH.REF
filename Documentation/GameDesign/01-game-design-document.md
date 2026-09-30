@@ -4,7 +4,7 @@
 
 ## 1. High Concept & Creative Vision
 
-**Unix Tamagotchi** is a retro digital pet companion tailored for couples, families, friends, and tech enthusiasts.
+**Unix Tamagotchi** is a retro digital pet companion **primarily marketed toward couples** — two partners sharing and caring for a single virtual creature together. Families, friend groups, and solo players are also fully supported, but the game's identity, onboarding, and social features are centered on the couple experience.
 
 Instead of glossy, cartoonish 3D models or low-effort pixel dumps, the pets are hand-crafted **1-bit dithered pixel art sprites** living inside an authentic **monospace terminal environment**, featuring industrial UI bracket buttons and diagnostic paneling.
 
@@ -12,7 +12,7 @@ Instead of glossy, cartoonish 3D models or low-effort pixel dumps, the pets are 
 1. **Authentic Hacker Aesthetic**: Monospace typography (`VT323`), ANSI block characters (`█ ▓ ▒ ░`), prompt syntax (`[ > ACTION ]`), and retro hardware audio beeps.
 2. **Stress-Free Companion (PoC Focus)**: In the initial version, pets do not die or abandon the player. The game serves as a cozy, charming terminal mobile companion.
 3. **Unified 1-Bit Dithered Aesthetic**: A cohesive visual language combining the tactile Game Boy DMG style with a Macintosh-inspired industrial diagnostic terminal layout, shaded dynamically with Bayer matrix dithering.
-4. **Collaborative Pet Care**: Support for multiplayer group mechanics (in future phases) where couples, families, and friends can share responsibility and interact with the same digital pet.
+4. **Collaborative Pet Care (Couple-First)**: Support for multiplayer group mechanics (in future phases) where two players — primarily a romantic couple — share responsibility and interact with the same digital pet. Larger groups (families, friends) are supported but are not the primary marketing focus.
 
 ---
 

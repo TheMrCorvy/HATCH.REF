@@ -1,7 +1,9 @@
 # Unix Tamagotchi: Shared Pet Care Architecture
 
 ## 1. Concept Overview
-The core of Unix Tamagotchi's multiplayer experience is the "Care Group." Instead of individual, isolated experiences, 2 to 6 users form a group to collaboratively care for a shared digital pet. All users interact with the exact same pet instance, fostering cooperation and shared responsibility within an industrial terminal aesthetic.
+The core of Unix Tamagotchi's multiplayer experience is the "Care Group." Instead of individual, isolated experiences, users form a group to collaboratively care for a shared digital pet. All users interact with the exact same pet instance, fostering cooperation and shared responsibility within an industrial terminal aesthetic.
+
+> **Marketing Focus — Couples First**: Although the system supports groups of 2 to 6 members (and solo play), the game is **primarily marketed as an experience for couples**. The default onboarding flow, promotional materials, and UX writing are written with a two-partner audience in mind. `FAMILY` and `FRIENDS` group types are fully functional but are secondary in the product's public identity.
 
 ## 2. Group Creation and Onboarding
 Care Groups are the fundamental social unit. The group creation process involves a single "Admin" who creates the unit and invites others.
