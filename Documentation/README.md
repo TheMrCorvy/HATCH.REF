@@ -44,7 +44,8 @@ Documentation/
 │   ├── 01-core-pet-actions.md             # Eat, Sleep, Play as initial user-triggered plugins
 │   ├── 02-pet-store-and-credits.md        # 240 starting credits, pet pricing & dynamic capacity
 │   ├── 03-pet-inventory-and-switching.md  # Dynamic pet inventory & active companion switching
-│   └── 04-poc-scope-and-future-roadmap.md # Strict PoC boundaries vs Future Roadmap
+│   ├── 04-poc-scope-and-future-roadmap.md # Strict PoC boundaries vs Future Roadmap
+│   └── 05-pet-lifecycle-and-aging.md      # 5-phase aging system, age-gated plugins & priority system
 │
 ├── Payments/                              # In-App Purchases & Argentine payout compliance
 │   ├── 01-app-store-google-play-rules.md  # Google Play & Apple StoreKit digital goods compliance

@@ -14,14 +14,14 @@ Unlike user actions triggered by button taps, **Non-User-Triggered Actions** tri
 ```mermaid
 flowchart TD
     AppResume([App Reopened by Player]) --> ReadTimestamps["Read Last Interaction Timestamp & Current Time"]
-    ReadTimestamps --> CheckAutoActions["Query Active Autonomous Action Plugins"]
+    ReadTimestamps --> CheckAutoActions["Query Active Autonomous Action Plugins (age-eligible only)"]
 
-    CheckAutoActions --> EvalWork{"Is pet in Working Age\n& within working hours?"}
+    CheckAutoActions --> EvalWork{"Pet is ADULT phase\n& plugin priority allows?"}
     EvalWork -->|Yes| CalcWork["Compute Hours Worked\nCredits Earned = hours * wage_rate\nEnergy Drained = hours * energy_rate"]
     EvalWork -->|No| CheckSick{"Is pet ill?"}
 
     CalcWork --> UpdateStats["Apply Credit & Stat Deltas to Local State"]
-    CheckSick -->|Yes| SetHospital["Switch Scenario to 'hospital_bed'"]
+    CheckSick -->|Yes| SetHospital["Switch Scenario to 'hospital_bed'\n(priority 0 — overrides all others)"]
     CheckSick -->|No| NormalRoom["Keep 'default_room'"]
 
     UpdateStats --> ShowSummary["Display Notification:\n'> [OFFICE] <pet> worked 4 hours and earned 40 credits!'"]
@@ -96,12 +96,10 @@ class OfficeWorkActionPlugin extends AutonomousActionPlugin {
     required DateTime currentTime,
   }) {
     // Condition 1: Must be enabled by backend
-    final isEnabled = backendParams['is_enabled'] == true;
-    if (!isEnabled) return false;
+    if (backendParams['is_enabled'] != true) return false;
 
-    // Condition 2: Pet age check (must be at least minimum work age)
-    final minAgeDays = (backendParams['min_age_days'] as num?)?.toInt() ?? 3;
-    if (pet.ageInDays < minAgeDays) return false;
+    // Condition 2: Age gate — office work requires ADULT phase
+    if (!isAgeEligible(pet.currentPhase)) return false;
 
     // Condition 3: Sufficient energy
     if (pet.energy < 20) return false;
@@ -161,3 +159,68 @@ Rather than running heavy battery-consuming background Dart isolates:
 1. When the player exits the app, the current `DateTime.now()` is saved to local storage.
 2. When the app returns to the foreground (`AppLifecycleState.resumed`), `PluginRegistry` evaluates all autonomous actions against the elapsed time interval.
 3. Rewards and stat adjustments apply instantly, and a terminal dialog welcomes the player back with their pet's accomplishments. Actions will update the Flame viewport to play the appropriate 1-bit dithered sprite animation sequences (e.g. `typing_at_keyboard`).
+
+---
+
+## 5. Age-Gated Plugin Example: School Study
+
+The `school_study` plugin demonstrates how age gates are enforced on the Dart side. The backend provides the gate as part of the capability manifest; the client enforces it via `isAgeEligible`.
+
+```dart
+class SchoolStudyActionPlugin extends AutonomousActionPlugin {
+  @override
+  String get id => 'school_study';
+
+  @override
+  String get displayName => 'Go to School';
+
+  @override
+  String get defaultScenarioId => 'school_desk';
+
+  // Available during child and young phases only
+  @override
+  AgePhase get minAgePhase => AgePhase.child;
+
+  @override
+  AgePhase get maxAgePhase => AgePhase.young;
+
+  @override
+  int get priority => 40;
+
+  @override
+  bool shouldTrigger({
+    required PetState pet,
+    required Map<String, dynamic> backendParams,
+    required DateTime currentTime,
+  }) {
+    if (backendParams['is_enabled'] != true) return false;
+    if (!isAgeEligible(pet.currentPhase)) return false;
+    if (pet.energy < 15) return false;
+    return true;
+  }
+
+  @override
+  AutonomousExecutionResult computeElapsedProgress({
+    required PetState pet,
+    required DateTime startTime,
+    required DateTime endTime,
+    required Map<String, dynamic> backendParams,
+  }) {
+    final studyHours = endTime.difference(startTime).inMinutes / 60.0;
+    final cappedHours = studyHours.clamp(0.0, 6.0);
+    final intelligenceGain = (backendParams['intel_per_hour'] as num?)?.toInt() ?? 5;
+
+    return AutonomousExecutionResult(
+      creditsEarned: 0,
+      hungerDelta: -(cappedHours * 3).round(),
+      energyDelta: -(cappedHours * 4).round(),
+      happinessDelta: (cappedHours * 2).round(),
+      statusSummary:
+          '> [SCHOOL] ${pet.nickname} attended ${cappedHours.toStringAsFixed(1)}h of class. INTEL +${(cappedHours * intelligenceGain).round()}.',
+    );
+  }
+}
+```
+
+> `university_study` follows the same pattern with `minAgePhase: AgePhase.young`, `maxAgePhase: AgePhase.young`, and a higher `intel_per_hour` reward. See `Features/05-pet-lifecycle-and-aging.md` for the full plugin availability matrix.
+

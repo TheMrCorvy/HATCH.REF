@@ -75,10 +75,26 @@ lib/plugins/
 
 ## 3. Core Dart Contracts
 
-### A. Base Action Contract (`lib/plugins/interfaces/action_plugin.dart`)
+### A. Age Phase Enum (`lib/models/age_phase.dart`)
+
+All age-gate logic references this enum. During the PoC, every pet returns `AgePhase.baby` as a static value; the real computation is introduced in Phase 2 via `Features/05-pet-lifecycle-and-aging.md`.
+
+```dart
+/// Ordered by lifecycle progression — ordinal comparisons are intentional.
+enum AgePhase { baby, child, young, adult, elder }
+
+extension AgePhaseName on AgePhase {
+  String get label => name.toUpperCase(); // e.g. 'ADULT'
+}
+```
+
+---
+
+### B. Base Action Contract (`lib/plugins/interfaces/action_plugin.dart`)
 
 ```dart
 import 'package:flutter/foundation.dart';
+import '../../models/age_phase.dart';
 
 enum ActionType { userTriggered, autonomous }
 
@@ -87,6 +103,24 @@ abstract class ActionPlugin {
   String get displayName;    // User-facing label (e.g. 'Practice Basketball')
   ActionType get actionType; // User-triggered or autonomous
   String get defaultScenarioId; // Default scenario (e.g. 'basketball_court')
+
+  // Age gates — null means no restriction on that bound
+  AgePhase? get minAgePhase => null;
+  AgePhase? get maxAgePhase => null;
+
+  // Priority — lower value = higher priority (0 overrides everything)
+  // Used by the PluginRegistry to resolve conflicts between autonomous plugins.
+  // TBD: exact values finalized in Features/05-pet-lifecycle-and-aging.md
+  int get priority => 50;
+
+  /// Returns false if the pet's current phase is outside this plugin's age gate.
+  bool isAgeEligible(AgePhase petPhase) {
+    final min = minAgePhase;
+    final max = maxAgePhase;
+    if (min != null && petPhase.index < min.index) return false;
+    if (max != null && petPhase.index > max.index) return false;
+    return true;
+  }
 
   /// Executes the action given the current pet state and backend-provided parameters
   ActionResult execute({
