@@ -25,7 +25,11 @@ Documentation/
 │   ├── 02-user-triggered-actions.md       # PoC core (Eat, Sleep, Play) + event actions (Basketball)
 │   ├── 03-non-user-triggered-actions.md   # Autonomous actions (Work, Study, Career, Age growth)
 │   ├── 04-scenarios-and-environments.md   # Dynamic rooms (Terminal Room, Hospital Bed, Sports Field)
-│   └── 05-backend-control-and-schemas.md  # Backend tables, remote config & composability rules
+│   ├── 05-backend-control-and-schemas.md  # Backend tables, remote config & composability rules
+│   └── Minigames/                         # Minigame Plugin subsystem (Post-PoC, low priority)
+│       ├── 01-minigame-overview.md        # Architecture, categories, Flutter dir structure & roadmap
+│       ├── 02-session-lifecycle-and-categories.md # Session state machine, SOLO/SOLO_VS_PC/PVP Ghost
+│       └── 03-backend-schema-and-rewards.md       # DDL, ghost recordings, reward config & scoring roadmap
 │
 ├── Design/                                # Design system, themes, wireframes & animations
 │   ├── 01-design-system-and-theming.md    # Unified Industrial Terminal Palette & Typography
