@@ -74,19 +74,22 @@ erDiagram
         string role
         timestamp joined_at
     }
-    shared_pets {
+    pets {
         uuid id PK
         uuid group_id FK
-        string name
+        string pet_type FK
+        string nickname
         integer hunger
         integer energy
         integer happiness
-        timestamp last_updated
+        integer age_in_days
+        timestamp last_interaction_at
+        timestamp created_at
     }
     
     users ||--o{ group_members : "joins"
     groups ||--o{ group_members : "contains"
-    groups ||--|| shared_pets : "owns"
+    groups ||--o{ pets : "owns"
     users ||--o{ groups : "administers"
 ```
 

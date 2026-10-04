@@ -43,7 +43,9 @@ CREATE TABLE public.action_plugins (
     -- TBD: exact values — see Features/05-pet-lifecycle-and-aging.md for design intent.
     priority INTEGER NOT NULL DEFAULT 50,
     -- blocking_conditions: JSON array of runtime conditions that suppress this plugin.
-    -- e.g. [{"condition": "is_sick", "blocks": true}, {"condition": "is_sleeping", "blocks": true}]
+    -- Each entry: {"condition": "<state_key>"} — presence of the condition is sufficient to block.
+    -- The `blocks` field is always true and may be omitted in future schema revisions.
+    -- e.g. [{"condition": "is_sick"}, {"condition": "is_sleeping"}]
     blocking_conditions JSONB NOT NULL DEFAULT '[]'::jsonb,
     parameters JSONB NOT NULL DEFAULT '{}'::jsonb, -- Dynamic variables (wages, bonuses, min_energy)
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
@@ -73,7 +75,7 @@ INSERT INTO public.action_plugins (id, display_name, action_type, is_enabled, ta
 ('practice_basketball','Basketball',       'USER_TRIGGERED', false, 'basketball_court','young', 'adult', 60, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"credit_reward": 15, "min_energy": 25}'::jsonb),
 ('school_study',       'Go to School',     'AUTONOMOUS',     false, 'default_room',    'child', 'young', 40, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"intel_per_hour": 5}'::jsonb),
 ('university_study',   'University',       'AUTONOMOUS',     false, 'default_room',    'young', 'young', 40, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"intel_per_hour": 12}'::jsonb),
-('office_work',        'Office Shift',     'AUTONOMOUS',     false, 'default_room',    'adult', 'adult', 50, '[{"condition": "is_sick", "blocks": true}, {"condition": "is_sleeping", "blocks": true}]'::jsonb, '{"wage_per_hour": 12}'::jsonb),
+('office_work',        'Office Shift',     'AUTONOMOUS',     false, 'default_room',    'young', 'adult', 50, '[{"condition": "is_sick", "blocks": true}, {"condition": "is_sleeping", "blocks": true}]'::jsonb, '{"wage_per_hour": 12}'::jsonb),
 ('hospital_recovery',  'Hospital Recovery','AUTONOMOUS',     false, 'hospital_bed',    NULL,    NULL,     0, '[]'::jsonb, '{"recovery_rate": 5}'::jsonb);
 ```
 

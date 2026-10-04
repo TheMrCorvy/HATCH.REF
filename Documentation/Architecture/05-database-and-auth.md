@@ -1,6 +1,6 @@
 # Architecture: 05 Database and Authentication
 
-This document details the PostgreSQL relational schema, Row-Level Security (RLS) policies, dynamic pet capacity rules, and social authentication architecture for the **Unix Tamagotchi**.
+This document details the PostgreSQL relational schema, Row-Level Security (RLS) policies, and social authentication architecture for the **Unix Tamagotchi**. Pet ownership is **unbounded by design** — any user may own as many pets as their credit balance allows; no server-side quota field exists.
 
 ---
 
@@ -14,12 +14,13 @@ erDiagram
     GROUPS ||--o{ PETS : owns
     PET_CATALOG ||--o{ PETS : defines
     SCENARIO_PLUGINS ||--o{ ACTION_PLUGINS : binds_to
+    PETS }o--|| PET_LIFECYCLE_CONFIG : "phase config"
+    GROUPS ||--o{ DISSOLUTION_REQUESTS : "has pending"
 
     PROFILES {
         uuid id PK "Matches auth.users id"
         text username
         integer credits "Default: 240 — always per-user, never shared"
-        integer max_pets_allowed "Nullable: NULL = Unlimited"
         text fcm_token "Nullable — set on login for push notifications"
         timestamp created_at
     }
@@ -29,7 +30,6 @@ erDiagram
         text name
         uuid admin_id FK "References profiles.id"
         text group_type "SOLO | COUPLE | FAMILY | FRIENDS"
-        integer max_pets_allowed "Nullable: NULL = Unlimited"
         timestamp created_at
     }
 
@@ -88,6 +88,26 @@ erDiagram
         text store_order_id
         timestamp created_at
     }
+
+    PET_LIFECYCLE_CONFIG {
+        text pet_type PK,FK
+        integer phase_index PK
+        text phase_name
+        integer min_age_days
+        jsonb stat_decay_modifiers
+        text sprite_pool_id
+    }
+
+    DISSOLUTION_REQUESTS {
+        uuid id PK
+        uuid group_id FK
+        uuid requested_by FK
+        text status "PENDING | ACCEPTED | REJECTED"
+        integer votes_required
+        integer votes_cast
+        timestamp expires_at
+        timestamp created_at
+    }
 ```
 
 ---
@@ -103,7 +123,6 @@ CREATE TABLE public.profiles (
     username TEXT NOT NULL,
     avatar_url TEXT,
     credits INTEGER NOT NULL DEFAULT 240 CHECK (credits >= 0),
-    max_pets_allowed INTEGER DEFAULT NULL, -- NULL indicates unlimited pets!
     fcm_token TEXT, -- updated on every login for push notification targeting
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
@@ -115,7 +134,6 @@ CREATE TABLE public.groups (
     name TEXT NOT NULL,
     admin_id UUID REFERENCES public.profiles(id),
     group_type TEXT NOT NULL CHECK (group_type IN ('SOLO', 'COUPLE', 'FAMILY', 'FRIENDS')),
-    max_pets_allowed INTEGER DEFAULT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -157,7 +175,8 @@ CREATE TABLE public.scenario_plugins (
     display_name TEXT NOT NULL,
     is_enabled BOOLEAN NOT NULL DEFAULT true,
     parameters JSONB NOT NULL DEFAULT '{}'::jsonb,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 -- 3. Action Plugins Table
@@ -169,8 +188,16 @@ CREATE TABLE public.action_plugins (
     valid_from TIMESTAMPTZ,
     valid_until TIMESTAMPTZ,
     target_scenario_id TEXT REFERENCES public.scenario_plugins(id) ON DELETE SET NULL,
+    -- Age gates: NULL on either bound means unconstrained on that end.
+    min_age_phase TEXT DEFAULT NULL CHECK (min_age_phase IN ('baby','child','young','adult','elder')),
+    max_age_phase TEXT DEFAULT NULL CHECK (max_age_phase IN ('baby','child','young','adult','elder')),
+    -- Lower priority value = higher precedence (0 overrides all others).
+    priority INTEGER NOT NULL DEFAULT 50,
+    -- blocking_conditions: [{"condition": "is_sick"}] — omit the field, presence alone means blocks=true.
+    blocking_conditions JSONB NOT NULL DEFAULT '[]'::jsonb,
     parameters JSONB NOT NULL DEFAULT '{}'::jsonb,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 -- 4. Pet Catalog
@@ -183,7 +210,7 @@ CREATE TABLE public.pet_catalog (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 5. Pets Table (Dynamic Capacity - No Hardcoded 2-Pet Clamp)
+-- 5. Pets Table
 -- Owned by a GROUP, not an individual user. is_active removed — see active_pet_sessions.
 CREATE TABLE public.pets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -191,37 +218,54 @@ CREATE TABLE public.pets (
     pet_type TEXT NOT NULL REFERENCES public.pet_catalog(pet_type),
     nickname TEXT NOT NULL,
     hunger INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
-    energy INTEGER NOT NULL DEFAULT 80 CHECK (energy BETWEEN 0 AND 100),
-    happiness INTEGER NOT NULL DEFAULT 80 CHECK (happiness BETWEEN 0 AND 100),
+    energy INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
+    happiness INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
     age_in_days INTEGER NOT NULL DEFAULT 0,
     last_interaction_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Dynamic Capacity Validation Trigger (capacity is now per-group)
-CREATE OR REPLACE FUNCTION check_dynamic_pets_limit()
+-- 6. Pet Lifecycle Configuration (per-species aging schedule, Phase 2+)
+-- See Features/05-pet-lifecycle-and-aging.md for design intent and example seed data.
+CREATE TABLE public.pet_lifecycle_config (
+    pet_type TEXT NOT NULL REFERENCES public.pet_catalog(pet_type) ON DELETE CASCADE,
+    phase_index INTEGER NOT NULL CHECK (phase_index BETWEEN 0 AND 4),
+    phase_name TEXT NOT NULL CHECK (phase_name IN ('baby', 'child', 'young', 'adult', 'elder')),
+    min_age_days INTEGER NOT NULL,
+    stat_decay_modifiers JSONB NOT NULL DEFAULT '{"hunger": 1.0, "energy": 1.0, "happiness": 1.0}'::jsonb,
+    sprite_pool_id TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (pet_type, phase_index)
+);
+
+-- 7. Dissolution Requests (consensus-based group dissolution, Phase 4+)
+-- COUPLE groups require both members to accept. FAMILY/FRIENDS require majority (50% + 1).
+CREATE TABLE public.dissolution_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
+    requested_by UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED')),
+    votes_required INTEGER NOT NULL,   -- set at creation time: 2 for COUPLE, ceil(n/2)+1 for others
+    votes_cast INTEGER NOT NULL DEFAULT 1,  -- initiator’s vote is counted automatically
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '48 hours',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_dissolution_requests_group ON public.dissolution_requests(group_id);
+
+-- updated_at auto-update triggers for mutable plugin tables
+CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
-DECLARE
-    group_max_limit INTEGER;
-    current_pet_count INTEGER;
-BEGIN
-    SELECT max_pets_allowed INTO group_max_limit FROM public.groups WHERE id = NEW.group_id;
-
-    IF group_max_limit IS NOT NULL THEN
-        SELECT COUNT(*) INTO current_pet_count FROM public.pets WHERE group_id = NEW.group_id;
-        IF current_pet_count >= group_max_limit THEN
-            RAISE EXCEPTION 'Group has reached its maximum allowed pet capacity (%).', group_max_limit;
-        END IF;
-    END IF;
-
-    RETURN NEW;
-END;
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER enforce_dynamic_pets_limit
-BEFORE INSERT ON public.pets
-FOR EACH ROW
-EXECUTE FUNCTION check_dynamic_pets_limit();
+CREATE TRIGGER trg_action_plugins_updated_at
+BEFORE UPDATE ON public.action_plugins
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER trg_scenario_plugins_updated_at
+BEFORE UPDATE ON public.scenario_plugins
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 ```
 
 ---

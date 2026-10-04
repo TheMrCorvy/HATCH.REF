@@ -7,10 +7,9 @@ This document specifies the in-game pet store, credit balance economics, and dyn
 ## 1. Credit Economy & Dynamic Capacity Rules
 
 1. **Starting Capital**: The player begins the game with **240 credits**.
-2. **Dynamic Pet Capacity (No Hardcoded 2-Pet Limit)**:
-   - The player is **not restricted** to a hardcoded limit of 2 pets.
-   - Any limits on pet ownership are managed dynamically by the backend (`profiles.max_pets_allowed`). If this setting is `NULL`, the player can adopt as many pets as their credits allow.
-   - With the initial 240 credits and pets priced at 120 credits, a new player can adopt up to 2 pets immediately ($2 \times 120 = 240$). If more credits are earned through future work actions or IAP, the player can expand their companion family without code modifications.
+2. **Unbounded Pet Ownership (Credit-Bound Only)**:
+   - There is no server-side limit on how many pets a player can own.
+   - A player may adopt as many pets as their credit balance allows. With 240 starting credits and pets at 120 each, a new player can adopt up to 2 pets immediately ($2 \times 120 = 240$). As credits accumulate through future work actions or IAP, the family grows without any code changes.
 3. **PoC Fixed Recharge**: For Day 1 PoC, there are no credit top-ups; players spend from their initial 240 credit grant.
 
 ---
@@ -29,13 +28,9 @@ This document specifies the in-game pet store, credit balance economics, and dyn
 The core logic for processing a pet adoption in the store ensures that players meet both capacity and financial requirements. This can be expressed in the following pseudocode:
 
 ```text
-FUNCTION processStorePurchase(currentCredits, ownedPets, backendMaxPetsLimit, catalogItem, customNickname):
+FUNCTION processStorePurchase(currentCredits, ownedPets, catalogItem, customNickname):
 
-  // Check 1: Backend dynamic limit (if configured)
-  IF backendMaxPetsLimit IS NOT NULL AND count(ownedPets) >= backendMaxPetsLimit THEN
-    RETURN Failure("Store notice: You have reached the maximum allowed pet capacity.")
-
-  // Check 2: Available credits
+  // Check: Available credits
   IF currentCredits < catalogItem.priceCredits THEN
     RETURN Failure("Insufficient credits! Need " + catalogItem.priceCredits + ", available: " + currentCredits + ".")
 

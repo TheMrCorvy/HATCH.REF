@@ -1,7 +1,12 @@
 # Ownership: 02 Group Dissolution & Pet Cloning
 
 ## 1. Dissolution Overview
-When a multiplayer group dissolves (either because the admin disbands it or all members leave), the assets tied to that group must be reconciled. Because pets are deeply invested entities in the Unix Tamagotchi ecosystem, they are not simply deleted.
+Group dissolution requires **member consensus**, not unilateral admin action:
+
+- **COUPLE (2 members)**: Both partners must accept the dissolution request. Either member can initiate it, but the other must confirm.
+- **FAMILY / FRIENDS (2–6 members)**: A majority vote is required (50 % + 1). The initiator’s vote is cast automatically.
+
+A `dissolution_requests` row is created when a member initiates the process (see `Architecture/05-database-and-auth.md` for the DDL). The request expires in 48 hours if quorum is not reached. Once all required votes are cast, `dissolve_group_and_clone_pets()` is executed atomically. Because pets are deeply invested entities, they are never deleted — every member receives a clone.
 
 ## 2. Pet Cloning Protocol
 Upon group dissolution, **every member receives an exact clone of every shared pet**, placed into their personal `SOLO` group.
@@ -21,21 +26,23 @@ Upon group dissolution, **every member receives an exact clone of every shared p
 ## 4. Dissolution Sequence
 ```mermaid
 sequenceDiagram
-    participant Admin
-    participant Group
+    participant MemberA
+    participant API
+    participant MemberB
     participant DB Function
-    participant Member1_Solo
-    participant Member2_Solo
+    participant Member_Solo_X
 
-    Admin->>Group: Disband Group
-    Group->>DB Function: trigger_dissolution(group_id)
-    DB Function->>DB Function: Identify all pets in group_id
-    DB Function->>Member1_Solo: Insert cloned pets (New UUIDs)
-    DB Function->>Member2_Solo: Insert cloned pets (New UUIDs)
-    DB Function->>Member1_Solo: Transfer purchased furniture/customizations
-    DB Function->>Member2_Solo: Transfer purchased furniture/customizations
-    DB Function->>Group: Delete Group (Cascade)
-    Admin-->>Group: Dissolution Complete
+    MemberA->>API: POST /groups/{id}/dissolution-request
+    API->>API: INSERT dissolution_requests (votes_required=2, votes_cast=1)
+    API-->>MemberB: Push notification — dissolution requested
+    MemberB->>API: POST /dissolution-requests/{id}/vote (accept)
+    API->>API: votes_cast=2 ≥ votes_required=2 → status=ACCEPTED
+    API->>DB Function: dissolve_group_and_clone_pets(group_id)
+    DB Function->>Member_Solo_X: Insert cloned pets (New UUIDs) for each member
+    DB Function->>Member_Solo_X: Transfer purchased furniture/customizations
+    DB Function->>API: DELETE groups CASCADE
+    API-->>MemberA: Dissolution Complete
+    API-->>MemberB: Dissolution Complete
 ```
 
 ## 5. PostgreSQL Dissolution Function

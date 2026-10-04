@@ -50,7 +50,6 @@ erDiagram
         string name
         uuid admin_id FK
         string group_type
-        int max_pets_allowed
         timestamp created_at
     }
     
@@ -64,8 +63,8 @@ erDiagram
     PETS {
         uuid id PK
         uuid group_id FK
-        string name
-        string type
+        string pet_type FK
+        string nickname
         int hunger
         int energy
         int happiness
@@ -82,7 +81,6 @@ CREATE TABLE groups (
     name TEXT NOT NULL,
     admin_id UUID REFERENCES profiles(id),
     group_type TEXT NOT NULL CHECK (group_type IN ('SOLO', 'COUPLE', 'FAMILY', 'FRIENDS')),
-    max_pets_allowed INTEGER DEFAULT 5,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -100,8 +98,8 @@ CREATE TABLE group_members (
 CREATE TABLE pets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    type TEXT NOT NULL,
+    pet_type TEXT NOT NULL,
+    nickname TEXT NOT NULL,
     hunger INTEGER DEFAULT 100,
     energy INTEGER DEFAULT 100,
     happiness INTEGER DEFAULT 100,

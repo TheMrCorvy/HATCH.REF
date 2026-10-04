@@ -77,7 +77,7 @@ lib/plugins/
 
 ### A. Age Phase Enum (`lib/models/age_phase.dart`)
 
-All age-gate logic references this enum. During the PoC, every pet returns `AgePhase.baby` as a static value; the real computation is introduced in Phase 2 via `Features/05-pet-lifecycle-and-aging.md`.
+All age-gate logic references this enum. During the PoC, every pet starts at `AgePhase.child` as a static value; the real computation is introduced in Phase 2 via `Features/05-pet-lifecycle-and-aging.md`. Starting at `child` ensures the three core PoC actions (Eat, Sleep, Play) are all unlocked from day one.
 
 ```dart
 /// Ordered by lifecycle progression — ordinal comparisons are intentional.

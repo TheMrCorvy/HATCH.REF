@@ -93,6 +93,5 @@ final activeGroupProvider = StateNotifierProvider<ActiveGroupNotifier, GroupCont
 });
 ```
 
-## 5. Capacity and Edge Cases
-- **Overcapacity on Dissolution**: If a user has 5 pets in their `SOLO` group, joins a multiplayer group with 3 pets, and the multiplayer group dissolves, the user now has 5 original + 3 cloned pets (total 8).
-- **Future Consideration**: Maximum pet capacity per group is controlled by the backend (`groups.max_pets_allowed`). UI will need to handle overflow states (e.g., pagination or scrolling terminal views) if cloning pushes a `SOLO` group over standard capacity.
+## 5. Edge Cases
+- **Accumulation on Dissolution**: If a user has 5 pets in their `SOLO` group, joins a multiplayer group with 3 pets, and that group dissolves, the user ends up with 8 pets. Since there is no server-side pet cap, this is valid. The UI must handle variable-length pet lists (scrollable terminal view).

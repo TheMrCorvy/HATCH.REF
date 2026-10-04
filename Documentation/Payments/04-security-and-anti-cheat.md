@@ -30,7 +30,7 @@ class SecureVault {
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
-      keyCipherAlgorithm: KeyCipherAlgorithm.RSA_ECB_PKCS1Padding,
+      keyCipherAlgorithm: KeyCipherAlgorithm.RSA_ECB_OAEPWithSHA_256AndMGF1Padding,
       storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
     ),
   );

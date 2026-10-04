@@ -27,10 +27,8 @@ sequenceDiagram
     Backend->>StoreAPI: Validate Receipt with Google Play / Apple Server
     StoreAPI-->>Backend: Verified Valid & Not Revoked
 
-    Backend->>DB: BEGIN TRANSACTION;
-    Backend->>DB: INSERT INTO transactions (...);
-    Backend->>DB: UPDATE profiles SET credits = credits + 500;
-    Backend->>DB: COMMIT;
+    Backend->>DB: SELECT add_credits(userId, 500, 'IAP_PURCHASE', orderId)
+    Note over Backend,DB: add_credits() handles idempotency, ledger insert,<br/>and balance update atomically. Never call UPDATE credits directly.
 
     Backend-->>App: { success: true, newBalance: 740 }
     App->>Storefront: completePurchase(purchaseDetails)

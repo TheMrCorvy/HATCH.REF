@@ -112,8 +112,10 @@ CREATE TABLE public.notification_preferences (
     partner_action_alerts BOOLEAN NOT NULL DEFAULT true,
     milestone_alerts BOOLEAN NOT NULL DEFAULT true,
     inactivity_alerts BOOLEAN NOT NULL DEFAULT true,
-    quiet_hours_start TIME DEFAULT '22:00',
-    quiet_hours_end TIME DEFAULT '08:00',
+    -- Store as TIMETZ or pair with a timezone TEXT column to handle users outside Argentina.
+    quiet_hours_start TIMETZ DEFAULT '22:00+00',
+    quiet_hours_end TIMETZ DEFAULT '08:00+00',
+    timezone TEXT NOT NULL DEFAULT 'America/Argentina/Buenos_Aires',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
