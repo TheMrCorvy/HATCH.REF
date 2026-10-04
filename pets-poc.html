@@ -1,0 +1,1024 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HATCH_OS // PET_CATALOG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:#0E0F0B;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:28px 16px 56px;
+  font-family:'VT323','Courier New',monospace;
+}
+
+.terminal{
+  width:100%;
+  max-width:960px;
+  background-color:#C5BEAA;
+  background-image:
+    linear-gradient(rgba(20,21,18,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(20,21,18,.05) 1px,transparent 1px);
+  background-size:4px 4px;
+  border:3px solid #141512;
+  border-radius:3px;
+  overflow:hidden;
+}
+
+/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.hdr{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:5px 12px 4px;
+  border-bottom:2px solid #141512;
+  font-size:18px;
+  letter-spacing:.06em;
+  color:#141512;
+  background:rgba(20,21,18,.07);
+}
+.hdr-clock{color:#B85E2B}
+
+/* â”€â”€ Hazard stripe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.haz{
+  height:13px;
+  background:repeating-linear-gradient(
+    -45deg,
+    #141512 0 6px,
+    #C5BEAA 6px 12px
+  );
+  border-top:1px solid #141512;
+  border-bottom:1px solid #141512;
+}
+
+/* â”€â”€ Pet grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.pet-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2px;
+  background:#141512;
+  padding:2px;
+  margin:14px;
+}
+@media(min-width:860px){
+  .pet-grid{grid-template-columns:repeat(4,1fr)}
+}
+
+/* â”€â”€ Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.pet-card{
+  background:#C5BEAA;
+  padding:10px 8px 12px;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  border:2px solid transparent;
+  transition:background .08s,border-color .08s;
+  position:relative;
+  user-select:none;
+}
+.pet-card:hover{background:#CCC5AF}
+.pet-card.selected{
+  border-color:#B85E2B;
+  background:#D0C9B2;
+}
+.pet-card.selected::after{
+  content:'â—†';
+  position:absolute;
+  top:7px;right:9px;
+  font-size:11px;
+  color:#B85E2B;
+}
+
+/* â”€â”€ Viewport frame â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.vp{
+  position:relative;
+  width:200px;
+  height:200px;
+  flex-shrink:0;
+}
+/* TL and TR corners */
+.vp::before,.vp::after{
+  content:'';
+  position:absolute;
+  width:10px;height:10px;
+  border-color:#141512;
+  border-style:solid;
+  z-index:1;
+  pointer-events:none;
+}
+.vp::before{top:0;left:0;border-width:2px 0 0 2px}
+.vp::after {top:0;right:0;border-width:2px 2px 0 0}
+/* BL and BR corners via child spans */
+.vp-bl,.vp-br{
+  position:absolute;
+  width:10px;height:10px;
+  border-color:#141512;
+  border-style:solid;
+  pointer-events:none;
+  z-index:1;
+}
+.vp-bl{bottom:0;left:0; border-width:0 0 2px 2px}
+.vp-br{bottom:0;right:0;border-width:0 2px 2px 0}
+
+canvas{
+  width:200px;
+  height:200px;
+  display:block;
+}
+
+/* â”€â”€ Card info text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.info{
+  width:100%;
+  font-size:15px;
+  color:#141512;
+  letter-spacing:.04em;
+  line-height:1.2;
+}
+.info-type{font-size:13px;opacity:.65;margin-bottom:1px}
+.info-name{font-size:18px;margin-bottom:5px}
+.badge{
+  display:inline-block;
+  font-size:13px;
+  padding:1px 7px;
+  margin-bottom:5px;
+  letter-spacing:.05em;
+}
+.badge-poc    {background:#141512;color:#C5BEAA}
+.badge-concept{border:1px solid #141512;color:#141512;opacity:.7}
+.info-stats{font-size:14px;color:#B85E2B;letter-spacing:.06em}
+
+/* â”€â”€ Detail panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.detail{
+  margin:0 14px 8px;
+  border:1px solid #141512;
+  padding:10px 14px;
+  display:none;
+  font-size:16px;
+  color:#141512;
+  line-height:1.4;
+}
+.detail.on{display:block}
+.detail-title{
+  font-size:20px;
+  padding-bottom:5px;
+  border-bottom:1px dashed #141512;
+  margin-bottom:7px;
+}
+.detail-row{font-size:15px;margin-bottom:3px}
+.detail-row span{color:#B85E2B}
+.detail-desc{white-space:pre-line;font-size:15px;margin-top:6px}
+
+/* â”€â”€ Log â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.log{
+  margin:4px 14px 8px;
+  font-size:15px;
+  color:#141512;
+  opacity:.8;
+  min-height:22px;
+  letter-spacing:.03em;
+}
+.log::before{content:'â”‚ '}
+
+/* â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.ftr{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:4px 12px 5px;
+  border-top:2px solid #141512;
+  font-size:14px;
+  color:#141512;
+  background:rgba(20,21,18,.07);
+  letter-spacing:.05em;
+}
+.ftr-badge{
+  background:#141512;
+  color:#C5BEAA;
+  padding:1px 7px;
+  font-size:13px;
+}
+
+/* â”€â”€ Rarity badges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.badge-row{display:flex;gap:5px;align-items:center;margin-bottom:5px;flex-wrap:wrap}
+.rarity{
+  display:inline-block;
+  font-size:12px;
+  padding:1px 6px;
+  letter-spacing:.08em;
+  font-family:'VT323','Courier New',monospace;
+  line-height:1.4;
+}
+.rarity-common  {border:1px solid #141512;color:#141512}
+.rarity-rare    {background:#141512;color:#C5BEAA}
+.rarity-legendary{background:#B85E2B;color:#C5BEAA;letter-spacing:.04em}
+
+/* â”€â”€ Action buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.action-bar{
+  display:flex;gap:8px;
+  margin-top:10px;padding-top:8px;
+  border-top:1px dashed #141512;
+}
+.act-btn{
+  flex:1;
+  background:transparent;
+  border:2px solid #141512;
+  color:#141512;
+  font-family:'VT323','Courier New',monospace;
+  font-size:18px;
+  padding:4px 0;
+  cursor:pointer;
+  letter-spacing:.06em;
+  transition:background .1s,color .1s;
+}
+.act-btn:hover:not(:disabled){background:#141512;color:#C5BEAA}
+.act-btn.active{background:#B85E2B!important;border-color:#B85E2B!important;color:#C5BEAA!important}
+.act-btn:disabled{opacity:.4;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<div class="terminal">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <span>SUB_SYS: HATCH_OS</span>
+    <span>PET_CATALOG // V.1.0</span>
+    <span class="hdr-clock" id="clock">00:00:00</span>
+  </div>
+  <div class="haz"></div>
+
+  <!-- PET GRID -->
+  <div class="pet-grid">
+
+    <!-- BUNNY -->
+    <div class="pet-card" id="card-bunny" onclick="selectPet('bunny')">
+      <div class="vp">
+        <canvas id="cv-bunny" width="200" height="200"></canvas>
+        <span class="vp-bl"></span><span class="vp-br"></span>
+      </div>
+      <div class="info">
+        <div class="info-type">TYPE: LEPUS_VULGARIS</div>
+        <div class="info-name">[ CRAZY_DIAMOND ]</div>
+        <div class="badge-row">
+          <span class="badge badge-poc">â— POC_CONFIRMED</span>
+          <span class="rarity rarity-common">[COMMON]</span>
+        </div>
+        <div class="info-stats">SPD:04 &nbsp;STR:02 &nbsp;CR:120</div>
+      </div>
+    </div>
+
+    <!-- CAT -->
+    <div class="pet-card" id="card-cat" onclick="selectPet('cat')">
+      <div class="vp">
+        <canvas id="cv-cat" width="200" height="200"></canvas>
+        <span class="vp-bl"></span><span class="vp-br"></span>
+      </div>
+      <div class="info">
+        <div class="info-type">TYPE: FELIS_CYBER</div>
+        <div class="info-name" style="font-size:15px">[ GOLD_EXP_REQUIEM ]</div>
+        <div class="badge-row">
+          <span class="badge badge-poc">â— POC_CONFIRMED</span>
+          <span class="rarity rarity-legendary">[LEGENDARY]</span>
+        </div>
+        <div class="info-stats">SPD:07 &nbsp;STR:04 &nbsp;CR:120</div>
+      </div>
+    </div>
+
+    <!-- DOG -->
+    <div class="pet-card" id="card-dog" onclick="selectPet('dog')">
+      <div class="vp">
+        <canvas id="cv-dog" width="200" height="200"></canvas>
+        <span class="vp-bl"></span><span class="vp-br"></span>
+      </div>
+      <div class="info">
+        <div class="info-type">TYPE: CANIS_PROTO</div>
+        <div class="info-name">[ ECHOES_ACT_TWO ]</div>
+        <div class="badge-row">
+          <span class="badge badge-concept">â—‹ CONCEPT_PREVIEW</span>
+          <span class="rarity rarity-rare">[RARE]</span>
+        </div>
+        <div class="info-stats">SPD:05 &nbsp;STR:06 &nbsp;CR:???</div>
+      </div>
+    </div>
+
+    <!-- BIRD -->
+    <div class="pet-card" id="card-bird" onclick="selectPet('bird')">
+      <div class="vp">
+        <canvas id="cv-bird" width="200" height="200"></canvas>
+        <span class="vp-bl"></span><span class="vp-br"></span>
+      </div>
+      <div class="info">
+        <div class="info-type">TYPE: AVIS_SIGNAL</div>
+        <div class="info-name">[ HIGHWAY_STAR ]</div>
+        <div class="badge-row">
+          <span class="badge badge-concept">â—‹ CONCEPT_PREVIEW</span>
+          <span class="rarity rarity-common">[COMMON]</span>
+        </div>
+        <div class="info-stats">SPD:08 &nbsp;STR:01 &nbsp;CR:???</div>
+      </div>
+    </div>
+
+  </div><!-- /pet-grid -->
+
+  <!-- DETAIL PANEL -->
+  <div class="detail" id="detail">
+    <div class="detail-title" id="d-title"></div>
+    <div class="detail-row" id="d-row1"></div>
+    <div class="detail-row" id="d-row2"></div>
+    <div class="detail-desc" id="d-desc"></div>
+    <div class="action-bar">
+      <button class="act-btn" id="btn-eating"   onclick="triggerAction('eating')"   disabled>[ EAT ]</button>
+      <button class="act-btn" id="btn-sleeping"  onclick="triggerAction('sleeping')" disabled>[ SLEEP ]</button>
+      <button class="act-btn" id="btn-playing"   onclick="triggerAction('playing')"  disabled>[ PLAY ]</button>
+    </div>
+  </div>
+
+  <!-- LOG LINE -->
+  <div class="log" id="log">SYSTEM_BOOT_COMPLETE. SELECT A SPECIMEN TO INSPECT.</div>
+
+  <div class="haz"></div>
+
+  <!-- FOOTER -->
+  <div class="ftr">
+    <span>UNITS_TOTAL: 04</span>
+    <span class="ftr-badge">POC_CONFIRMED: 02</span>
+    <span>CONCEPT_PREVIEW: 02</span>
+  </div>
+
+</div><!-- /terminal -->
+
+<script>
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// PET DATA
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const PETS = {
+  bunny: {
+    type:'LEPUS_VULGARIS', name:'CRAZY_DIAMOND', rarity:'COMMON', cr:'120 CR',
+    spd:'04', str:'02', joy:'85',
+    desc:`> GENTLE COMPANION. BALANCED CORE STATS. HIGH SATURATION EFFICIENCY.
+> LONG-TERM BONDING OPTIMIZED. REPAIR_INSTINCT TRAIT ACTIVE.
+> FOOD: SYNTH_CARROT  Â·  CARE_DIFF: CLASS-B (MED)  Â·  LIFESPAN: 240 CYCLES
+>
+> NAME_POOL[COMMON]: CRAZY_DIAMOND Â· SILVER_CHARIOT Â· SOFT_MACHINE Â· BEACH_BOY
+> NAME_POOL[RARE]:   CRAZY_DIAMOND_PULSE Â· HARVEST_NODE Â· MOODY_BLUES_ECHO
+> NAME_POOL[LEGENDARY]: [RESERVED â€” EVOLUTION_PHASE_04]`,
+    log:'> LEPUS_VULGARIS // CRAZY_DIAMOND SELECTED. VITALS: ENERGY 100%  SATUR 80%  JOY 85%'
+  },
+  cat: {
+    type:'FELIS_CYBER', name:'GOLD_EXPERIENCE_REQUIEM', rarity:'LEGENDARY', cr:'120 CR',
+    spd:'07', str:'04', joy:'70',
+    desc:`> AGGRESSIVE HACKER FELINE. HIGH ENERGY DRAIN. VOID_ADAPTATION TRAIT ACTIVE.
+> SHADOW-COATED EXTERIOR REDUCES INTERACTION LATENCY.
+> FOOD: BIO_PELLET  Â·  CARE_DIFF: CLASS-B (MED)  Â·  LIFESPAN: 240 CYCLES
+>
+> NAME_POOL[COMMON]: STAR_PLATINUM Â· KING_CRIMSON Â· KILLER_QUEEN
+> NAME_POOL[RARE]:   KING_CRIMSON_LOOP Â· STICKY_FINGERS_HACK Â· AEROSMITH_BURST
+> NAME_POOL[LEGENDARY]: GOLD_EXPERIENCE_REQUIEM  â† transcendent apex form`,
+    log:'> FELIS_CYBER // GOLD_EXPERIENCE_REQUIEM â€” LEGENDARY_TIER SPECIMEN. JOY: 70%'
+  },
+  dog: {
+    type:'CANIS_PROTO', name:'ECHOES_ACT_TWO', rarity:'RARE', cr:'[PHASE_2_UNLOCK]',
+    spd:'05', str:'06', joy:'90',
+    desc:`> [CONCEPT_PREVIEW] SPECIFICATION UNCONFIRMED.
+> LOYAL COMBAT COMPANION. HIGH STR. PACK SUBROUTINES DETECTED.
+> FOOD: PROTO_BONE  Â·  TRAIT: LOYALTY_MATRIX
+>
+> NAME_POOL[COMMON]: ECHOES Â· DIVER_DOWN Â· THE_HAND Â· BITES_THE_DUST
+> NAME_POOL[RARE]:   ECHOES_ACT_TWO Â· DIVER_SHIELD Â· THE_HAND_GUARD
+> NAME_POOL[LEGENDARY]: ECHOES_ACT_THREE`,
+    log:'> [CONCEPT] CANIS_PROTO // ECHOES_ACT_TWO LOADED. SPEC PENDING PHASE_2.'
+  },
+  bird: {
+    type:'AVIS_SIGNAL', name:'HIGHWAY_STAR', rarity:'COMMON', cr:'[PHASE_2_UNLOCK]',
+    spd:'08', str:'01', joy:'75',
+    desc:`> [CONCEPT_PREVIEW] SPECIFICATION UNCONFIRMED.
+> HIGH-VELOCITY AERIAL CONSTRUCT. SIGNAL RELAY CAPABILITY.
+> FOOD: QUANTUM_SEED  Â·  TRAIT: AERIAL_UPLINK  Â·  FRAGILE_HULL WARNING
+>
+> NAME_POOL[COMMON]: HIGHWAY_STAR Â· GRATEFUL_DEAD Â· WONDER_OF_U Â· PAPER_MOON_KING
+> NAME_POOL[RARE]:   HIGHWAY_STAR_SIGNAL Â· GRATEFUL_DEAD_NODE Â· PAPER_MOON_TRACE
+> NAME_POOL[LEGENDARY]: HIGHWAY_STAR_REQUIEM`,
+    log:'> [CONCEPT] AVIS_SIGNAL // HIGHWAY_STAR LOADED. SPEC PENDING PHASE_2.'
+  }
+};
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// 8Ã—8 BAYER ORDERED DITHERING
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const BAYER8 = [
+  [ 0,32, 8,40, 2,34,10,42],
+  [48,16,56,24,50,18,58,26],
+  [12,44, 4,36,14,46, 6,38],
+  [60,28,52,20,62,30,54,22],
+  [ 3,35,11,43, 1,33, 9,41],
+  [51,19,59,27,49,17,57,25],
+  [15,47, 7,39,13,45, 5,37],
+  [63,31,55,23,61,29,53,21]
+];
+const INK = [20, 21, 18];   // #141512 charcoal
+const PAP = [197,190,170];  // #C5BEAA khaki
+
+function applyDither(ctx, W, H) {
+  const id = ctx.getImageData(0,0,W,H);
+  const d  = id.data;
+  for (let y=0; y<H; y++) {
+    for (let x=0; x<W; x++) {
+      const i = (y*W+x)*4;
+      const g = d[i]*.299 + d[i+1]*.587 + d[i+2]*.114;
+      const t = (BAYER8[y%8][x%8]/63)*255;
+      const c = (g < t) ? INK : PAP;
+      d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2]; d[i+3]=255;
+    }
+  }
+  ctx.putImageData(id,0,0);
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// DRAW HELPERS
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function drawZZZ(ctx, cx, topY, frame) {
+  ctx.fillStyle='hsl(40,7%,52%)';
+  ctx.font=(frame===0?'17':'13')+'px VT323,monospace';
+  ctx.fillText('Z', cx+34+(frame?4:0), topY+(frame?3:0));
+  ctx.font='21px VT323,monospace';
+  ctx.fillText('Z', cx+42+(frame?2:0), topY-15+(frame?2:0));
+  ctx.font='27px VT323,monospace';
+  ctx.fillText('Z', cx+48, topY-32);
+}
+
+function drawSparkles(ctx, cx, topY) {
+  ctx.fillStyle='hsl(40,8%,20%)';
+  [[cx-24,topY],[cx-12,topY-6],[cx+12,topY-6],[cx+24,topY]].forEach(([sx,sy])=>{
+    ctx.beginPath(); ctx.arc(sx,sy,2.2,0,Math.PI*2); ctx.fill();
+  });
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// DRAW â€” BUNNY  (200Ã—200)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function drawBunny(ctx, state='idle', frame=0) {
+  const W=200, H=200, cx=100;
+  const play=state==='playing', sleep=state==='sleeping', eat=state==='eating';
+  const yOff=(play&&frame===1)?-14:0;
+  const ss=1-Math.abs(yOff)/28;
+  const eyesClosed=sleep||(eat&&frame===1);
+  const eyesWide=play&&frame===1;
+
+  ctx.fillStyle='hsl(40,5%,92%)'; ctx.fillRect(0,0,W,H);
+
+  ctx.beginPath(); ctx.ellipse(cx,194+yOff*.3,33*ss,7*ss,0,0,Math.PI*2);
+  ctx.fillStyle='hsl(40,10%,58%)'; ctx.fill();
+
+  ctx.save();
+  ctx.translate(0,yOff);
+
+  // tail (behind body)
+  ctx.beginPath(); ctx.ellipse(cx+34,148,13,11,.2,0,Math.PI*2); ctx.fillStyle='hsl(40,6%,76%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx+34,148,8,7,.2,0,Math.PI*2);   ctx.fillStyle='hsl(40,5%,88%)'; ctx.fill();
+
+  // body + highlight
+  ctx.beginPath(); ctx.ellipse(cx,150,36,28,0,0,Math.PI*2);      ctx.fillStyle='hsl(40,9%,23%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-10,138,16,10,-.3,0,Math.PI*2); ctx.fillStyle='hsl(40,7%,49%)'; ctx.fill();
+
+  // ears before head so head covers bases
+  [[-20,-.10],[20,.10]].forEach(([ex,rot])=>{
+    ctx.save(); ctx.translate(cx+ex,55); ctx.scale(.60,1);
+    ctx.beginPath(); ctx.ellipse(0,0,20,46,rot,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,22%)'; ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(cx+ex,56); ctx.scale(.44,.82);
+    ctx.beginPath(); ctx.ellipse(0,0,13,36,rot*.6,0,Math.PI*2); ctx.fillStyle='hsl(0,10%,62%)'; ctx.fill(); ctx.restore();
+  });
+
+  // head + highlight
+  ctx.beginPath(); ctx.arc(cx,109,38,0,Math.PI*2);              ctx.fillStyle='hsl(40,9%,23%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-10,95,18,13,-.3,0,Math.PI*2); ctx.fillStyle='hsl(40,7%,49%)'; ctx.fill();
+
+  // cheeks
+  [[-22,.2],[22,-.2]].forEach(([ex,r])=>{
+    ctx.beginPath(); ctx.ellipse(cx+ex,118,14,11,r,0,Math.PI*2); ctx.fillStyle='hsl(40,8%,34%)'; ctx.fill();
+  });
+
+  // eyes
+  const eyeY=103, eyeR=eyesWide?13:11;
+  if(eyesClosed){
+    ctx.strokeStyle='hsl(0,0%,8%)'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx-27,eyeY); ctx.quadraticCurveTo(cx-16,eyeY+5,cx-5,eyeY);  ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+5,eyeY);  ctx.quadraticCurveTo(cx+16,eyeY+5,cx+27,eyeY); ctx.stroke();
+  } else {
+    [[-16,-15,-13],[16,17,19]].forEach(([se,pu,hi])=>{
+      ctx.beginPath(); ctx.arc(cx+se,eyeY,eyeR,0,Math.PI*2);        ctx.fillStyle='hsl(40,5%,88%)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+pu,eyeY,eyeR*.58,0,Math.PI*2);    ctx.fillStyle='hsl(0,0%,5%)';   ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+hi,eyeY-3,2.5,0,Math.PI*2);       ctx.fillStyle='hsl(0,0%,97%)';  ctx.fill();
+    });
+    // eyebrow arcs
+    ctx.strokeStyle='hsl(40,9%,20%)'; ctx.lineWidth=1.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx-25,eyeY-8); ctx.quadraticCurveTo(cx-16,eyeY-11,cx-7,eyeY-8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+7,eyeY-8);  ctx.quadraticCurveTo(cx+16,eyeY-11,cx+25,eyeY-8); ctx.stroke();
+    if(eyesWide) drawSparkles(ctx,cx,eyeY-14);
+  }
+
+  // nose
+  ctx.fillStyle='hsl(0,0%,7%)';
+  ctx.beginPath(); ctx.moveTo(cx,112); ctx.lineTo(cx-5,117); ctx.lineTo(cx+5,117); ctx.closePath(); ctx.fill();
+
+  // mouth + eating food symbol
+  ctx.strokeStyle='hsl(40,5%,13%)'; ctx.lineWidth=1.5; ctx.lineCap='round';
+  if(eat&&frame===0){
+    ctx.beginPath(); ctx.moveTo(cx,117); ctx.bezierCurveTo(cx-5,125,cx-9,127,cx-9,122); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,117); ctx.bezierCurveTo(cx+5,125,cx+9,127,cx+9,122); ctx.stroke();
+    ctx.fillStyle='hsl(40,8%,26%)';
+    ctx.beginPath(); ctx.moveTo(cx+26,116); ctx.lineTo(cx+32,121); ctx.lineTo(cx+26,126); ctx.lineTo(cx+20,121); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='hsl(40,8%,22%)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(cx+26,116); ctx.lineTo(cx+28,110); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+28,111); ctx.lineTo(cx+30,113); ctx.moveTo(cx+28,111); ctx.lineTo(cx+26,113); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(cx,117); ctx.bezierCurveTo(cx-4,121,cx-7,122,cx-7,120); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,117); ctx.bezierCurveTo(cx+4,121,cx+7,122,cx+7,120); ctx.stroke();
+  }
+
+  // whiskers
+  ctx.strokeStyle='hsl(40,5%,76%)'; ctx.lineWidth=1.5; ctx.lineCap='round';
+  for(let i=0;i<3;i++){
+    ctx.beginPath(); ctx.moveTo(cx-8,118+i*4); ctx.lineTo(cx-42,115+i*3); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+8,118+i*4); ctx.lineTo(cx+42,115+i*3); ctx.stroke();
+  }
+
+  if(sleep) drawZZZ(ctx,cx,97,frame);
+
+  // paws + toe lines
+  [[-20,.1],[20,-.1]].forEach(([ex,r])=>{
+    ctx.beginPath(); ctx.ellipse(cx+ex,175,18,10,r,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,27%)'; ctx.fill();
+  });
+  ctx.strokeStyle='hsl(40,5%,70%)'; ctx.lineWidth=1.2; ctx.lineCap='butt';
+  for(let i=-1;i<=1;i++){
+    ctx.beginPath(); ctx.moveTo(cx-20+i*5.5,168); ctx.lineTo(cx-20+i*5.5,177); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+20+i*5.5,168); ctx.lineTo(cx+20+i*5.5,177); ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// DRAW â€” CAT  (200Ã—200)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function drawCat(ctx, state='idle', frame=0) {
+  const W=200, H=200, cx=100;
+  const play=state==='playing', sleep=state==='sleeping', eat=state==='eating';
+  const yOff=(play&&frame===1)?-14:0;
+  const ss=1-Math.abs(yOff)/28;
+  const eyesClosed=sleep||(eat&&frame===1);
+  const eyesWide=play&&frame===1;
+
+  ctx.fillStyle='hsl(40,5%,92%)'; ctx.fillRect(0,0,W,H);
+
+  ctx.beginPath(); ctx.ellipse(cx-4,194+yOff*.3,30*ss,7*ss,0,0,Math.PI*2);
+  ctx.fillStyle='hsl(40,10%,58%)'; ctx.fill();
+
+  ctx.save();
+  ctx.translate(0,yOff);
+
+  // tail â€” shortened to stay within frame
+  ctx.beginPath();
+  ctx.moveTo(cx+28,152);
+  ctx.bezierCurveTo(cx+53,158, cx+67,118, cx+55,90);
+  ctx.bezierCurveTo(cx+47,70,  cx+32,66,  cx+36,78);
+  ctx.strokeStyle='hsl(40,9%,19%)'; ctx.lineWidth=11; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx+27,150);
+  ctx.bezierCurveTo(cx+51,156, cx+65,116, cx+53,88);
+  ctx.bezierCurveTo(cx+45,68,  cx+30,64,  cx+34,76);
+  ctx.strokeStyle='hsl(40,6%,44%)'; ctx.lineWidth=4; ctx.stroke();
+
+  // body + highlight
+  ctx.beginPath(); ctx.ellipse(cx-4,148,32,28,-.08,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,19%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-15,136,15,10,-.3,0,Math.PI*2);  ctx.fillStyle='hsl(40,7%,43%)'; ctx.fill();
+
+  // pointed ears
+  ctx.beginPath(); ctx.moveTo(cx-34,68); ctx.lineTo(cx-44,30); ctx.lineTo(cx-14,56); ctx.closePath(); ctx.fillStyle='hsl(40,9%,17%)'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx-32,66); ctx.lineTo(cx-38,36); ctx.lineTo(cx-18,58); ctx.closePath(); ctx.fillStyle='hsl(0,10%,54%)'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx+26,68); ctx.lineTo(cx+36,30); ctx.lineTo(cx+8,56);  ctx.closePath(); ctx.fillStyle='hsl(40,9%,17%)'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx+24,66); ctx.lineTo(cx+30,36); ctx.lineTo(cx+12,58); ctx.closePath(); ctx.fillStyle='hsl(0,10%,54%)'; ctx.fill();
+
+  // head + highlight
+  ctx.beginPath(); ctx.arc(cx-2,100,40,0,Math.PI*2);            ctx.fillStyle='hsl(40,9%,19%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-14,85,16,12,-.3,0,Math.PI*2); ctx.fillStyle='hsl(40,7%,43%)'; ctx.fill();
+
+  // eyes (almond)
+  const eyeY=98;
+  if(eyesClosed){
+    ctx.strokeStyle='hsl(0,0%,8%)'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx-30,eyeY); ctx.quadraticCurveTo(cx-17,eyeY+5,cx-4,eyeY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+4,eyeY);  ctx.quadraticCurveTo(cx+17,eyeY+5,cx+30,eyeY); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(cx-30,eyeY); ctx.bezierCurveTo(cx-26,eyeY-8,cx-8,eyeY-8,cx-4,eyeY); ctx.bezierCurveTo(cx-8,eyeY+8,cx-26,eyeY+8,cx-30,eyeY); ctx.closePath(); ctx.fillStyle='hsl(60,12%,78%)'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx+4,eyeY);  ctx.bezierCurveTo(cx+8,eyeY-8,cx+26,eyeY-8,cx+30,eyeY); ctx.bezierCurveTo(cx+26,eyeY+8,cx+8,eyeY+8,cx+4,eyeY);   ctx.closePath(); ctx.fillStyle='hsl(60,12%,78%)'; ctx.fill();
+    const sr=eyesWide?6:4;
+    ctx.beginPath(); ctx.ellipse(cx-17,eyeY,sr,9,0,0,Math.PI*2); ctx.fillStyle='hsl(0,0%,5%)'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+17,eyeY,sr,9,0,0,Math.PI*2); ctx.fillStyle='hsl(0,0%,5%)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx-14,eyeY-4,3,0,Math.PI*2); ctx.fillStyle='hsl(0,0%,97%)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+20,eyeY-4,3,0,Math.PI*2); ctx.fillStyle='hsl(0,0%,97%)'; ctx.fill();
+    // eyelashes
+    ctx.strokeStyle='hsl(0,0%,8%)'; ctx.lineWidth=1.2; ctx.lineCap='round';
+    [cx-26,cx-17,cx-8,cx+8,cx+17,cx+26].forEach((lx,li)=>{
+      ctx.beginPath(); ctx.moveTo(lx,eyeY-8); ctx.lineTo(lx+(li<3?-1:1),eyeY-14); ctx.stroke();
+    });
+    if(eyesWide) drawSparkles(ctx,cx,eyeY-16);
+  }
+
+  // nose
+  ctx.fillStyle='hsl(0,15%,20%)';
+  ctx.beginPath(); ctx.moveTo(cx-2,107); ctx.lineTo(cx-7,114); ctx.lineTo(cx+3,114); ctx.closePath(); ctx.fill();
+
+  // mouth + eating
+  ctx.strokeStyle='hsl(40,5%,13%)'; ctx.lineWidth=1.5; ctx.lineCap='round';
+  if(eat&&frame===0){
+    ctx.beginPath(); ctx.moveTo(cx-2,114); ctx.bezierCurveTo(cx-6,122,cx-10,125,cx-12,121); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-2,114); ctx.bezierCurveTo(cx+2,122,cx+6,125,cx+8,121); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx-2,120,4,3.5,0,0,Math.PI*2); ctx.fillStyle='hsl(0,25%,45%)'; ctx.fill();
+    // BIO_PELLET item
+    ctx.beginPath(); ctx.arc(cx+28,112,6,0,Math.PI*2); ctx.fillStyle='hsl(40,8%,28%)'; ctx.fill();
+    ctx.strokeStyle='hsl(40,5%,68%)'; ctx.lineWidth=1;
+    [-3,0,3].forEach(l=>{ctx.beginPath();ctx.moveTo(cx+28+l,106);ctx.lineTo(cx+28+l,118);ctx.stroke();});
+  } else {
+    ctx.beginPath(); ctx.moveTo(cx-2,114); ctx.bezierCurveTo(cx-6,119,cx-10,121,cx-12,118); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-2,114); ctx.bezierCurveTo(cx+2,119,cx+6,121,cx+8,118); ctx.stroke();
+  }
+
+  // whiskers
+  ctx.strokeStyle='hsl(40,5%,74%)'; ctx.lineWidth=1.5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(cx-8,110); ctx.lineTo(cx-48,104); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-8,114); ctx.lineTo(cx-48,114); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-8,118); ctx.lineTo(cx-46,122); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+4,110); ctx.lineTo(cx+44,104); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+4,114); ctx.lineTo(cx+44,114); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+4,118); ctx.lineTo(cx+42,122); ctx.stroke();
+
+  if(sleep) drawZZZ(ctx,cx,97,frame);
+
+  // collar + bell
+  ctx.fillStyle='hsl(40,8%,33%)'; ctx.fillRect(cx-28,130,56,7);
+  ctx.beginPath(); ctx.arc(cx-2,137,5,0,Math.PI*2); ctx.fillStyle='hsl(40,8%,62%)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx-2,137,2.2,0,Math.PI*2); ctx.fillStyle='hsl(40,5%,28%)'; ctx.fill();
+
+  // paws + toes
+  [[-16,.1],[14,-.1]].forEach(([ex,r])=>{
+    ctx.beginPath(); ctx.ellipse(cx+ex,178,17,10,r,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,21%)'; ctx.fill();
+  });
+  ctx.strokeStyle='hsl(40,5%,68%)'; ctx.lineWidth=1.2; ctx.lineCap='butt';
+  for(let i=-1;i<=1;i++){
+    ctx.beginPath(); ctx.moveTo(cx-16+i*5.5,170); ctx.lineTo(cx-16+i*5.5,180); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+14+i*5.5,170); ctx.lineTo(cx+14+i*5.5,180); ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// DRAW â€” DOG  (200Ã—200)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function drawDog(ctx, state='idle', frame=0) {
+  const W=200, H=200, cx=100;
+  const play=state==='playing', sleep=state==='sleeping', eat=state==='eating';
+  const yOff=(play&&frame===1)?-14:0;
+  const ss=1-Math.abs(yOff)/28;
+  const eyesClosed=sleep||(eat&&frame===1);
+  const eyesWide=play&&frame===1;
+
+  ctx.fillStyle='hsl(40,5%,92%)'; ctx.fillRect(0,0,W,H);
+
+  ctx.beginPath(); ctx.ellipse(cx,194+yOff*.3,36*ss,7*ss,0,0,Math.PI*2);
+  ctx.fillStyle='hsl(40,10%,58%)'; ctx.fill();
+
+  ctx.save();
+  ctx.translate(0,yOff);
+
+  // tail
+  ctx.beginPath(); ctx.moveTo(cx+32,148); ctx.bezierCurveTo(cx+64,140,cx+78,110,cx+65,88);
+  ctx.strokeStyle='hsl(40,9%,21%)'; ctx.lineWidth=13; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+32,148); ctx.bezierCurveTo(cx+64,140,cx+78,110,cx+65,88);
+  ctx.strokeStyle='hsl(40,7%,47%)'; ctx.lineWidth=7; ctx.stroke();
+
+  // body + highlight
+  ctx.beginPath(); ctx.ellipse(cx,148,40,34,0,0,Math.PI*2);     ctx.fillStyle='hsl(40,9%,25%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-12,135,18,12,-.3,0,Math.PI*2); ctx.fillStyle='hsl(40,7%,49%)'; ctx.fill();
+
+  // floppy ears (before head)
+  [[-28,.18],[28,-.18]].forEach(([ex,rot],i)=>{
+    ctx.save(); ctx.translate(cx+ex,82); ctx.rotate(rot);
+    ctx.beginPath(); ctx.ellipse(0,24,20,38,0,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,17%)'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse((i===0?2:-2),26,12,28,(i===0?.1:-.1),0,Math.PI*2); ctx.fillStyle='hsl(40,8%,31%)'; ctx.fill();
+    ctx.restore();
+  });
+
+  // head + highlight
+  ctx.beginPath(); ctx.arc(cx,92,44,0,Math.PI*2);               ctx.fillStyle='hsl(40,9%,25%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-13,78,18,13,-.3,0,Math.PI*2); ctx.fillStyle='hsl(40,7%,49%)'; ctx.fill();
+  // forehead fur marks
+  ctx.strokeStyle='hsl(40,9%,16%)'; ctx.lineWidth=1.2; ctx.lineCap='round';
+  [[cx-6,68,cx-3,60],[cx+2,67,cx+5,59]].forEach(([x1,y1,x2,y2])=>{ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); });
+
+  // muzzle (reduced size)
+  ctx.beginPath(); ctx.ellipse(cx,109,22,15,0,0,Math.PI*2); ctx.fillStyle='hsl(40,8%,33%)'; ctx.fill();
+  // nose
+  ctx.beginPath(); ctx.ellipse(cx,101,11,7,0,0,Math.PI*2); ctx.fillStyle='hsl(0,0%,7%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-3,98,4,3,-.2,0,Math.PI*2); ctx.fillStyle='hsl(0,0%,60%)'; ctx.fill();
+
+  // eyes
+  const eyeY=82, eyeR=eyesWide?13:12;
+  if(eyesClosed){
+    ctx.strokeStyle='hsl(0,0%,8%)'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx-32,eyeY); ctx.quadraticCurveTo(cx-20,eyeY+5,cx-8,eyeY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+8,eyeY);  ctx.quadraticCurveTo(cx+20,eyeY+5,cx+32,eyeY); ctx.stroke();
+  } else {
+    [[-20,-19,-16],[20,21,24]].forEach(([se,pu,hi])=>{
+      ctx.beginPath(); ctx.arc(cx+se,eyeY,eyeR,0,Math.PI*2);       ctx.fillStyle='hsl(40,5%,84%)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+pu,eyeY,eyeR*.6,0,Math.PI*2);    ctx.fillStyle='hsl(0,0%,6%)';   ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+hi,eyeY-3,3,0,Math.PI*2);        ctx.fillStyle='hsl(0,0%,97%)';  ctx.fill();
+    });
+    // angled eyebrows (loyal/concerned look)
+    ctx.fillStyle='hsl(40,9%,17%)';
+    ctx.save(); ctx.translate(cx-20,68); ctx.rotate(-.25); ctx.beginPath(); ctx.ellipse(0,0,10,3.5,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(cx+20,68); ctx.rotate(.25);  ctx.beginPath(); ctx.ellipse(0,0,10,3.5,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+    if(eyesWide) drawSparkles(ctx,cx,eyeY-18);
+  }
+
+  // smile + eating
+  ctx.strokeStyle='hsl(40,5%,11%)'; ctx.lineWidth=2; ctx.lineCap='round';
+  if(eat&&frame===0){
+    ctx.beginPath(); ctx.moveTo(cx,111); ctx.bezierCurveTo(cx-6,120,cx-14,124,cx-16,120); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,111); ctx.bezierCurveTo(cx+6,120,cx+14,124,cx+16,120); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx,121,5,4,0,0,Math.PI); ctx.fillStyle='hsl(0,30%,50%)'; ctx.fill();
+    // PROTO_BONE item
+    ctx.fillStyle='hsl(40,8%,28%)';
+    [[cx+26,111],[cx+36,111]].forEach(([bx,by])=>{ ctx.beginPath(); ctx.arc(bx,by,4,0,Math.PI*2); ctx.fill(); });
+    ctx.fillRect(cx+27,108,12,6);
+    [[cx+26,107],[cx+26,115],[cx+36,107],[cx+36,115]].forEach(([bx,by])=>{ ctx.beginPath(); ctx.arc(bx,by,3,0,Math.PI*2); ctx.fill(); });
+  } else {
+    ctx.beginPath(); ctx.moveTo(cx,111); ctx.bezierCurveTo(cx-6,120,cx-14,124,cx-16,120); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,111); ctx.bezierCurveTo(cx+6,120,cx+14,124,cx+16,120); ctx.stroke();
+  }
+
+  if(sleep) drawZZZ(ctx,cx,80,frame);
+
+  // collar + tag
+  ctx.fillStyle='hsl(40,9%,17%)'; ctx.fillRect(cx-30,128,60,8);
+  ctx.beginPath(); ctx.arc(cx,137,5.5,0,Math.PI*2); ctx.fillStyle='hsl(40,8%,60%)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,137,2.5,0,Math.PI*2); ctx.fillStyle='hsl(0,0%,7%)'; ctx.fill();
+
+  // paws + toes
+  [[-20,.1],[20,-.1]].forEach(([ex,r])=>{
+    ctx.beginPath(); ctx.ellipse(cx+ex,178,20,12,r,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,23%)'; ctx.fill();
+  });
+  ctx.strokeStyle='hsl(40,5%,70%)'; ctx.lineWidth=1.2; ctx.lineCap='butt';
+  for(let i=-1;i<=1;i++){
+    ctx.beginPath(); ctx.moveTo(cx-20+i*6.5,170); ctx.lineTo(cx-20+i*6.5,181); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+20+i*6.5,170); ctx.lineTo(cx+20+i*6.5,181); ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// DRAW â€” BIRD  (200Ã—200)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function drawBird(ctx, state='idle', frame=0) {
+  const W=200, H=200, cx=100;
+  const play=state==='playing', sleep=state==='sleeping', eat=state==='eating';
+  const yOff=(play&&frame===1)?-14:0;
+  const ss=1-Math.abs(yOff)/28;
+  const eyesClosed=sleep||(eat&&frame===1);
+  const eyesWide=play&&frame===1;
+  const headY=sleep?88:82;
+
+  ctx.fillStyle='hsl(40,5%,92%)'; ctx.fillRect(0,0,W,H);
+
+  // branch (fixed â€” outside yOff translate)
+  ctx.beginPath(); ctx.moveTo(20,163); ctx.lineTo(180,163);
+  ctx.strokeStyle='hsl(40,12%,26%)'; ctx.lineWidth=11; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(20,163); ctx.lineTo(180,163);
+  ctx.strokeStyle='hsl(40,8%,50%)'; ctx.lineWidth=5; ctx.stroke();
+  ctx.strokeStyle='hsl(40,10%,20%)'; ctx.lineWidth=1; ctx.lineCap='butt';
+  for(let bx=30;bx<176;bx+=15){ ctx.beginPath(); ctx.moveTo(bx,159); ctx.lineTo(bx+5,167); ctx.stroke(); }
+
+  // shadow (fixed)
+  ctx.beginPath(); ctx.ellipse(cx,194+yOff*.3,20*ss,5*ss,0,0,Math.PI*2);
+  ctx.fillStyle='hsl(40,10%,58%)'; ctx.fill();
+
+  ctx.save();
+  ctx.translate(0,yOff);
+
+  // legs + feet
+  ctx.strokeStyle='hsl(40,9%,19%)'; ctx.lineWidth=3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(cx-14,163); ctx.lineTo(cx-16,151); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+14,163); ctx.lineTo(cx+16,151); ctx.stroke();
+  ctx.lineWidth=2;
+  [[cx-15,cx-24,cx-8],[cx+15,cx+8,cx+24]].forEach(([ax,lx,rx])=>{
+    ctx.beginPath(); ctx.moveTo(lx,163); ctx.lineTo(rx,163); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lx,163); ctx.lineTo(lx-2,170); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rx,163); ctx.lineTo(rx+2,170); ctx.stroke();
+  });
+
+  // tail feathers (behind body)
+  for(let i=0;i<5;i++){
+    ctx.save(); ctx.translate(cx,152); ctx.rotate((i-2)*.28);
+    ctx.beginPath(); ctx.ellipse(0,18,7,22,0,0,Math.PI*2); ctx.fillStyle=`hsl(40,9%,${17+i*5}%)`; ctx.fill();
+    ctx.restore();
+  }
+
+  // body
+  ctx.beginPath(); ctx.ellipse(cx,122,40,34,0,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,21%)'; ctx.fill();
+
+  // wing (slightly spread when playing+jumping)
+  const wingX=(play&&frame===1)?cx-52:cx-44;
+  ctx.beginPath();
+  ctx.moveTo(cx-10,106);
+  ctx.bezierCurveTo(wingX,113, wingX-4,140, cx-34,154);
+  ctx.bezierCurveTo(cx-20,160, cx-4,150, cx-2,137);
+  ctx.closePath(); ctx.fillStyle='hsl(40,9%,15%)'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx-12,109); ctx.bezierCurveTo(cx-36,118,cx-38,138,cx-24,150);
+  ctx.strokeStyle='hsl(40,7%,40%)'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke();
+  for(let i=0;i<5;i++){
+    ctx.save(); ctx.translate(cx-36+i*8,150); ctx.rotate(-.3+i*.14);
+    ctx.beginPath(); ctx.ellipse(0,8,4,11,0,0,Math.PI*2); ctx.fillStyle=`hsl(40,9%,${11+i*6}%)`; ctx.fill();
+    ctx.restore();
+  }
+
+  // body highlights + belly
+  ctx.beginPath(); ctx.ellipse(cx+7,112,17,12,.3,0,Math.PI*2); ctx.fillStyle='hsl(40,7%,47%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx+9,130,17,15,0,0,Math.PI*2);  ctx.fillStyle='hsl(40,6%,55%)'; ctx.fill();
+
+  // head + highlight + crest
+  ctx.beginPath(); ctx.arc(cx+8,headY,30,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,21%)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx,headY-10,13,10,-.3,0,Math.PI*2); ctx.fillStyle='hsl(40,7%,45%)'; ctx.fill();
+  for(let i=0;i<4;i++){
+    ctx.save(); ctx.translate(cx+8+(i-1.5)*9,headY-24); ctx.rotate((i-1.5)*.28);
+    ctx.beginPath(); ctx.ellipse(0,-9,4,13,0,0,Math.PI*2); ctx.fillStyle='hsl(40,9%,18%)'; ctx.fill();
+    ctx.restore();
+  }
+
+  // eye
+  const eyeX=cx+18, eyeY=headY-6;
+  if(eyesClosed){
+    ctx.strokeStyle='hsl(0,0%,8%)'; ctx.lineWidth=2; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(eyeX-10,eyeY); ctx.quadraticCurveTo(eyeX,eyeY+4,eyeX+10,eyeY); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(eyeX,eyeY,9,0,Math.PI*2);      ctx.fillStyle='hsl(40,5%,86%)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(eyeX+1,eyeY,6,0,Math.PI*2);    ctx.fillStyle='hsl(0,0%,5%)';   ctx.fill();
+    ctx.beginPath(); ctx.arc(eyeX+3,eyeY-3,2.5,0,Math.PI*2);ctx.fillStyle='hsl(0,0%,97%)';  ctx.fill();
+    if(eyesWide) drawSparkles(ctx,cx+8,eyeY-14);
+  }
+
+  // beak (compact â€” stays within canvas bounds)
+  const beakMid=headY-1, beakOpen=eat&&frame===0;
+  if(beakOpen){
+    ctx.fillStyle='hsl(40,9%,15%)';
+    ctx.beginPath(); ctx.moveTo(cx+36,beakMid-4); ctx.lineTo(cx+50,beakMid-8); ctx.lineTo(cx+36,beakMid-1); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='hsl(40,8%,25%)';
+    ctx.beginPath(); ctx.moveTo(cx+36,beakMid-1); ctx.lineTo(cx+46,beakMid+1); ctx.lineTo(cx+36,beakMid+4); ctx.closePath(); ctx.fill();
+    // QUANTUM_SEED dots in beak
+    [[cx+44,beakMid-5],[cx+42,beakMid-3],[cx+46,beakMid-3]].forEach(([sx,sy])=>{
+      ctx.beginPath(); ctx.arc(sx,sy,2.2,0,Math.PI*2); ctx.fillStyle='hsl(40,8%,22%)'; ctx.fill();
+    });
+  } else {
+    ctx.fillStyle='hsl(40,9%,15%)';
+    ctx.beginPath(); ctx.moveTo(cx+36,beakMid-3); ctx.lineTo(cx+50,beakMid-7); ctx.lineTo(cx+36,beakMid+4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='hsl(40,7%,46%)';
+    ctx.beginPath(); ctx.moveTo(cx+36,beakMid-3); ctx.lineTo(cx+48,beakMid-7); ctx.lineTo(cx+43,beakMid-3); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx+36,beakMid-1); ctx.lineTo(cx+48,beakMid-7);
+    ctx.strokeStyle='hsl(40,6%,10%)'; ctx.lineWidth=1; ctx.lineCap='butt'; ctx.stroke();
+  }
+
+  if(sleep) drawZZZ(ctx,cx+8,headY-6,frame);
+
+  ctx.restore();
+}
+
+// CLOCK
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(), n.getMinutes(), n.getSeconds()]
+      .map(v => String(v).padStart(2,'0')).join(':');
+}
+setInterval(tick, 1000);
+tick();
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ANIMATION ENGINE
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const DRAW_FNS = { bunny:drawBunny, cat:drawCat, dog:drawDog, bird:drawBird };
+const ACTION_DURATIONS = { eating:3500, sleeping:5000, playing:3000 };
+const ACTION_FPS       = { eating:3, sleeping:2, playing:5 };
+let currentPet = null;
+const petTimers={}, petRAFs={}, petFrames={}, petStates={};
+
+function redraw(petId, state, frame) {
+  const cv  = document.getElementById('cv-'+petId);
+  const ctx = cv.getContext('2d');
+  DRAW_FNS[petId](ctx, state, frame);
+  applyDither(ctx, 200, 200);
+}
+
+function stopAction(petId) {
+  cancelAnimationFrame(petRAFs[petId]);
+  clearTimeout(petTimers[petId]);
+  delete petRAFs[petId];
+  petStates[petId] = 'idle';
+  petFrames[petId] = 0;
+  document.getElementById('cv-'+petId).classList.remove('js-anim');
+  redraw(petId, 'idle', 0);
+  ['eating','sleeping','playing'].forEach(a => {
+    const btn = document.getElementById('btn-'+a);
+    if(btn) btn.classList.remove('active');
+  });
+}
+
+function triggerAction(action) {
+  if(!currentPet) return;
+  const petId = currentPet;
+  stopAction(petId);
+
+  document.getElementById('cv-'+petId).classList.add('js-anim');
+  petStates[petId] = action;
+  petFrames[petId] = 0;
+
+  ['eating','sleeping','playing'].forEach(a => {
+    const btn = document.getElementById('btn-'+a);
+    if(btn) btn.classList.toggle('active', a===action);
+  });
+
+  const interval = 1000 / ACTION_FPS[action];
+  let lastFrameTime = 0;
+  function loop(ts) {
+    if(ts - lastFrameTime >= interval) {
+      petFrames[petId] = 1 - petFrames[petId];
+      lastFrameTime = ts;
+      redraw(petId, action, petFrames[petId]);
+    }
+    petRAFs[petId] = requestAnimationFrame(loop);
+  }
+  petRAFs[petId] = requestAnimationFrame(loop);
+
+  const labels = { eating:'FEEDING', sleeping:'INITIATING_REST', playing:'ENGAGING_PLAY_PROTOCOL' };
+  document.getElementById('log').textContent =
+    '> '+PETS[petId].name+' // '+labels[action]+'... DURATION: '+ACTION_DURATIONS[action]+'ms';
+
+  petTimers[petId] = setTimeout(() => {
+    stopAction(petId);
+    document.getElementById('log').textContent =
+      '> '+PETS[petId].name+' // ACTION_COMPLETE. IDLE_STATE_RESTORED.';
+  }, ACTION_DURATIONS[action]);
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SELECTION
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function selectPet(id) {
+  document.querySelectorAll('.pet-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card-'+id).classList.add('selected');
+  currentPet = id;
+  const p = PETS[id];
+
+  document.getElementById('detail').classList.add('on');
+
+  const rc = 'rarity-'+p.rarity.toLowerCase();
+  document.getElementById('d-title').innerHTML =
+    '&gt; SELECTED: '+p.name+
+    ' <span class="rarity '+rc+'" style="font-size:14px;margin-left:6px">['+p.rarity+']</span>';
+  document.getElementById('d-row1').innerHTML =
+    'TYPE: <span>'+p.type+'</span> &nbsp;|&nbsp; CR: <span>'+p.cr+'</span>';
+  document.getElementById('d-row2').innerHTML =
+    'SPD: <span>'+p.spd+'</span> &nbsp;&nbsp; STR: <span>'+p.str+'</span> &nbsp;&nbsp; JOY: <span>'+p.joy+'</span>';
+  document.getElementById('d-desc').textContent = p.desc;
+
+  ['eating','sleeping','playing'].forEach(a => {
+    const btn = document.getElementById('btn-'+a);
+    if(btn) { btn.disabled = false; btn.classList.remove('active'); }
+  });
+
+  document.getElementById('log').textContent = p.log;
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// INIT ALL CANVASES
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function initAll() {
+  Object.keys(DRAW_FNS).forEach(petId => {
+    petStates[petId] = 'idle';
+    petFrames[petId] = 0;
+    redraw(petId, 'idle', 0);
+  });
+}
+window.addEventListener('load', initAll);
+</script>
+</body>
+</html>
