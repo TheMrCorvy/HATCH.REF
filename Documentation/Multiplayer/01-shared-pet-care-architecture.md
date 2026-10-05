@@ -1,9 +1,9 @@
 # Unix Tamagotchi: Shared Pet Care Architecture
 
 ## 1. Concept Overview
-The core of Unix Tamagotchi's multiplayer experience is the "Care Group." Instead of individual, isolated experiences, users form a group to collaboratively care for a shared digital pet. All users interact with the exact same pet instance, fostering cooperation and shared responsibility within an industrial terminal aesthetic.
+The core of Unix Tamagotchi's multiplayer experience is the "Care Group." Instead of individual, isolated experiences, users form a group to collaboratively manage and nurture a shared giant Kaiju (Titan). All users interact with the exact same Titan instance, fostering cooperation and shared containment responsibility within an industrial terminal aesthetic.
 
-> **Marketing Focus — Couples First**: Although the system supports groups of 2 to 6 members (and solo play), the game is **primarily marketed as an experience for couples**. The default onboarding flow, promotional materials, and UX writing are written with a two-partner audience in mind. `FAMILY` and `FRIENDS` group types are fully functional but are secondary in the product's public identity.
+> **Marketing Focus — Couples First**: Although the system supports groups of 2 to 6 members (and solo play), the game is **primarily marketed as an experience for couples**. The default onboarding flow, promotional materials, and UX writing are written with a two-partner audience in mind (co-parenting a 100-meter Titan). `FAMILY` and `FRIENDS` group types are fully functional but are secondary in the product's public identity.
 
 ## 2. Group Creation and Onboarding
 Care Groups are the fundamental social unit. The group creation process involves a single "Admin" who creates the unit and invites others.
@@ -13,22 +13,22 @@ Care Groups are the fundamental social unit. The group creation process involves
 - **QR Codes**: Scannable matrix barcodes styled as tactical system diagnostics.
 
 ## 3. Shared Pet Ownership
-The digital pet entity is bound to the *group*, not an individual user.
-- Any group member can execute care actions (e.g., `[ FEED ]`, `[ CLEAN ]`, `[ PLAY ]`).
+The digital Kaiju entity is bound to the *group*, not an individual user.
+- Any group member can execute care actions (e.g., `[ FEED ]`, `[ SLEEP ]`, `[ PLAY ]`).
 - Pet care interactions and shared habitat furniture are accessible to all group members. **Credits (the in-game currency) are always per-user and are never pooled or shared.** Each member's credit balance is independent of group membership.
-- The pet's lifecycle, evolution, and health status are mutually managed.
+- The Kaiju's lifecycle, evolution, and containment status are mutually managed.
 
 ## 4. Real-Time Sync Architecture
 To maintain the illusion of a living digital entity, the system relies on **Supabase Realtime WebSockets** for instant state synchronization.
 - When an action is executed, it is immediately synchronized across all connected devices in the group.
-- The pet's 1-bit dithered pixel art animations trigger simultaneously across all viewports.
+- The Kaiju's 1-bit dithered pixel art animations trigger simultaneously across all viewports.
 
 ## 5. Action Broadcasting
 All care actions broadcast their state to online members:
 - **Action Trigger**: User A clicks `[ FEED ]`.
-- **Local Response**: User A's client immediately plays the feeding animation (Optimistic UI).
+- **Local Response**: User A's client immediately plays the feeding animation (Optimistic UI devouring `HUMAN_SPHERE_BALL`).
 - **Broadcast**: The backend broadcasts an `action_executed` payload to the group's channel.
-- **Remote Response**: Users B and C see the feed animation and the subsequent stat update in real-time, along with a terminal log entry (e.g., `> SYSTEM LOG: USER_B INITIATED FEEDING SEQUENCE`).
+- **Remote Response**: Users B and C see the devour animation and the subsequent stat update in real-time, along with a terminal log entry (e.g., `> SYSTEM LOG: USER_B DISPENSED HUMAN_SPHERE_BALL TO TITAN`).
 
 ## 6. Presence System
 The terminal UI includes a "Secured Session" presence tracker.
@@ -115,11 +115,11 @@ sequenceDiagram
     participant Server as WebSocket Server
     participant UserB as User B (Client)
     
-    UserA->>UserA: Click [ FEED ] (Optimistic Animation)
+    UserA->>UserA: Click [ FEED ] (Optimistic Human Sphere Devour)
     UserA->>Server: Send 'feed' action payload
-    Server->>Server: Validate & Update Pet State
+    Server->>Server: Validate & Update Kaiju State
     Server-->>UserB: Broadcast 'action: feed'
-    UserB->>UserB: Trigger 1-bit feed animation
+    UserB->>UserB: Trigger 1-bit human sphere devour animation
     Server-->>UserA: Ack success & State Sync
     Server-->>UserB: State Sync
 ```

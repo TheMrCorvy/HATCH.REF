@@ -45,19 +45,19 @@ flowchart TD
 
 ### 1. Flutter Mobile Client (`apps/mobile` or `tamagotchi_app/`)
 - **Presentation Layer**: Two-layer compositing architecture:
-  - **Pet Scene Layer (Flame Viewport)**: 1-bit dithered bitmap sprites rendered at low virtual resolution. Applies dithering shader via Flame `FragmentProgram` and upscales with nearest-neighbor filtering.
+  - **Kaiju Scene Layer (Flame Viewport)**: 1-bit dithered bitmap sprites rendered at low virtual resolution (taking visual reference from `Desing References/Godzila.webp`). Applies dithering shader via Flame `FragmentProgram` and upscales with nearest-neighbor filtering.
   - **UI Layer (Flutter Overlay)**: Native resolution monospace terminal text, bracket-style buttons, hazard stripe decorations, and system diagnostic labels.
 - **Engine Core & Riverpod**:
-  - `PetNotifier`: Orchestrates pet interactions, energy/hunger balance, and cooldown timers.
+  - `PetNotifier`: Orchestrates Kaiju interactions, energy/hunger balance, and cooldown timers.
   - `PluginRegistry`: Service locator containing compiled action and scenario plugins.
   - `Flame Game Component`: Manages sprite animation, particle effects, and the Bayer matrix fragment shader pipeline.
-  - `InventoryNotifier`: Manages owned pets (unlimited capacity) and the 240 starting credits.
+  - `InventoryNotifier`: Manages owned Kaijus (unlimited capacity) and the 240 starting credits.
 - **Data Persistence**: Local key-value binary engine (**Hive** or encrypted SharedPreferences) maintaining zero-latency reads/writes without an active network connection.
 
 ### 2. Plugin Subsystem (`lib/plugins/`)
-- `plugins/user_triggered_actions/`: User-initiated interactions (Eat, Sleep, Play, Basketball).
-- `plugins/non_user_triggered_actions/`: Autonomous routines (Office work shifts, career study).
-- `plugins/scenarios/`: Dynamic visual environments (Default Room, Hospital Bed, Basketball Arena).
+- `plugins/user_triggered_actions/`: User-initiated interactions (Eat a ball of humans, Sleep, Play, Crush Tanks).
+- `plugins/non_user_triggered_actions/`: Autonomous routines (City rampage work shifts, urban demolition study).
+- `plugins/scenarios/`: Dynamic visual environments (Terminal Habitat Room, Metropolis Ruins, Clinic Ward).
 
 ### 3. Backend & Cloud Services (`backend/` & Supabase)
 - **Database & Row-Level Security**: Supabase PostgreSQL housing player profiles, pet inventories, transactions, and the `action_plugins` / `scenario_plugins` tables.

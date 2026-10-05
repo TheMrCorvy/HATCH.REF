@@ -67,7 +67,7 @@ class RoomScreen extends ConsumerWidget {
         child: Column(
           children: [
             // 1. Top Terminal HUD (Flutter Overlay)
-            const SystemHeaderBar(subSystem: 'LEPUS-01'),
+            const SystemHeaderBar(subSystem: 'TITAN-01'),
             const SizedBox(height: 12),
 
             // 2. Two-Layer Compositing: Flame GameWidget + Camera Reticles
@@ -103,11 +103,11 @@ class RoomScreen extends ConsumerWidget {
 
 ## 3. Screen Summaries
 
-- **Pet Store Screen (SHOP)**:
-  - Displays available pets from the catalog (e.g., Terminal Bunny 120 credits).
+- **Kaiju Store Screen (SHOP)**:
+  - Displays available Kaijus from the catalog (e.g., Godzilla 120 credits, Cyber Godzilla 120 credits).
   - Purchase is permitted as long as `credits >= item.price`. 
-- **Pet Switcher Screen (SWAP)**:
-  - Displays a scrollable `ListView` of all owned pets.
+- **Kaiju Switcher Screen (SWAP)**:
+  - Displays a scrollable `ListView` of all owned Kaijus.
   - Tapping `[ SWAP TO THIS COMPANION ]` invokes `ref.read(gameStateProvider.notifier).switchActivePet(pet.id)` and redirects to the Room Screen.
 - **Settings Screen (CONF)**:
   - Instead of theme switching, provides immersive hardware controls:

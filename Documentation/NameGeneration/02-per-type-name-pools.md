@@ -40,11 +40,11 @@ The pet name pools mirror this structure: expressive tokens that stand on their 
 
 ---
 
-## 2. Pool: `bunny`
+## 2. Pool: `godzilla`
 
-**Personality archetype:** Gentle, precise, light energy. High saturation, balanced stats. Suggests repair, growth, organic warmth.
+**Personality archetype:** Apex Saurian Titan. Primeval atomic energy, resilient health, balanced stats. Suggests primeval restoration, seismic force, ancient elemental growth.
 
-**Thematic Stand sources:** Crazy Diamond (restoration), Silver Chariot (precision), Harvest (diligent swarm), Soft Machine (fluid adaptation), Pearl Jam (organic force), White Album (cold precision), Moody Blues (echo/memory), Beach Boy (patient hunter).
+**Thematic Stand sources:** Crazy Diamond (restoration/unbreakable force), Silver Chariot (precision/slashing armor), Harvest (diligent earth-tapper), Soft Machine (fluid mass adaptation), Pearl Jam (organic vigor), White Album (indestructible ice armor), Moody Blues (ancient resonance), Beach Boy (unstoppable pull).
 
 ### Full Name Pool
 
@@ -83,16 +83,16 @@ BEACH_BOY_CURRENT
 
 ```text
 SUB_SYS: CRAZY_DIAMOND_PULSE    0X4F92 // 1.0.4-BETA    18:53:19
-> [ALERT] CRAZY_DIAMOND_PULSE is too exhausted to play! Needs sleep.
+> [ALERT] CRAZY_DIAMOND_PULSE is too exhausted to play! Needs dormancy.
 > SELECTED: SOFT_MACHINE
-> DESC: FLUID-ADAPTATION SPECIMEN. OPTIMIZED FOR HIGH-SATURATION INTAKE.
+> DESC: SAURIAN TITAN SPECIMEN. OPTIMIZED FOR HIGH-ENERGY MASS CONSUMPTION.
 ```
 
 ---
 
-## 3. Pool: `cat`
+## 3. Pool: `cyber_godzilla`
 
-**Personality archetype:** Aggressive, fast, dark energy. Hacker feline, higher energy drain. Suggests raw power, temporal disruption, void dissolution.
+**Personality archetype:** Cybernetic Titan. Aggressive, laser discharge, void circuitry, higher energy drain. Suggests raw artificial firepower, temporal disruption, absolute destruction.
 
 **Thematic Stand sources:** Star Platinum (peak power), King Crimson (time erasure), Gold Experience (vital energy/requiem), Sticky Fingers (dexterity/portals), Aerosmith (aerial speed), Emperor (long-range precision), Cream (void/dissolution), Killer Queen (explosive chain).
 
@@ -130,77 +130,79 @@ KILLER_QUEEN_CASCADE
 | `rare` | All 3-token names (e.g. `STAR_PLATINUM_VOID`) | 35% |
 | `legendary` | `GOLD_EXPERIENCE_REQUIEM` | 5% |
 
-> `GOLD_EXPERIENCE_REQUIEM` is the legendary-tier name for `cat` pets. In JoJo's Bizarre Adventure, Requiem is the transcendent evolution of a Stand — fitting for the rarest designation a specimen can receive.
+> `GOLD_EXPERIENCE_REQUIEM` is the legendary-tier name for `cyber_godzilla` (Cybernetic Titan) specimens. In JoJo's Bizarre Adventure, Requiem is the transcendent evolution of a Stand — fitting for the rarest designation a specimen can receive.
 
 ### Examples in UI
 
 ```text
 SUB_SYS: KING_CRIMSON_LOOP    0X4F92 // 1.0.4-BETA    18:53:19
-> [ALERT] KING_CRIMSON_LOOP is too exhausted to play! Needs sleep.
+> [ALERT] KING_CRIMSON_LOOP is too exhausted to rampage! Needs dormancy.
 > SELECTED: GOLD_EXPERIENCE_REQUIEM
-> DESC: TRANSCENDENT VITAL CONSTRUCT. REQUIEM-CLASS ENERGY OUTPUT DETECTED.
+> DESC: TRANSCENDENT APEX TITAN CONSTRUCT. REQUIEM-CLASS ATOMIC OUTPUT DETECTED.
 ```
 
 ---
 
-## 4. Reserved Pools for Future Pet Types
+## 4. Reserved Pools for Future Kaiju Types
 
-The following types are visible in design mockups and store wireframes but are not yet part of the official pet catalog. Their name pools are pre-designed here to accelerate future inclusion.
+The following types are reserved for future Titan catalog expansions. Their name pools are pre-designed here to accelerate future inclusion.
 
-### `void_lepus` (VOID_LEPUS)
-**Archetype:** High-velocity shadow construct. Dark, entropic, cold.
+### `titan_rodan` (TITAN_RODAN)
+**Archetype:** High-velocity volcanic saurian Titan. Supersonic aerial shockwaves, geothermal heat, volcanic embers.
 
-**Thematic Stand sources:** D4C — Dirty Deeds Done Dirt Cheap (parallel dimensions), Tusk (piercing force), Black Sabbath (shadow/ambush), Scary Monsters (primal transformation).
+**Thematic Stand sources:** Magician's Red (flame manipulation), Aerosmith (high-speed aerial bombardment), Tower of Gray (hypersonic velocity), The Sun (radiant thermal emission).
 
 ```
-DIRTY_DEEDS
-DIRTY_DEEDS_DONE_DIRT_CHEAP
-TUSK_PIERCE
-TUSK_ACT_FOUR
-BLACK_SABBATH_VEIL
-SCARY_MONSTERS_CORE
-D4C_PARALLEL
-D4C_LOVE_TRAIN
-SHADOW_VECTOR
-VOID_PIERCER
+MAGICIANS_RED
+MAGICIANS_RED_EMBER
+AEROSMITH_DIVE
+AEROSMITH_VOLCANO
+TOWER_OF_GRAY_CORE
+THE_SUN_RADIANCE
+VOLCANIC_VECTOR
+THERMAL_PIERCER
+PYRO_CASCADE
+SOLAR_NODE
 ```
 
-### `lepus_aurum` (LEPUS_AURUM)
-**Archetype:** High-stamina gold variant. Radiant, vital, rare lineage.
+### `titan_ghidorah` (TITAN_GHIDORAH)
+**Archetype:** Three-headed golden apex bio-terror. Gravity beams, cosmic storm generation, planetary extinction.
 
-**Thematic Stand sources:** Gold Experience Requiem (apex vitality), Made in Heaven (transcendence), Stone Free (liberation), Wonder of U (inevitable force).
+**Thematic Stand sources:** Gold Experience Requiem (golden supremacy), Made in Heaven (cosmic acceleration), Weather Report / Heavy Weather (storm generation), Wonder of U (inevitable catastrophe).
 
 ```
 MADE_IN_HEAVEN
 MADE_IN_HEAVEN_NODE
-STONE_FREE_AURUM
+HEAVY_WEATHER_STORM
 WONDER_OF_U
 WONDER_OF_U_CASCADE
 GOLD_REQUIEM
 GOLD_SIGNAL_AURUM
-INEVITABLE_CURRENT
-APEX_VITAL_NODE
+GRAVITY_CURRENT
+APEX_CALAMITY_NODE
+TRI_CORE_EXTINCTION
 ```
 
-### `dwarf_v01` (DWARF_V01)
-**Archetype:** Small but sturdy. Methodical, resilient, ancient energy.
+### `titan_mothra` (TITAN_MOTHRA)
+**Archetype:** Divine lepidopteran titan. Bioluminescent scales, reflective aura, rebirth lifecycle.
 
-**Thematic Stand sources:** Hierophant Green (binding threads, range), Hermit Purple (root network), Tusk Act 1-2 (slow but inexorable).
+**Thematic Stand sources:** Hierophant Green (reflective emerald scales), Hermit Purple (ancient psychic resonance), Pearl Jam (restorative vitality), Cinderella (aesthetic metamorphosis).
 
 ```
 HIEROPHANT_GREEN
-HIEROPHANT_THREAD
+HIEROPHANT_SCALE
 HERMIT_PURPLE_ROOT
-HERMIT_CHAIN
-TUSK_BIND
+DIVINE_RESONANCE
+PEARL_JAM_VITAL
 EMERALD_COIL
-PURPLE_NETWORK
-ANCIENT_THREAD_NODE
+DIVINE_AURORA
+ANCIENT_PULSE_NODE
+METAMORPHIC_CHITIN
 ```
 
 ---
 
-## 5. Extending Pools for New Pet Types
+## 5. Extending Pools for New Titan Types
 
 When a new `pet_type` is registered in `pet_catalog`, a matching name pool must be created. Follow this checklist:
 

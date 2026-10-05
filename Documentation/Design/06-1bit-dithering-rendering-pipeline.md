@@ -8,10 +8,10 @@ This document details the graphics rendering pipeline for the **Unix Tamagotchi*
 
 To achieve the "Tactical 1-Bit Cyber-Specimen OS" aesthetic without sacrificing UI legibility, the app uses a strict two-layer compositing architecture:
 
-1. **Layer 1: The Pet Scene (SubViewport)**
+1. **Layer 1: The Kaiju Scene (SubViewport)**
    - Managed by Flame.
-   - Sprites and backgrounds are rendered into an off-screen buffer at a very low virtual resolution (e.g., 256×256).
-   - A custom Fragment Shader (GLSL/FLSL) is applied to this buffer to perform Ordered Bayer Dithering.
+   - Sprites (Kaijus, city ruins, habitat props) and backgrounds are rendered into an off-screen buffer at a very low virtual resolution (e.g., 256×256).
+   - A custom Fragment Shader (GLSL/FLSL) is applied to this buffer to perform Ordered Bayer Dithering. The visual standard is defined by `Desing References/Godzila.webp`, where Godzilla's saurian silhouette, dorsal plates, and atomic breath beam render crisply through the 1-bit dither matrix.
    - The result is then upscaled to the device screen size using **Nearest-Neighbor** filtering to ensure crisp, chunky pixels.
 2. **Layer 2: The Flutter UI Overlay**
    - Managed by Flutter's standard widget tree.

@@ -11,8 +11,8 @@ For the PoC, all application state resides on the user's device. We utilize **Fl
 ```mermaid
 flowchart LR
     UI["Flutter UI Components (Terminal)"]
-    Viewport["Flame Viewport (Pet Scene)"]
-    Actions["Action Plugins (Eat, Sleep, Play, Basketball)"]
+    Viewport["Flame Viewport (Kaiju Scene)"]
+    Actions["Action Plugins (Eat Ball of Humans, Sleep, Play, City Rampage)"]
     Store["Riverpod StateNotifiers (In-Memory)"]
     Storage["Hive Encrypted Binary Storage (On-Disk)"]
 
@@ -35,14 +35,14 @@ import 'package:flutter/foundation.dart';
 class PetInstance {
   final String id;
   final String groupId; // maps to groups.id; 'solo_<userId>' during PoC offline phase
-  final String petType; // 'bunny' | 'cat'
+  final String petType; // 'godzilla' | 'cyber_godzilla'
   final String nickname;
   final int hunger;     // 0 - 100
   final int energy;     // 0 - 100
   final int happiness;  // 0 - 100
   final int ageInDays;
-  final String currentActionState; // 'idle' | 'eating' | 'sleeping' | 'playing'
-  final String activeScenarioId;   // e.g. 'default_room' | 'hospital_bed'
+  final String currentActionState; // 'idle' | 'eating' | 'sleeping' | 'playing' | 'destroying_city'
+  final String activeScenarioId;   // e.g. 'default_room' | 'metropolis_ruins'
   final DateTime lastInteractionTimestamp;
 
   const PetInstance({

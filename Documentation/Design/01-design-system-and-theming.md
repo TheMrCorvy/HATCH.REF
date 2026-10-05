@@ -25,10 +25,10 @@ The visual language relies on a strict 3-color palette plus one emergency color 
 ### Unified Terminal Palette
 | Semantic Token | Hex | Purpose |
 | :--- | :--- | :--- |
-| `background` | `#C5BEAA` to `#D4D99C` | Warm khaki/cream LCD surface with subtle grid texture |
-| `foreground` / `ink` | `#141512` to `#1A1C16` | Deep charcoal/black for text, borders, pet sprites |
+| `background` | `#C5BEAA` to `#D4D99C` | Warm khaki/cream LCD surface with subtle grid texture (matches `Desing References/Godzila.webp`) |
+| `foreground` / `ink` | `#141512` to `#1A1C16` | Deep charcoal/black for text, borders, Kaiju titan sprites, atomic breath blast |
 | `accent` | `#B85E2B` to `#D48038` | Warm copper/amber for stat values, active selections, highlights |
-| `emergency` | `#B72828` | Crimson red — ONLY for critical failure, death, and reboot states |
+| `emergency` | `#B72828` | Crimson red — ONLY for critical failure, reactor meltdown, and reboot states |
 
 ---
 
@@ -40,7 +40,8 @@ The visual language relies on a strict 3-color palette plus one emergency color 
 
 ### Terminal UI Language
 - **Buttons**: Bracket-style syntax with monospace formatting, e.g., `[ EAT ]`, `[ ACQUIRE ]`, `[ CONFIG ]`.
-- **System Diagnostics**: Labels and headers use rigid diagnostic naming conventions like `SYS_DIAG`, `SUB_SYS: LEPUS-01`, `STORAGE_MGR // V.02`, `PID: 8832`, `SECURED_SESSION`.
+- **System Diagnostics**: Labels and headers use rigid diagnostic naming conventions like `SYS_DIAG`, `SUB_SYS: TITAN-01`, `STORAGE_MGR // V.02`, `PID: 8832`, `SECURED_SESSION`.
+- **Visual Benchmark**: The rendering aesthetic directly mirrors `Desing References/Godzila.webp`, displaying a massive Kaiju looming over city skylines with atomic breath rendered using ordered Bayer matrix dithering.
 - **Decorations**: Hazard caution stripes (diagonal black/cream) mark decorative borders and warnings. Camera reticles (`┌ ┐ └ ┘`) denote viewports.
 
 ---

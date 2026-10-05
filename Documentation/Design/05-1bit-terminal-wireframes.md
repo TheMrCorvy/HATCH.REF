@@ -4,13 +4,13 @@ This document provides visual wireframe approximations of the core screens in th
 
 ---
 
-## 1. Pet Room Screen
+## 1. Kaiju Habitat Room Screen
 
-The primary interaction screen, featuring the two-layer compositing (Flame viewport + UI).
+The primary interaction screen, featuring the two-layer compositing (Flame viewport + UI) where the giant Kaiju resides with its room furniture (bed, chair, desk, kitchen).
 
 ```text
 ==================================================
-SUB_SYS: LEPUS-01           V.1.0.4       14:02:33
+SUB_SYS: TITAN-01 (GODZILLA) V.1.0.4      14:02:33
 ==================================================
 
 VITALS.SATUR   [████████░░] 80%
@@ -21,14 +21,16 @@ VITALS.JOY     [██████████] 100%
       
          ( Flame GameWidget )
          ( 1-Bit Dithered   )
-         ( Bunny Sprite     )
+         ( Godzilla Sprite  )
+         ( Dithered Breath  )
+         ( Ref: Godzila.webp)
          
       └                              ┘
 
 [ > EAT ]    [ > SLEEP ]    [ > PLAY ]
 
-> INITIALIZING VIRTUAL ENVIRONMENT...
-> COMPANION AWAKE.
+> INITIALIZING VIRTUAL HABITAT...
+> TITAN SPECIMEN AWAKE & OBSERVED.
 --------------------------------------------------
 MEMORY: 48KB/64KB  SECURED_SESSION  PID: 8832
 ==================================================
@@ -37,9 +39,9 @@ MEMORY: 48KB/64KB  SECURED_SESSION  PID: 8832
 
 ---
 
-## 2. Pet Store Screen (PETS_LAB)
+## 2. Kaiju Acquisition Screen (PETS_LAB)
 
-Where players acquire new pets using their credits.
+Where players acquire new Kaijus using their credits.
 
 ```text
 ==================================================
@@ -49,7 +51,7 @@ SYS: PETS_LAB // ACQUISITION          CR: 1,450
 AVAILABLE SPECIMENS:
 
 ┌──────────────────────────────────────────────┐
-│ ID: LEPUS-01   "Terminal Bunny"              │
+│ ID: TITAN-01   "Godzilla"                    │
 │ PRICE: 120 CR                                │
 │ STATUS: AVAILABLE                            │
 │                                              │
@@ -57,8 +59,8 @@ AVAILABLE SPECIMENS:
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ ID: FELIS-02   "Cyber Cat"                   │
-│ PRICE: 240 CR                                │
+│ ID: CYBER-02   "Cyber Godzilla"              │
+│ PRICE: 120 CR                                │
 │ STATUS: AVAILABLE                            │
 │                                              │
 │ [ > ACQUIRE ]                 [ > CANCEL ]   │
@@ -81,9 +83,9 @@ Managing items and consumables.
 SYS: STORAGE_MGR // INVENTORY         CAP: 14/50
 ==================================================
 
-ITEM_01: NUTRIENT_PELLET
+ITEM_01: HUMAN_SPHERE_BALL
 QTY: 14
-[ > USE_ITEM ]    [ > DISCARD ]
+[ > FEED_KAIJU ]    [ > DISCARD ]
 
 ITEM_02: CAFFEINE_STIM
 QTY: 3
@@ -145,16 +147,16 @@ Tracking pet growth and metrics.
 EVO_MGR // GROWTH TIMELINE
 ==================================================
 
-SPECIMEN: LEPUS-01
-CURRENT STAGE: ADULT (STAGE_03)
+SPECIMEN: TITAN-01
+CURRENT STAGE: ADULT TITAN (STAGE_03)
 
-[ EGG ] ---> [ BABY ] ---> [ ADULT ]
-             ( 12h )       ( 72h )
+[ EGG ] ---> [ HATCHLING ] ---> [ ADULT TITAN ]
+             ( 12h )            ( 72h )
 
 METRICS_LOG:
 - AVG_JOY: 92%
-- FEED_RATE: OPTIMAL
-- ILLNESS_EVENTS: 0
+- FEED_RATE: OPTIMAL (HUMAN CLUSTERS CONSUMED)
+- RAMPAGE_EVENTS: 0
 
 DNA INTEGRITY: 99.8% STABLE
 
@@ -180,8 +182,8 @@ Death or critical state (Rendered entirely with the Crimson emergency palette).
 ERR_SYS // CRITICAL FAILURE DETECTED
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-FATAL ERROR: VITALS_DEPLETED
-SPECIMEN: LEPUS-01
+FATAL ERROR: REACTOR_SHUTDOWN
+SPECIMEN: TITAN-01
 
 CAUSE: SATURATION = 0%, ENERGY = 0%
 TIME_OF_FAILURE: 14:32:11
@@ -219,8 +221,8 @@ SYS: STORE_MGR // HABITAT OUTFITTING   CR: 1,450
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│ ITEM: BASKETBALL_HOOP                        │
-│ TYPE: TOY                                    │
+│ ITEM: CRUSHED_TANK_TOY                       │
+│ TYPE: TOY_SMASH                              │
 │ BOOSTS: +15% JOY, -5% ENERGY                 │
 │ PRICE: 450 CR                                │
 │ [ > ACQUIRE ]                                │

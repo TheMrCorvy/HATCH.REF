@@ -1,10 +1,10 @@
-# Features: 05 Pet Lifecycle & Aging
+# Features: 05 Kaiju Lifecycle & Aging
 
 ## 1. Overview
 
-> **PoC Status**: Aging is **deferred to Phase 2+** (requires the Supabase backend). During the PoC, all pets remain in a static phase. The `age_in_days` field exists in the model but does not increment. Phase thresholds and durations come from the backend (`pet_lifecycle_config` table, per pet type) and are never hardcoded in the client.
+> **PoC Status**: Aging is **deferred to Phase 2+** (requires the Supabase backend). During the PoC, all Kaijus remain in a static phase. The `age_in_days` field exists in the model but does not increment. Phase thresholds and durations come from the backend (`pet_lifecycle_config` table, per pet type) and are never hardcoded in the client.
 
-The Unix Tamagotchi lifecycle is divided into **5 sequential phases**. Each phase unlocks or locks specific plugins, changes the pet's animations and personality responses, and affects the rate at which stats decay. The total lifespan of a pet is open-ended — an elder pet does not die, it simply enters a stable late-life state with altered behavior.
+The Unix Tamagotchi Kaiju lifecycle is divided into **5 sequential phases**. Each phase unlocks or locks specific plugins, changes the Kaiju's animations and personality responses, and affects the rate at which stats decay. The total lifespan of a Kaiju titan is open-ended — an elder Kaiju does not die, it simply enters a stable late-life state with altered behavior.
 
 ---
 
@@ -12,13 +12,13 @@ The Unix Tamagotchi lifecycle is divided into **5 sequential phases**. Each phas
 
 | Phase | Index | Suggested Duration (TBD) | `age_in_days` Range (TBD) | Description |
 |---|---|---|---|---|
-| **Baby** | 0 | ~1 day | 0 ≤ age < 1 | Freshly hatched. Highly dependent, rapid stat decay, minimal interaction set. |
-| **Child** | 1 | ~3 days | 1 ≤ age < 4 | Becomes playful and curious. School plugin unlocks. |
-| **Young** | 2 | ~7 days | 4 ≤ age < 11 | Near peak energy. University plugin unlocks. Light athletic events available. |
-| **Adult** | 3 | ~14 days | 11 ≤ age < 25 | Full action set. Work plugins unlock. School/university plugins lock. |
-| **Elder** | 4 | Indefinite | 25 ≤ age | Slower stat decay. Work plugins lock. Requires more care. Special elder interactions TBD. |
+| **Baby** | 0 | ~1 day | 0 ≤ age < 1 | Freshly hatched titan. Highly dependent, rapid stat decay, minimal interaction set. |
+| **Child** | 1 | ~3 days | 1 ≤ age < 4 | Juvenile titan. Becomes playful and stompy. Destruction Academy plugin unlocks. |
+| **Young** | 2 | ~7 days | 4 ≤ age < 11 | Sub-adult titan. Near peak energy. Advanced Demolition Study unlocks. Light athletic events available. |
+| **Adult** | 3 | ~14 days | 11 ≤ age < 25 | Full Apex Titan. City Destruction work plugins unlock. Study plugins lock. |
+| **Elder** | 4 | Indefinite | 25 ≤ age | Ancient Titan. Slower stat decay. City Destruction work plugins lock. Requires more care. |
 
-> All numeric values above are **TBD**. Final durations will be defined per pet type in the `pet_lifecycle_config` backend table. The values here are design reference points, not implementation targets.
+> All numeric values above are **TBD**. Final durations will be defined per Kaiju type in the `pet_lifecycle_config` backend table. The values here are design reference points, not implementation targets.
 
 ---
 
@@ -28,13 +28,13 @@ The backend can override any cell in this matrix via the `min_age_phase` / `max_
 
 | Plugin | Baby | Child | Young | Adult | Elder |
 |---|---|---|---|---|---|
-| `eat` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `sleep` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `play` | ❌ | ✅ | ✅ | ✅ | ✅ |
-| `school_study` | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `university_study` | ❌ | ❌ | ✅ | ❌ | ❌ |
-| `office_work` | ❌ | ❌ | ✅ | ✅ | ❌ |
-| `practice_basketball` | ❌ | ❌ | ✅ | ✅ | ❌ |
+| `eat` (Ball of Humans) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `sleep` (Dormancy) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `play` (Smash Toys) | ❌ | ✅ | ✅ | ✅ | ✅ |
+| `destruction_study` (Demolition Academy) | ❌ | ✅ | ✅ | ❌ | ❌ |
+| `advanced_demolition` (Advanced Demolition) | ❌ | ❌ | ✅ | ❌ | ❌ |
+| `city_destruction` (City Rampage Work) | ❌ | ❌ | ✅ | ✅ | ❌ |
+| `crush_tank` (Crush Tanks) | ❌ | ❌ | ✅ | ✅ | ❌ |
 | `hospital_recovery` | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
@@ -108,11 +108,11 @@ CREATE TABLE public.pet_lifecycle_config (
 
 -- Example seed data (all durations TBD)
 INSERT INTO public.pet_lifecycle_config VALUES
-('bunny', 0, 'baby',   0,  '{"hunger": 1.5, "energy": 1.5, "happiness": 1.5}'::jsonb, 'bunny_baby'),
-('bunny', 1, 'child',  1,  '{"hunger": 1.2, "energy": 1.2, "happiness": 1.2}'::jsonb, 'bunny_child'),
-('bunny', 2, 'young',  4,  '{"hunger": 1.0, "energy": 1.0, "happiness": 1.0}'::jsonb, 'bunny_young'),
-('bunny', 3, 'adult',  11, '{"hunger": 1.0, "energy": 1.0, "happiness": 1.0}'::jsonb, 'bunny_adult'),
-('bunny', 4, 'elder',  25, '{"hunger": 0.7, "energy": 0.7, "happiness": 0.8}'::jsonb, 'bunny_elder');
+('godzilla', 0, 'baby',   0,  '{"hunger": 1.5, "energy": 1.5, "happiness": 1.5}'::jsonb, 'godzilla_baby'),
+('godzilla', 1, 'child',  1,  '{"hunger": 1.2, "energy": 1.2, "happiness": 1.2}'::jsonb, 'godzilla_child'),
+('godzilla', 2, 'young',  4,  '{"hunger": 1.0, "energy": 1.0, "happiness": 1.0}'::jsonb, 'godzilla_young'),
+('godzilla', 3, 'adult',  11, '{"hunger": 1.0, "energy": 1.0, "happiness": 1.0}'::jsonb, 'godzilla_adult'),
+('godzilla', 4, 'elder',  25, '{"hunger": 0.7, "energy": 0.7, "happiness": 0.8}'::jsonb, 'godzilla_elder');
 ```
 
 ### Client-Side Phase Resolution
@@ -163,15 +163,15 @@ When multiple autonomous plugins could trigger simultaneously (e.g., a pet is bo
 |---|---|---|
 | 0–10 | Critical overrides — block all others | `hospital_recovery` |
 | 11–30 | High priority lifecycle | `sleep` (autonomous) |
-| 31–60 | Normal activity | `office_work`, `school_study`, `university_study` |
-| 61–100 | Low priority / optional | `practice_basketball` |
+| 31–60 | Normal activity | `city_destruction`, `destruction_study`, `advanced_demolition` |
+| 61–100 | Low priority / optional | `crush_tank` |
 
 ### `blocking_conditions` Format
 Each plugin can declare conditions that prevent it from running. These are evaluated server-side before broadcasting the active manifest:
 
 ```json
 {
-  "id": "office_work",
+  "id": "city_destruction",
   "priority": 50,
   "blocking_conditions": [
     { "condition": "is_sick",     "blocks": true },

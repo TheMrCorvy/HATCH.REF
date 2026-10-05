@@ -6,23 +6,24 @@ This document details the multi-frame bitmap spritesheet data structures, high-f
 
 ## 1. 1-Bit Dithered Sprite Design Rules
 
-1. **Pixel Art Format**: Pets are drawn as actual pixel art using PNG sprite sheets, rather than ASCII text characters.
-2. **Animation Sheets**: Every pet has a single PNG sprite sheet containing all frames for various animation states, organized in a consistent grid.
-3. **Framerate**: Animations run at smooth **30+ FPS** (with tweens, breathing, blinking, and particle effects).
-4. **Rendering Pipeline**: Sprites are drawn in a Flame game viewport at a low virtual resolution (e.g., 256×256) and upscaled using nearest-neighbor filtering to achieve crisp, chunky pixels. Shading and volume are added via a post-processing Bayer dithering fragment shader.
+1. **Pixel Art Format**: Kaijus are drawn as authentic pixel art using PNG sprite sheets, rather than ASCII text characters.
+2. **Animation Sheets**: Every Kaiju has a PNG sprite sheet containing all frames for its animation states (idle, eating, sleeping, rampaging/playing), organized in a consistent grid.
+3. **Framerate**: Animations run at smooth **30+ FPS** (with breathing cycles, dorsal fin glow tweens, and atomic breath particle dispersal).
+4. **Visual Standard**: The aesthetic benchmark is defined by `Desing References/Godzila.webp`, depicting Godzilla looming over urban skyscrapers while unleashing a dithered cone of atomic breath.
+5. **Rendering Pipeline**: Sprites are drawn in a Flame game viewport at a low virtual resolution (e.g., 256×256) and upscaled using nearest-neighbor filtering to achieve crisp, chunky pixels. Shading, volume, and energy blasts are processed via a Bayer dithering fragment shader.
 
 ---
 
 ## 2. Dart Spritesheet Models & Catalog (`lib/core/sprite_engine/`)
 
-The `PetDefinition` model references asset paths and grid data rather than hardcoded text strings.
+The `PetDefinition` model references asset paths and grid data:
 
 ```dart
 class PetDefinition {
   final String petType;
   final String displayName;
   final int priceCredits;
-  final String spriteSheetAsset; // e.g. 'bunny_spritesheet.png'
+  final String spriteSheetAsset; // e.g. 'kaijus/godzilla_spritesheet.png'
   final int frameWidth;
   final int frameHeight;
   final Map<String, SpriteAnimationData> actions;
@@ -45,49 +46,49 @@ class PetDefinition {
 
 ---
 
-## 3. Pet Definitions (e.g., `lib/core/sprite_engine/bunny_sprites.dart`)
+## 3. Kaiju Definitions (e.g., `lib/core/sprite_engine/godzilla_sprites.dart`)
 
 ```dart
 import 'package:flame/sprite.dart';
 
-final bunnyDefinition = PetDefinition(
-  petType: 'bunny',
-  displayName: 'Terminal Bunny',
+final godzillaDefinition = PetDefinition(
+  petType: 'godzilla',
+  displayName: 'Godzilla',
   priceCredits: 120,
-  spriteSheetAsset: 'pets/bunny_spritesheet.png',
-  frameWidth: 64,
-  frameHeight: 64,
+  spriteSheetAsset: 'kaijus/godzilla_spritesheet.png',
+  frameWidth: 128,
+  frameHeight: 128,
   actions: {
-    // Idle cycle row 0, 4 frames, 0.2s per frame
+    // Idle cycle: row 0, 4 frames, 0.25s per frame (subtle breathing & tail sway)
     'idle': SpriteAnimationData.sequenced(
       amount: 4,
-      stepTime: 0.2,
-      textureSize: Vector2(64, 64),
+      stepTime: 0.25,
+      textureSize: Vector2(128, 128),
       texturePosition: Vector2(0, 0),
     ),
 
-    // Eat cycle row 1, 4 frames
+    // Eat cycle: row 1, 4 frames (devouring a compressed ball of human people)
     'eating': SpriteAnimationData.sequenced(
       amount: 4,
-      stepTime: 0.15,
-      textureSize: Vector2(64, 64),
-      texturePosition: Vector2(0, 64),
-    ),
-
-    // Sleep cycle row 2, 2 frames
-    'sleeping': SpriteAnimationData.sequenced(
-      amount: 2,
-      stepTime: 0.5,
-      textureSize: Vector2(64, 64),
+      stepTime: 0.2,
+      textureSize: Vector2(128, 128),
       texturePosition: Vector2(0, 128),
     ),
 
-    // Play cycle row 3, 6 frames
+    // Sleep cycle: row 2, 2 frames (dormant slumber with smoke puff)
+    'sleeping': SpriteAnimationData.sequenced(
+      amount: 2,
+      stepTime: 0.6,
+      textureSize: Vector2(128, 128),
+      texturePosition: Vector2(0, 256),
+    ),
+
+    // Rampage / Play cycle: row 3, 6 frames (atomic breath sweep, matching Godzila.webp)
     'playing': SpriteAnimationData.sequenced(
       amount: 6,
-      stepTime: 0.1,
-      textureSize: Vector2(64, 64),
-      texturePosition: Vector2(0, 192),
+      stepTime: 0.12,
+      textureSize: Vector2(128, 128),
+      texturePosition: Vector2(0, 384),
     ),
   },
 );

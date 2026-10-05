@@ -7,26 +7,26 @@ The Unix Tamagotchi features a robust customization system designed around its 1
 The system supports several layers of cosmetic personalization for the Tactical 1-Bit Cyber-Specimen OS:
 
 1. **Room Palette Themes:** Swaps the dithering shader's `uColorLight` and `uColorDark` uniforms. 
-   - *Examples:* 'Game Boy Green', 'Amber Monitor', 'Blue Terminal', 'Classic Khaki'.
-2. **Pet Nicknames:** Custom names for the specimen (already implemented).
+   - *Examples:* 'Classic Khaki' (matching `Desing References/Godzila.webp`), 'Amber Monitor', 'Game Boy Green', 'Blue Terminal'.
+2. **Kaiju Designations:** Custom specimen names (e.g. `CRAZY_DIAMOND_PULSE`, `GODZILLA_01`).
 3. **Terminal Boot Messages:** Custom welcome text displayed in the log panel upon startup.
 4. **Room Ambient Effects:** Shader parameters controlling fog density, scan lines, and CRT curvature.
-5. **Future Additions:** Pet accessories, pet skins (alternative spritesheets).
+5. **Future Additions:** Titan accessories, Kaiju skins (alternative spritesheets).
 
 ### 1.1 PoC Scope
 For the initial Proof of Concept (PoC), the following elements are in scope:
 - Room Palette Themes
-- Pet Nicknames
+- Kaiju Designations
 - Terminal Boot Messages
 
-**Deferred to post-PoC:** Room Ambient Effects, Pet accessories, and Pet skins.
+**Deferred to post-PoC:** Room Ambient Effects, Titan accessories, and Kaiju skins.
 
 ## 2. Per-User Rendering in Shared Groups
 
 The Unix Tamagotchi employs a client-side rendering approach for most customizations. In a multiplayer group setting (COUPLE, FAMILY, FRIENDS):
 
 - **Visual Customizations (Themes, Messages):** Each member sees their *own* customizations. For example, User A might view the specimen in 'Amber Monitor' mode, while User B simultaneously views the same specimen in 'Game Boy Green'. 
-- **Shared Customizations (Nicknames):** Pet nicknames are synchronized globally within the group; all members see the same nickname.
+- **Shared Customizations (Nicknames):** Kaiju nicknames are synchronized globally within the group; all members see the same nickname.
 
 ## 3. Customization Selector UI
 
@@ -47,7 +47,7 @@ The customization interface maintains the industrial terminal aesthetic, utilizi
   MSG: "WAKE UP, NEO..."           [ EDIT ]
 
 > SPECIMEN_DESIGNATION:
-  ID: "RUSTY"                      [ RENAME ]
+  ID: "CRAZY_DIAMOND_PULSE"        [ RENAME ]
 
 =================================================
 [ APPLY_CHANGES ]    [ REVERT_TO_DEFAULT ]

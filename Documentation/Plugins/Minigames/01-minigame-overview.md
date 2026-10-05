@@ -82,12 +82,12 @@ erDiagram
 
 | Minigame ID | Display Name | Category | Concept |
 | :--- | :--- | :--- | :--- |
-| `throw_basket` | Basketball Throw | SOLO | Tap rhythm to score baskets within a time limit. |
-| `parachute_drop` | Parachute Drop | SOLO | Navigate the pet's parachute through obstacles. |
-| `shark_swim` | Shark Swim | SOLO_VS_PC | Race the PC to the finish while dodging sharks. |
-| `asteroid_dodge` | Asteroid Dodge | SOLO_VS_PC | Pilot the pet pod past asteroids; PC has a fixed path. |
-| `relay_race` | Relay Race | PVP | Race against a ghost opponent's recorded run. |
-| `fetch_duel` | Fetch Duel | PVP | Compete against a ghost to collect the most relics. |
+| `tank_toss` | Tank Toss | SOLO | Tap rhythm to fling military tanks at defense bunkers. |
+| `orbital_reentry` | Atmospheric Drop | SOLO | Guide Kaiju descent through missile interceptor clouds. |
+| `deep_sea_trench` | Trench Hunter | SOLO_VS_PC | Race against military AI submersibles while dodging depth charges. |
+| `missile_barrage_dodge` | Missile Barrage | SOLO_VS_PC | Evade incoming military surface-to-air missile waves. |
+| `skyline_demolition_race` | Demolition Race | PVP | Compete against a ghost Titan to level skyscrapers within time limit. |
+| `reactor_core_harvest` | Reactor Harvest | PVP | Race against a ghost Titan to crack open nuclear reactor silos. |
 
 ---
 
@@ -100,14 +100,14 @@ lib/plugins/
     ├── interfaces/
     │   └── minigame_plugin.dart          # Abstract contract (extends UserActionPlugin)
     ├── solo/
-    │   ├── throw_basket_minigame.dart
-    │   └── parachute_drop_minigame.dart
+    │   ├── tank_toss_minigame.dart
+    │   └── orbital_reentry_minigame.dart
     ├── solo_vs_pc/
-    │   ├── shark_swim_minigame.dart
-    │   └── asteroid_dodge_minigame.dart
+    │   ├── deep_sea_trench_minigame.dart
+    │   └── missile_barrage_dodge_minigame.dart
     ├── pvp/
-    │   ├── relay_race_minigame.dart
-    │   └── fetch_duel_minigame.dart
+    │   ├── skyline_demolition_race_minigame.dart
+    │   └── reactor_core_harvest_minigame.dart
     └── shared/
         ├── ghost_player_component.dart   # Flame component replaying a ghost recording
         ├── minigame_session_screen.dart  # Full-screen Flame host widget

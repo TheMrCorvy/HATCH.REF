@@ -16,15 +16,15 @@ flowchart TD
     AppResume([App Reopened by Player]) --> ReadTimestamps["Read Last Interaction Timestamp & Current Time"]
     ReadTimestamps --> CheckAutoActions["Query Active Autonomous Action Plugins (age-eligible only)"]
 
-    CheckAutoActions --> EvalWork{"Pet is ADULT phase\n& plugin priority allows?"}
-    EvalWork -->|Yes| CalcWork["Compute Hours Worked\nCredits Earned = hours * wage_rate\nEnergy Drained = hours * energy_rate"]
-    EvalWork -->|No| CheckSick{"Is pet ill?"}
+    CheckAutoActions --> EvalWork{"Kaiju is ADULT phase\n& plugin priority allows?"}
+    EvalWork -->|Yes| CalcWork["Compute Hours Rampaged\nCredits Earned = hours * bounty_rate\nEnergy Drained = hours * energy_rate"]
+    EvalWork -->|No| CheckSick{"Is Kaiju injured?"}
 
     CalcWork --> UpdateStats["Apply Credit & Stat Deltas to Local State"]
     CheckSick -->|Yes| SetHospital["Switch Scenario to 'hospital_bed'\n(priority 0 — overrides all others)"]
     CheckSick -->|No| NormalRoom["Keep 'default_room'"]
 
-    UpdateStats --> ShowSummary["Display Notification:\n'> [OFFICE] <pet> worked 4 hours and earned 40 credits!'"]
+    UpdateStats --> ShowSummary["Display Notification:\n'> [RAMPAGE] <kaiju> destroyed 4 city sectors and earned 40 credits!'"]
 ```
 
 ---
@@ -76,18 +76,18 @@ class AutonomousExecutionResult {
 
 ---
 
-## 3. Implementation: Office Work Plugin (`lib/plugins/non_user_triggered_actions/office_work_action_plugin.dart`)
+## 3. Implementation: City Destruction Plugin (`lib/plugins/non_user_triggered_actions/city_destruction_action_plugin.dart`)
 
 ```dart
-class OfficeWorkActionPlugin extends AutonomousActionPlugin {
+class CityDestructionActionPlugin extends AutonomousActionPlugin {
   @override
-  String get id => 'office_work';
+  String get id => 'city_destruction';
 
   @override
-  String get displayName => 'Office Job';
+  String get displayName => 'City Rampage';
 
   @override
-  String get defaultScenarioId => 'corporate_cubicle';
+  String get defaultScenarioId => 'metropolis_ruins';
 
   @override
   bool shouldTrigger({
@@ -98,7 +98,7 @@ class OfficeWorkActionPlugin extends AutonomousActionPlugin {
     // Condition 1: Must be enabled by backend
     if (backendParams['is_enabled'] != true) return false;
 
-    // Condition 2: Age gate — office work requires ADULT phase
+    // Condition 2: Age gate — city destruction requires ADULT phase
     if (!isAgeEligible(pet.currentPhase)) return false;
 
     // Condition 3: Sufficient energy
@@ -114,13 +114,13 @@ class OfficeWorkActionPlugin extends AutonomousActionPlugin {
     required DateTime endTime,
     required Map<String, dynamic> backendParams,
   }) {
-    final wagePerHr = (backendParams['wage_per_hour'] as num?)?.toInt() ?? 10;
+    final bountyPerHr = (backendParams['bounty_per_hour'] as num?)?.toInt() ?? 10;
     final maxShiftHrs = (backendParams['max_shift_hours'] as num?)?.toDouble() ?? 8.0;
 
     final elapsedHours = endTime.difference(startTime).inMinutes / 60.0;
     final actualHoursWorked = elapsedHours.clamp(0.0, maxShiftHrs);
 
-    final credits = (actualHoursWorked * wagePerHr).round();
+    final credits = (actualHoursWorked * bountyPerHr).round();
     final energyDrain = -(actualHoursWorked * 6).round();
     final hungerDrain = -(actualHoursWorked * 4).round();
 
@@ -128,8 +128,8 @@ class OfficeWorkActionPlugin extends AutonomousActionPlugin {
       creditsEarned: credits,
       energyDelta: energyDrain,
       hungerDelta: hungerDrain,
-      statusSummary: '${pet.nickname} completed a ${actualHoursWorked.toStringAsFixed(1)}hr work shift and earned $credits credits!',
-      overrideScenarioId: 'corporate_cubicle',
+      statusSummary: '${pet.nickname} leveled urban sectors over a ${actualHoursWorked.toStringAsFixed(1)}hr rampage and earned $credits credits!',
+      overrideScenarioId: 'metropolis_ruins',
     );
   }
 
@@ -142,8 +142,8 @@ class OfficeWorkActionPlugin extends AutonomousActionPlugin {
     // Fallback if manually inspected
     return ActionResult(
       success: true,
-      message: '${currentPet.nickname} is currently at the office working.',
-      animationSequence: 'typing_at_keyboard',
+      message: '${currentPet.nickname} is currently rampaging through the metropolis.',
+      animationSequence: 'atomic_breath_sweep',
       targetScenarioId: defaultScenarioId,
       duration: const Duration(seconds: 4),
     );
@@ -158,24 +158,24 @@ class OfficeWorkActionPlugin extends AutonomousActionPlugin {
 Rather than running heavy battery-consuming background Dart isolates:
 1. When the player exits the app, the current `DateTime.now()` is saved to local storage.
 2. When the app returns to the foreground (`AppLifecycleState.resumed`), `PluginRegistry` evaluates all autonomous actions against the elapsed time interval.
-3. Rewards and stat adjustments apply instantly, and a terminal dialog welcomes the player back with their pet's accomplishments. Actions will update the Flame viewport to play the appropriate 1-bit dithered sprite animation sequences (e.g. `typing_at_keyboard`).
+3. Rewards and stat adjustments apply instantly, and a terminal dialog welcomes the player back with their Kaiju's demolition feats. Actions will update the Flame viewport to play the appropriate 1-bit dithered sprite animation sequences (e.g. `atomic_breath_sweep` or `stomping_skyscrapers`, as illustrated in `Desing References/Godzila.webp`).
 
 ---
 
-## 5. Age-Gated Plugin Example: School Study
+## 5. Age-Gated Plugin Example: Destruction Study
 
-The `school_study` plugin demonstrates how age gates are enforced on the Dart side. The backend provides the gate as part of the capability manifest; the client enforces it via `isAgeEligible`.
+The `destruction_study` plugin demonstrates how age gates are enforced on the Dart side for juvenile Kaijus learning how to destroy cities. The backend provides the gate as part of the capability manifest; the client enforces it via `isAgeEligible`.
 
 ```dart
-class SchoolStudyActionPlugin extends AutonomousActionPlugin {
+class DestructionStudyActionPlugin extends AutonomousActionPlugin {
   @override
-  String get id => 'school_study';
+  String get id => 'destruction_study';
 
   @override
-  String get displayName => 'Go to School';
+  String get displayName => 'Demolition Academy';
 
   @override
-  String get defaultScenarioId => 'school_desk';
+  String get defaultScenarioId => 'destruction_simulator';
 
   // Available during child and young phases only
   @override
@@ -216,11 +216,11 @@ class SchoolStudyActionPlugin extends AutonomousActionPlugin {
       energyDelta: -(cappedHours * 4).round(),
       happinessDelta: (cappedHours * 2).round(),
       statusSummary:
-          '> [SCHOOL] ${pet.nickname} attended ${cappedHours.toStringAsFixed(1)}h of class. INTEL +${(cappedHours * intelligenceGain).round()}.',
+          '> [ACADEMY] ${pet.nickname} studied ${cappedHours.toStringAsFixed(1)}h of urban demolition tactics. INTEL +${(cappedHours * intelligenceGain).round()}.',
     );
   }
 }
 ```
 
-> `university_study` follows the same pattern with `minAgePhase: AgePhase.young`, `maxAgePhase: AgePhase.young`, and a higher `intel_per_hour` reward. See `Features/05-pet-lifecycle-and-aging.md` for the full plugin availability matrix.
+> `advanced_demolition` follows the same pattern with `minAgePhase: AgePhase.young`, `maxAgePhase: AgePhase.young`, and a higher `intel_per_hour` reward. See `Features/05-pet-lifecycle-and-aging.md` for the full plugin availability matrix.
 

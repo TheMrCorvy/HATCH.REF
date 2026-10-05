@@ -1,15 +1,15 @@
-# Features: 02 Pet Store and Credits
+# Features: 02 Kaiju Store and Credits
 
-This document specifies the in-game pet store, credit balance economics, and dynamic acquisition rules for the **Unix Tamagotchi**.
+This document specifies the in-game Kaiju store, credit balance economics, and dynamic acquisition rules for the **Unix Tamagotchi**.
 
 ---
 
 ## 1. Credit Economy & Dynamic Capacity Rules
 
 1. **Starting Capital**: The player begins the game with **240 credits**.
-2. **Unbounded Pet Ownership (Credit-Bound Only)**:
-   - There is no server-side limit on how many pets a player can own.
-   - A player may adopt as many pets as their credit balance allows. With 240 starting credits and pets at 120 each, a new player can adopt up to 2 pets immediately ($2 \times 120 = 240$). As credits accumulate through future work actions or IAP, the family grows without any code changes.
+2. **Unbounded Kaiju Ownership (Credit-Bound Only)**:
+   - There is no server-side limit on how many Kaiju specimens a player can own.
+   - A player may adopt as many Kaijus as their credit balance allows. With 240 starting credits and Kaijus at 120 each, a new player can adopt up to 2 specimens immediately ($2 \times 120 = 240$). As credits accumulate through city destruction work actions or IAP, the roster grows without any code changes.
 3. **PoC Fixed Recharge**: For Day 1 PoC, there are no credit top-ups; players spend from their initial 240 credit grant.
 
 ---
@@ -18,8 +18,8 @@ This document specifies the in-game pet store, credit balance economics, and dyn
 
 | Item ID | Pet Type | Display Name | Cost | Traits |
 | :--- | :--- | :--- | :--- | :--- |
-| `item_bunny` | `bunny` | **Bunny** | 120 Credits | Gentle companion, balanced stats, 1-bit dithered pixel sprite. |
-| `item_cat` | `cat` | **Cyber Cat** | 120 Credits | Playful hacker feline, purring animations, higher energy drain, 1-bit dithered pixel sprite. |
+| `item_godzilla` | `godzilla` | **Godzilla** | 120 Credits | Apex saurian titan, dorsal plates, atomic breath animations, balanced stats, 1-bit dithered pixel sprite (see `Desing References/Godzila.webp`). |
+| `item_cyber_godzilla` | `cyber_godzilla` | **Cyber Godzilla** | 120 Credits | Cybernetic apex titan, steel hull, laser blast animations, higher energy drain, 1-bit dithered pixel sprite. |
 
 ---
 

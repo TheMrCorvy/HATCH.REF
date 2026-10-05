@@ -13,8 +13,8 @@ This document establishes the strict boundaries of the Initial Proof of Concept 
 | **Backend & Cloud** | 🔴 100% Offline (Local Hive) | 🟢 Supabase PostgreSQL & Realtime | Zero cloud infrastructure required on Day 1. |
 | **Pet Capacity** | 🟢 **Unbounded (Credit-bound only — no server quota)** | — | Players may own as many pets as their credits allow. No backend limit field exists. |
 | **Starting Economy** | 🟢 Fixed 240 Credits | 🟡 In-App Purchases, daily quests | Pre-calculates exact initial acquisition testing. |
-| **Core Actions** | 🟢 Eat, Sleep, Play (As Plugins) | 🟡 Basketball, Relic Search, Careers | Core loop proven with zero friction. |
-| **Scenarios** | 🟢 Default Room Plugin | 🟡 Hospital Bed, Sports Arena | Proves scenario viewport rendering. |
+| **Core Actions** | 🟢 Eat, Sleep, Play (As Plugins) | 🟡 Crush Tanks, Relic Search, City Rampage Shifts | Core loop proven with zero friction. |
+| **Scenarios** | 🟢 Default Room Plugin | 🟡 Metropolis Ruins, Containment Ward | Proves scenario viewport rendering. |
 | **Pet Lifecycle** | 🟡 **Static UI teaser with mock data (EVO_MGR screen)** | 🟢 **Aging, Autonomous Work, Illness logic** | Keeps early state models minimal. |
 | **Visual System** | 🟢 1-Bit Dithered Visual System | 🟡 Additional stippling effects | Proves the core dithering and terminal UI aesthetics. |
 | **Social** | 🔴 Solo play only | 🟢 Collaborative Multiplayer Care (couple-first) | Delays complex state sync to Phase 4. Primary target: couples. Families & friends also supported. |
@@ -44,9 +44,9 @@ gantt
 
     section Phase 3: iOS & Autonomous Actions
     iOS Platform Support             :p3_0, 2027-02, 2027-03
-    Pet Aging & Career Studying      :p3_1, 2027-03, 2027-04
-    Office Work Shift Plugin         :p3_2, 2027-04, 2027-05
-    Hospital Bed Recovery Scenario   :p3_3, 2027-04, 2027-05
+    Kaiju Aging & Demolition Study   :p3_1, 2027-03, 2027-04
+    City Destruction Work Plugin     :p3_2, 2027-04, 2027-05
+    Clinic Recovery Scenario         :p3_3, 2027-04, 2027-05
 
     section Phase 4: Couple Mode (Flagship) & IAP
     Couple Mode — NFC/BLE Pairing    :crit, p4_0, 2027-05, 2027-06

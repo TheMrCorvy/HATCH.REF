@@ -78,18 +78,18 @@ INSERT INTO public.action_plugins
      target_scenario_id, min_age_phase, max_age_phase, priority, blocking_conditions, parameters)
 VALUES
 (
-    'throw_basket',
-    'Basketball Throw',
+    'tank_toss',
+    'Tank Toss',
     'MINIGAME', false, NULL, NULL,
-    'basketball_court', 'child', NULL, 60,
+    'metropolis_ruins', 'child', NULL, 60,
     '[{"condition": "is_sick", "blocks": true}]'::jsonb,
     '{"score_threshold": 50, "lives": 3, "obstacle_density": "medium"}'::jsonb
 ),
 (
-    'relay_race',
-    'Relay Race',
+    'skyline_demolition_race',
+    'Demolition Race',
     'MINIGAME', false, NULL, NULL,
-    'default_room', 'child', NULL, 60,
+    'metropolis_ruins', 'child', NULL, 60,
     '[{"condition": "is_sick", "blocks": true}]'::jsonb,
     '{}'::jsonb
 );
@@ -100,7 +100,7 @@ INSERT INTO public.minigame_plugins
      ghost_pool_strategy, ghost_capture_on_pass, reward_config)
 VALUES
 (
-    'throw_basket',
+    'tank_toss',
     'SOLO',
     60,
     20,
@@ -112,7 +112,7 @@ VALUES
     }'::jsonb
 ),
 (
-    'relay_race',
+    'skyline_demolition_race',
     'PVP',
     60,
     20,
@@ -141,7 +141,7 @@ flowchart TD
 
     subgraph Flutter["Flutter Client"]
         Manifest["PluginRegistry fetches\ncapability manifest on handshake"]
-        UI["Dynamic button bar renders\n[ RELAY_RACE ] alongside Eat, Sleep, Play"]
+        UI["Dynamic button bar renders\n[ DEMOLITION_RACE ] alongside Eat, Sleep, Play"]
     end
 
     CreateAction --> CreateMinigame --> Enable

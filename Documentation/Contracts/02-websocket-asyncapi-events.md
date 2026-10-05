@@ -33,12 +33,12 @@ Emitted when a game manager toggles an action plugin or edits event parameters i
   "event": "PLUGIN_MANIFEST_UPDATED",
   "topic": "public:plugins",
   "payload": {
-    "pluginId": "practice_basketball",
+    "pluginId": "city_destruction",
     "isEnabled": true,
     "validUntil": "2026-10-05T23:59:59.000Z",
-    "targetScenarioId": "basketball_court",
+    "targetScenarioId": "metropolis_ruins",
     "parameters": {
-      "credit_reward": 20,
+      "credit_reward": 50,
       "min_energy": 25
     },
     "timestamp": "2026-09-27T12:00:00.000Z"
@@ -49,7 +49,7 @@ Emitted when a game manager toggles an action plugin or edits event parameters i
 ---
 
 ### Event B: `PET_SCENARIO_TRANSITIONED` (Private Channel)
-Emitted when a pet's environment scenario changes (e.g. transferred to clinic bed or sports court).
+Emitted when a Kaiju's environment scenario changes (e.g. deployed to metropolis ruins or medical containment pod).
 
 ```json
 {

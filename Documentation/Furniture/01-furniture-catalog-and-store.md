@@ -6,6 +6,8 @@ The Furniture Store module (accessible via `STORE_MGR // FURNITURE.DAT`) adheres
 
 > [!NOTE] 
 > The UI must convey an industrial, CLI-driven procurement system rather than a friendly retail store.
+>
+> In keeping with the retro-surreal Tamagotchi concept, giant Kaijus (like Godzilla) reside inside their terminal habitat room alongside their furniture — an oversized bed (`SLEEP_POD`), chair/couch (`COUCH_MOD`), desktop workstation (`WORK_STN`), kitchen (`KITCH_UNIT`), lamp (`NEON_LAMP`), and hydration dispenser (`HYDRA_DISP`). The furniture serves as functional, scaled furnishings for the massive titan living in the room.
 
 ## 2. Furniture Catalog
 

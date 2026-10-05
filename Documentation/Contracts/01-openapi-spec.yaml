@@ -58,7 +58,7 @@ paths:
               properties:
                 actionId:
                   type: string
-                  example: practice_basketball
+                  example: city_destruction
       responses:
         '200':
           content:
@@ -68,7 +68,7 @@ paths:
 
   /store/purchase:
     post:
-      summary: Spend credits to adopt a new digital pet
+      summary: Spend credits to adopt a new digital Kaiju
       requestBody:
         required: true
         content:
@@ -79,7 +79,7 @@ paths:
               properties:
                 petType:
                   type: string
-                  enum: [bunny, cat]
+                  enum: [godzilla, cyber_godzilla]
                 nickname:
                   type: string
       responses:
@@ -143,10 +143,10 @@ components:
       properties:
         id:
           type: string
-          example: practice_basketball
+          example: city_destruction
         displayName:
           type: string
-          example: Basketball
+          example: City Rampage
         actionType:
           type: string
           enum: [USER_TRIGGERED, AUTONOMOUS]
@@ -162,7 +162,7 @@ components:
           nullable: true
         targetScenarioId:
           type: string
-          example: basketball_court
+          example: metropolis_ruins
         parameters:
           type: object
 
@@ -171,10 +171,10 @@ components:
       properties:
         id:
           type: string
-          example: hospital_bed
+          example: metropolis_ruins
         displayName:
           type: string
-          example: Clinic Recovery Ward
+          example: Metropolis Ruins Destruction Zone
         isEnabled:
           type: boolean
         parameters:

@@ -38,9 +38,9 @@ The shared digital pet's 1-bit dithered animations and behavioral logic shift de
   - **Chore Assignment**: The terminal can assign care schedules (e.g., rotation for feeding and cleaning).
   - **Parental Controls**: Limits on when children can interact with the pet (e.g., sleep mode during school hours).
 - **Friends (TBD)**:
-  - **Competitive Mini-Events**: "Pet Olympics" and skill-based trials.
-  - **Social Leaderboards**: Tracking which member has contributed the most care points.
-  - **Pet Visiting**: Allowing the pet to momentarily visit other friend-groups.
+  - **Competitive Mini-Events**: "Kaiju Destruction Trials" and skill-based rampage challenges.
+  - **Social Leaderboards**: Tracking which member has contributed the most care and containment points.
+  - **Pet Visiting**: Allowing the Kaiju to momentarily visit or raid other friend-groups' containment sectors.
 
 ## 4. UI Differentiation by Group Type
 The industrial terminal interface subtly reconfigures its display based on the group type.
@@ -50,9 +50,9 @@ The industrial terminal interface subtly reconfigures its display based on the g
   - *Family*: `> INITIALIZING FAMILY_UNIT PROTOCOL...`
   - *Friends*: `> INITIALIZING SQUAD PROTOCOL...`
 - **Header Labels**: The active session header reflects the topology.
-  - `[ PAIR_BOND: LEPUS-01 ]`
-  - `[ FAMILY_UNIT: LEPUS-01 ]`
-  - `[ SQUAD: LEPUS-01 ]`
+  - `[ PAIR_BOND: TITAN-01 ]`
+  - `[ FAMILY_UNIT: TITAN-01 ]`
+  - `[ SQUAD: TITAN-01 ]`
 - **Decorative Elements**: Hazard caution stripes and camera reticles (`┌ ┐ └ ┘`) may shift in accent color distribution or pattern density depending on the group type to subconsciously orient the users.
 
 ## 5. Backend Configuration

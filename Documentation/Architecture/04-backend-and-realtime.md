@@ -23,10 +23,10 @@ sequenceDiagram
     ClientSDK-->>Player: Populates PluginRegistry
 
     Note over Manager,Player: Dynamic Operation (No App Update)
-    Manager->>Postgres: UPDATE action_plugins SET is_enabled = true WHERE id = 'practice_basketball'
+    Manager->>Postgres: UPDATE action_plugins SET is_enabled = true WHERE id = 'city_destruction'
     Postgres-->>Realtime: Logical Replication Change Event
     Realtime-->>Player: Broadcast 'plugin:updated'
-    Player->>Player: Injects [ BASKETBALL ] bracket button into UI automatically!
+    Player->>Player: Injects [ CITY RAMPAGE ] bracket button into UI automatically!
 ```
 
 ---

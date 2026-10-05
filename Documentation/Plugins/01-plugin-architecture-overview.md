@@ -17,9 +17,9 @@ In **Unix Tamagotchi**, all capabilities are implemented as **modular plugins** 
 ```mermaid
 flowchart TD
     subgraph Codebase["Flutter App Codebase (lib/plugins/)"]
-        DormantActions["Dormant User Actions\n(Basketball, Item Search, Eat, Play)"]
-        DormantAuto["Dormant Autonomous Actions\n(Work Shift, Career Study)"]
-        DormantScenarios["Dormant Scenarios\n(Terminal Room, Hospital Bed, Basketball Field)"]
+        DormantActions["Dormant User Actions\n(Crush Tanks, Item Search, Eat Ball of Humans, Play)"]
+        DormantAuto["Dormant Autonomous Actions\n(City Rampage Work, Demolition Study)"]
+        DormantScenarios["Dormant Scenarios\n(Terminal Habitat Room, Metropolis Ruins, Clinic Ward)"]
         Registry["PluginRegistry (Service Locator)"]
         DormantActions --> Registry
         DormantAuto --> Registry
@@ -54,21 +54,22 @@ lib/plugins/
 │   └── scenario_plugin.dart              # Contract for visual rooms & environments
 │
 ├── user_triggered_actions/               # User-initiated interactions
-│   ├── eat_action_plugin.dart            # Core action (PoC)
-│   ├── sleep_action_plugin.dart          # Core action (PoC)
-│   ├── play_action_plugin.dart           # Core action (PoC)
-│   ├── basketball_action_plugin.dart     # Event action (Practice Basketball)
+│   ├── eat_action_plugin.dart            # Core action: Devour ball of human people (PoC)
+│   ├── sleep_action_plugin.dart          # Core action: Kaiju slumber / dormancy (PoC)
+│   ├── play_action_plugin.dart           # Core action: Demolition practice / smash toys (PoC)
+│   ├── crush_tank_action_plugin.dart     # Event action (Crush Tanks)
 │   └── scavenge_action_plugin.dart       # Event action (Search for Relic)
 │
 ├── non_user_triggered_actions/           # Autonomous / Condition-triggered actions
-│   ├── office_work_action_plugin.dart    # Adult pet working shift (earns credits)
-│   ├── career_study_action_plugin.dart   # Pet studying to unlock job tiers
-│   └── hospital_recovery_plugin.dart     # Sick pet recovering in hospital bed
+│   ├── city_destruction_action_plugin.dart # Adult Kaiju rampage destroying cities (earns credits)
+│   ├── destruction_study_action_plugin.dart # Kaiju studying urban demolition tactics
+│   └── hospital_recovery_plugin.dart     # Injured Kaiju recovering in containment clinic
 │
 └── scenarios/                            # Dynamic room environments & layouts
-    ├── default_terminal_room.dart        # Core scenario (PoC)
+    ├── default_terminal_room.dart        # Habitat room with bed, chair, desk, kitchen (PoC)
+    ├── metropolis_ruins_scenario.dart    # Urban cityscape demolition environment
     ├── hospital_bed_scenario.dart        # Medical recovery environment
-    └── basketball_court_scenario.dart    # Sports stadium environment
+    └── containment_silo_scenario.dart    # Sub-zero containment silo environment
 ```
 
 ---
@@ -99,10 +100,10 @@ import '../../models/age_phase.dart';
 enum ActionType { userTriggered, autonomous }
 
 abstract class ActionPlugin {
-  String get id;             // Unique identifier matching backend key (e.g. 'practice_basketball')
-  String get displayName;    // User-facing label (e.g. 'Practice Basketball')
+  String get id;             // Unique identifier matching backend key (e.g. 'city_destruction')
+  String get displayName;    // User-facing label (e.g. 'City Rampage')
   ActionType get actionType; // User-triggered or autonomous
-  String get defaultScenarioId; // Default scenario (e.g. 'basketball_court')
+  String get defaultScenarioId; // Default scenario (e.g. 'metropolis_ruins')
 
   // Age gates — null means no restriction on that bound
   AgePhase? get minAgePhase => null;
@@ -161,7 +162,7 @@ class ActionResult {
 import 'package:flame/components.dart';
 
 abstract class ScenarioPlugin {
-  String get id; // e.g. 'hospital_bed', 'basketball_court'
+  String get id; // e.g. 'hospital_bed', 'metropolis_ruins'
   String get displayName;
 
   /// Builds the 1-bit dithered scene for the Flame engine viewport.

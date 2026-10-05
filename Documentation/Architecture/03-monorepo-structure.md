@@ -19,15 +19,15 @@ tamagotchi/
 │   │   │   ├── plugins/                  # DORMANT ACTION & SCENARIO PLUGINS
 │   │   │   │   ├── plugin_registry.dart  # Central plugin registry
 │   │   │   │   ├── interfaces/           # Plugin abstract contracts
-│   │   │   │   ├── user_triggered_actions/   # Eat, Sleep, Play, Basketball
-│   │   │   │   ├── non_user_triggered_actions/ # Work, Career Study, Hospital
-│   │   │   │   └── scenarios/            # Terminal Room, Hospital Bed, Arena
+│   │   │   │   ├── user_triggered_actions/   # Eat (Human Ball), Sleep, Play
+│   │   │   │   ├── non_user_triggered_actions/ # City Destruction, Demolition Study
+│   │   │   │   └── scenarios/            # Terminal Room, Metropolis Ruins, Containment
 │   │   │   │
 │   │   │   ├── features/                 # Screen feature modules
-│   │   │   │   ├── room/                 # Pet Room viewport & action bar
-│   │   │   │   ├── store/                # Dynamic pet store & credits
-│   │   │   │   ├── switch/               # Pet switcher & inventory
-│   │   │   │   └── multiplayer/          # Shared pet care logic
+│   │   │   │   ├── room/                 # Kaiju Room viewport & action bar
+│   │   │   │   ├── store/                # Dynamic Kaiju store & credits
+│   │   │   │   ├── switch/               # Kaiju switcher & inventory
+│   │   │   │   └── multiplayer/          # Shared Kaiju care logic
 │   │   │   │
 │   │   │   ├── core/                     # Core utilities & design system
 │   │   │   │   ├── theme/                # Industrial Terminal Palette & Styling
@@ -60,7 +60,7 @@ tamagotchi/
 
 ```yaml
 name: tamagotchi_mobile
-description: "Unix Tamagotchi - Tactical 1-Bit Cyber-Specimen Digital Pet"
+description: "Unix Tamagotchi - Tactical 1-Bit Kaiju / Titan Companion"
 publish_to: "none"
 version: 1.0.0+1
 

@@ -2,7 +2,7 @@
 
 Welcome to the comprehensive technical documentation for the **Unix Tamagotchi** project.
 
-This project is a multiplayer digital pet mobile game built **100% in Flutter and Flame (Dart 3.x)** with a "Tactical 1-Bit Cyber-Specimen OS" aesthetic, **primarily marketed toward couples** who share a virtual pet together. The application features an extensible **Action & Scenario Plugin Engine**, a unique visual style combining 1-bit dithered pixel art with an industrial terminal UI, and dynamic backend orchestration.
+This project is a multiplayer digital companion mobile game built **100% in Flutter and Flame (Dart 3.x)** with a "Tactical 1-Bit Cyber-Specimen OS" aesthetic, **primarily marketed toward couples** who share and raise a giant Kaiju specimen together. Instead of conventional domestic animals, the specimens are towering Kaijus from the Godzillaverse (taking strong visual reference from `Desing References/Godzila.webp`), living inside an oversized terminal habitat furnished with their bed, chair, desktop, and kitchen. For nutrition, the Kaiju devours a compressed ball of human people; for work, it carries out shifts destroying cities; and for study, it learns urban demolition tactics. The application features an extensible **Action & Scenario Plugin Engine**, a unique visual style combining 1-bit dithered pixel art with an industrial terminal UI, and dynamic backend orchestration.
 
 ---
 
@@ -22,9 +22,9 @@ Documentation/
 │
 ├── Plugins/                               # Action & Scenario Plugin Architecture
 │   ├── 01-plugin-architecture-overview.md # Plugin interfaces, registry, lifecycle & discovery
-│   ├── 02-user-triggered-actions.md       # PoC core (Eat, Sleep, Play) + event actions (Basketball)
-│   ├── 03-non-user-triggered-actions.md   # Autonomous actions (Work, Study, Career, Age growth)
-│   ├── 04-scenarios-and-environments.md   # Dynamic rooms (Terminal Room, Hospital Bed, Sports Field)
+│   ├── 02-user-triggered-actions.md       # PoC core (Eat Ball of Humans, Sleep, Play) + event actions (Crush Tanks)
+│   ├── 03-non-user-triggered-actions.md   # Autonomous actions (City Rampage Work, Urban Demolition Study, Age growth)
+│   ├── 04-scenarios-and-environments.md   # Dynamic environments (Terminal Habitat Room, Metropolis Ruins, Clinic Ward)
 │   ├── 05-backend-control-and-schemas.md  # Backend tables, remote config & composability rules
 │   └── Minigames/                         # Minigame Plugin subsystem (Post-PoC, low priority)
 │       ├── 01-minigame-overview.md        # Architecture, categories, Flutter dir structure & roadmap
@@ -109,9 +109,9 @@ Documentation/
      - `flutter_riverpod` — Reactive state management.
      - `hive_flutter` — Zero-latency local binary storage.
 2. **Unified Visual Style: Tactical 1-Bit Cyber-Specimen OS**:
-   - A singular, cohesive aesthetic combining a low-resolution Flame viewport with 1-bit dithered bitmap sprites (using Bayer matrix shaders) and a native-resolution Flutter UI mimicking an industrial diagnostic terminal.
+   - A singular, cohesive aesthetic combining a low-resolution Flame viewport with 1-bit dithered bitmap sprites (using Bayer matrix shaders, with `Desing References/Godzila.webp` as the prime visual standard for Godzilla looming over skylines and breathing dithered atomic breath) and a native-resolution Flutter UI mimicking an industrial diagnostic terminal.
 3. **Multiplayer Shared Pet Care**:
-   - **Primarily designed and marketed for couples** who co-manage a shared digital pet together. Solo play and larger groups (families, friends) are also fully supported, but the product identity and UX are centered on the two-player couple experience.
+   - **Primarily designed and marketed for couples** who co-manage and nurture a shared giant Kaiju together. Solo play and larger groups (families, friends) are also fully supported, but the product identity and UX are centered on the two-player couple experience.
 4. **Dormant Action & Scenario Plugin Architecture**:
    - Actions and environments are compiled into the app as modular plugins.
    - Plugins remain dormant until the backend enables them and supplies runtime parameters.
@@ -120,12 +120,12 @@ Documentation/
    - Capacity is governed by available credits and dynamic backend configurations.
 6. **PoC Scope**:
    - Strictly client-side / offline-first for Day 1 with **Flutter Riverpod** and local persistent storage.
-   - Core actions (Eat, Sleep, Play) implemented as the first 3 user-triggered plugins.
+   - Core actions (Eat a ball of human people, Sleep, Play) implemented as the first 3 user-triggered plugins.
 7. **In-App Purchases & Argentine Repatriation**:
    - Native integration via Flutter `in_app_purchase` package with direct SWIFT international wires to an Argentine USD bank account, complying with Argentine Central Bank and ARCA/AFIP regulations.
 8. **Unified Ownership Model (Group-of-1)**:
    - Every user starts in a personal SOLO group. Pets belong to groups, not individual users.
    - This architecture enables seamless transition from solo play to multiplayer shared pet care.
 9. **Furniture & Habitat Customization**:
-   - Furniture items are purchased by users and placed in group rooms.
+   - Furniture items (oversized beds, chairs, workstations, kitchens, lamps) are purchased by users and placed in group habitat rooms where the giant Kaiju lives.
    - Cosmetic customizations (palette themes, boot messages) are per-user preferences.

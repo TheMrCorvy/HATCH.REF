@@ -18,7 +18,7 @@ sequenceDiagram
     note right of DTR: 1-Bit Rendering Loop
     DTR->>SG: render BackgroundLayer (z: 0-20)
     DTR->>SG: render FurnitureComponents (z: 21-49)
-    DTR->>SG: render CyberSpecimenPet (z: 50)
+    DTR->>SG: render KaijuTitan (z: 50)
     end
 ```
 
@@ -26,15 +26,15 @@ sequenceDiagram
 
 The `default_terminal_room.dart` scene uses a hardcoded slot grid for the 12-unit capacity limit.
 
-*   **Z-Index Layering:** Background objects operate between `priority = 0` to `20`. Furniture items are added dynamically with `priority = 21` to `49`, depending on their Y-axis (isometric/pseudo-3D depth sorting). The Cyber-Specimen pet is rendered at `priority = 50`.
+*   **Z-Index Layering:** Background objects operate between `priority = 0` to `20`. Furniture items (bed, couch, desktop workstation, kitchen) are added dynamically with `priority = 21` to `49`, depending on their Y-axis (isometric/pseudo-3D depth sorting). The giant Kaiju titan (e.g., Godzilla) is rendered at `priority = 50`.
 *   **Sprite Application:** Items are instantiated as `SpriteComponent` entities inheriting the 1-bit dithered shader/palette rules.
 
 ## 3. Stat Modifiers (Passive Bonuses)
 
-Furniture is not merely cosmetic; it acts as a passive aura for the pet's metabolic loop.
+Furniture is not merely cosmetic; it acts as a passive aura for the Kaiju's metabolic loop.
 
 *   **Modifier Application:** A background isolate/ticker checks the room's furniture sum periodically.
-*   **Example Effect:** A `SLEEP_POD` providing `+40 ENERGY` modifies the base recovery rate when the pet is in an idle/sleeping state. 
+*   **Example Effect:** A `SLEEP_POD` providing `+40 ENERGY` modifies the base recovery rate when the Kaiju is in an idle/dormant state.
 *   Modifiers are cumulative, but capped based on maximum storage capacity (12 items) to prevent balance breaking.
 
 ## 4. Terminal Aesthetic Integration

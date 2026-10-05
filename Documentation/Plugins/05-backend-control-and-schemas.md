@@ -9,7 +9,7 @@ This document defines the backend database schemas, remote configuration payload
 The backend acts as the mission control for all plugins dormant in the Flutter app. Game operators and managers can:
 1. **Enable / Disable actions instantly** by toggling a boolean flag in PostgreSQL or Supabase.
 2. **Schedule limited-time events** by setting `valid_from` and `valid_until` timestamps.
-3. **Rebind Scenarios**: Point an action to any scenario (e.g. binding `practice_basketball` to `hospital_bed`).
+3. **Rebind Scenarios**: Point an action to any scenario (e.g. binding `crush_tank` to `hospital_bed`).
 4. **Tune Parameters**: Adjust rewards, stat costs, and cooldowns dynamically via JSON payloads without publishing app updates.
 
 ```mermaid
@@ -26,7 +26,7 @@ flowchart LR
 ```sql
 -- 1. Action Plugins Table
 CREATE TABLE public.action_plugins (
-    id TEXT PRIMARY KEY,                       -- Matches Dart plugin id (e.g. 'practice_basketball')
+    id TEXT PRIMARY KEY,                       -- Matches Dart plugin id (e.g. 'city_destruction')
     display_name TEXT NOT NULL,                -- User-facing button label
     action_type TEXT NOT NULL CHECK (action_type IN ('USER_TRIGGERED', 'AUTONOMOUS')),
     is_enabled BOOLEAN NOT NULL DEFAULT false, -- Master toggle
@@ -64,19 +64,20 @@ CREATE TABLE public.scenario_plugins (
 
 -- Seed Default Plugins
 INSERT INTO public.scenario_plugins (id, display_name, is_enabled, parameters) VALUES
-('default_room', 'Default Terminal Room', true, '{"ambient_fog": true, "dither_pattern": "bayer4x4"}'::jsonb),
+('default_room', 'Terminal Habitat Room', true, '{"ambient_fog": true, "dither_pattern": "bayer4x4"}'::jsonb),
+('metropolis_ruins', 'Metropolis Ruins', true, '{"dither_pattern": "bayer8x8", "skyline_theme": "TOKYO_1954"}'::jsonb),
 ('hospital_bed', 'Clinic Recovery Ward', true, '{"vital_monitor": true, "iv_drip_level": "FULL"}'::jsonb),
-('basketball_court', 'Cyber Arena', true, '{"stadium_name": "TOKYO DOME 2088"}'::jsonb);
+('containment_silo', 'Sub-Zero Containment Silo', true, '{"radiation_shielding": "MAX", "cryo_temp_k": 77}'::jsonb);
 
 INSERT INTO public.action_plugins (id, display_name, action_type, is_enabled, target_scenario_id, min_age_phase, max_age_phase, priority, blocking_conditions, parameters) VALUES
-('eat',                'Eat',              'USER_TRIGGERED', true,  'default_room',    NULL,    NULL,    50, '[]'::jsonb, '{"hunger_bonus": 25, "energy_cost": 5}'::jsonb),
-('sleep',              'Sleep',            'USER_TRIGGERED', true,  'default_room',    NULL,    NULL,    50, '[]'::jsonb, '{"energy_bonus": 35, "hunger_cost": 10}'::jsonb),
-('play',               'Play',             'USER_TRIGGERED', true,  'default_room',    'child', NULL,    50, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"happiness_bonus": 30, "energy_cost": 20}'::jsonb),
-('practice_basketball','Basketball',       'USER_TRIGGERED', false, 'basketball_court','young', 'adult', 60, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"credit_reward": 15, "min_energy": 25}'::jsonb),
-('school_study',       'Go to School',     'AUTONOMOUS',     false, 'default_room',    'child', 'young', 40, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"intel_per_hour": 5}'::jsonb),
-('university_study',   'University',       'AUTONOMOUS',     false, 'default_room',    'young', 'young', 40, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"intel_per_hour": 12}'::jsonb),
-('office_work',        'Office Shift',     'AUTONOMOUS',     false, 'default_room',    'young', 'adult', 50, '[{"condition": "is_sick", "blocks": true}, {"condition": "is_sleeping", "blocks": true}]'::jsonb, '{"wage_per_hour": 12}'::jsonb),
-('hospital_recovery',  'Hospital Recovery','AUTONOMOUS',     false, 'hospital_bed',    NULL,    NULL,     0, '[]'::jsonb, '{"recovery_rate": 5}'::jsonb);
+('eat',                'Eat (Ball of Humans)', 'USER_TRIGGERED', true,  'default_room',      NULL,    NULL,    50, '[]'::jsonb, '{"hunger_bonus": 25, "energy_cost": 5}'::jsonb),
+('sleep',              'Sleep (Dormancy)',     'USER_TRIGGERED', true,  'default_room',      NULL,    NULL,    50, '[]'::jsonb, '{"energy_bonus": 35, "hunger_cost": 10}'::jsonb),
+('play',               'Play (Smash Toys)',    'USER_TRIGGERED', true,  'default_room',      'child', NULL,    50, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"happiness_bonus": 30, "energy_cost": 20}'::jsonb),
+('crush_tank',         'Crush Tanks',          'USER_TRIGGERED', false, 'metropolis_ruins',  'young', 'adult', 60, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"credit_reward": 25, "min_energy": 25}'::jsonb),
+('destruction_study',  'Demolition Academy',   'AUTONOMOUS',     false, 'default_room',      'child', 'young', 40, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"intel_per_hour": 5}'::jsonb),
+('advanced_demolition','Advanced Demolition',  'AUTONOMOUS',     false, 'default_room',      'young', 'young', 40, '[{"condition": "is_sick", "blocks": true}]'::jsonb, '{"intel_per_hour": 12}'::jsonb),
+('city_destruction',   'City Rampage',         'AUTONOMOUS',     false, 'metropolis_ruins',  'young', 'adult', 50, '[{"condition": "is_sick", "blocks": true}, {"condition": "is_sleeping", "blocks": true}]'::jsonb, '{"bounty_per_hour": 12}'::jsonb),
+('hospital_recovery',  'Hospital Recovery',    'AUTONOMOUS',     false, 'hospital_bed',      NULL,    NULL,     0, '[]'::jsonb, '{"recovery_rate": 5}'::jsonb);
 ```
 
 ---
@@ -121,8 +122,8 @@ When the Flutter app launches, it fetches the active capability manifest from `G
       }
     },
     {
-      "id": "practice_basketball",
-      "display_name": "Basketball Event",
+      "id": "crush_tank",
+      "display_name": "Tank Defense Stomp",
       "action_type": "USER_TRIGGERED",
       "is_enabled": true,
       "valid_from": "2026-09-25T00:00:00.000Z",
@@ -135,9 +136,9 @@ When the Flutter app launches, it fetches the active capability manifest from `G
         { "condition": "is_sick", "blocks": true }
       ],
       "parameters": {
-        "credit_reward": 20,
+        "credit_reward": 25,
         "min_energy": 20,
-        "special_event_title": "Hospital Slam Dunk Fundraiser"
+        "special_event_title": "Containment Ward Defense Emergency"
       }
     }
   ]
@@ -145,4 +146,4 @@ When the Flutter app launches, it fetches the active capability manifest from `G
 ```
 
 > [!TIP]
-> Notice how in the payload above, the game operator dynamically set `target_scenario_id: "hospital_bed"` for `practice_basketball`. The Flutter client will seamlessly execute the basketball action while rendering the pet inside the hospital bed scenario!
+> Notice how in the payload above, the game operator dynamically set `target_scenario_id: "hospital_bed"` for `crush_tank`. The Flutter client will seamlessly execute the tank crushing action while rendering the Kaiju inside the clinic / containment recovery scenario!

@@ -8,16 +8,16 @@ This document specifies the architecture and implementation of **User-Triggered 
 
 User-triggered actions represent interactions initiated directly by the player tapping a terminal button in the UI.
 
-In the initial PoC, **Eat**, **Sleep**, and **Play** are refactored into the first three user-triggered plugins. In future updates, seasonal events or special abilities (such as **Practice Basketball** or **Search for Relic**) reside dormant in `lib/plugins/user_triggered_actions/` and only appear as interactive buttons in the UI when the backend activates them.
+In the initial PoC, **Eat**, **Sleep**, and **Play** are refactored into the first three user-triggered plugins. In future updates, seasonal events or special abilities (such as **Crush Tanks** or **Search for Relic**) reside dormant in `lib/plugins/user_triggered_actions/` and only appear as interactive buttons in the UI when the backend activates them.
 
 ```mermaid
 flowchart LR
-    Backend["Backend Capability Manifest"] -->|"actions: [eat, sleep, play, basketball]"| Registry["PluginRegistry"]
+    Backend["Backend Capability Manifest"] -->|"actions: [eat, sleep, play, crush_tank]"| Registry["PluginRegistry"]
     Registry -->|"Filters Enabled Actions"| UIRow["Dynamic Action Button Bar"]
     UIRow --> Btn1["[ EAT ]"]
     UIRow --> Btn2["[ SLEEP ]"]
     UIRow --> Btn3["[ PLAY ]"]
-    UIRow --> Btn4["[ BASKETBALL ]\n(Dynamically Injected!)"]
+    UIRow --> Btn4["[ CRUSH TANKS ]\n(Dynamically Injected!)"]
 ```
 
 ---
@@ -99,11 +99,11 @@ class EatActionPlugin extends ActionPlugin {
 
     return ActionResult(
       success: true,
-      message: 'Fed ${currentPet.nickname}. Hunger +$hungerBonus%',
+      message: 'Fed ${currentPet.nickname} a ball of human people. Hunger +$hungerBonus%',
       hungerDelta: hungerBonus,
       energyDelta: -energyCost,
       happinessDelta: 5,
-      animationSequence: 'eating',
+      animationSequence: 'eating_humans',
       targetScenarioId: targetScenario,
       duration: const Duration(milliseconds: 3500),
     );
@@ -111,23 +111,23 @@ class EatActionPlugin extends ActionPlugin {
 }
 ```
 
-### B. Event Action Plugin: Basketball (`lib/plugins/user_triggered_actions/basketball_action_plugin.dart`)
+### B. Event Action Plugin: Crush Tanks (`lib/plugins/user_triggered_actions/crush_tank_action_plugin.dart`)
 
-This plugin resides dormant in the app. When a basketball seasonal event goes live, the backend enables it:
+This plugin resides dormant in the app. When a military defense seasonal event goes live, the backend enables it:
 
 ```dart
-class BasketballActionPlugin extends ActionPlugin {
+class CrushTankActionPlugin extends ActionPlugin {
   @override
-  String get id => 'practice_basketball';
+  String get id => 'crush_tank';
 
   @override
-  String get displayName => 'Basketball';
+  String get displayName => 'Crush Tanks';
 
   @override
   ActionType get actionType => ActionType.userTriggered;
 
   @override
-  String get defaultScenarioId => 'basketball_court';
+  String get defaultScenarioId => 'metropolis_ruins';
 
   @override
   ActionResult execute({
@@ -135,19 +135,19 @@ class BasketballActionPlugin extends ActionPlugin {
     required Map<String, dynamic> backendParams,
     required DateTime triggeredAt,
   }) {
-    // Prerequisite: Pet must have sufficient energy
+    // Prerequisite: Kaiju must have sufficient energy
     final minEnergy = (backendParams['min_energy'] as num?)?.toInt() ?? 30;
     if (currentPet.energy < minEnergy) {
       return ActionResult(
         success: false,
-        message: '${currentPet.nickname} is too tired to practice basketball! (Needs $minEnergy% energy)',
+        message: '${currentPet.nickname} is too depleted to crush tanks! (Needs $minEnergy% energy)',
         animationSequence: 'idle',
         targetScenarioId: defaultScenarioId,
         duration: Duration.zero,
       );
     }
 
-    // Backend can override target scenario (e.g. if the event is set in a hospital!)
+    // Backend can override target scenario (e.g. if the event is set in an Arctic Outpost!)
     final targetScenario = (backendParams['scenario_id'] as String?) ?? defaultScenarioId;
     final happinessGain = (backendParams['happiness_gain'] as num?)?.toInt() ?? 40;
     final energyDrain = (backendParams['energy_drain'] as num?)?.toInt() ?? 25;
@@ -155,12 +155,12 @@ class BasketballActionPlugin extends ActionPlugin {
 
     return ActionResult(
       success: true,
-      message: '${currentPet.nickname} scored 3-pointers! Mood +$happinessGain%, Earned $creditReward credits!',
+      message: '${currentPet.nickname} pulverized incoming military tanks! Joy +$happinessGain%, Salvaged $creditReward credits!',
       hungerDelta: -20,
       energyDelta: -energyDrain,
       happinessDelta: happinessGain,
       creditsEarned: creditReward,
-      animationSequence: 'basketball_dribble',
+      animationSequence: 'tank_crush_stomp',
       targetScenarioId: targetScenario,
       duration: const Duration(seconds: 4),
     );

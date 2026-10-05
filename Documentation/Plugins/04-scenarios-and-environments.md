@@ -9,18 +9,18 @@ This document specifies the architecture, rendering engine, and composability ru
 In traditional pet games, rooms are static background images. In **Unix Tamagotchi**, scenarios are independent plugins residing in `lib/plugins/scenarios/`.
 
 Scenarios are **completely decoupled from actions**:
-- An action (e.g., "Practice Basketball") can specify which scenario to load (e.g., "Basketball Court").
-- Crucially, the backend can **rebind actions to different scenarios dynamically** via parameters. For example, if a special event features basketball inside a clinic, the backend overrides the action's target scenario to `"hospital_bed"` without modifying a single line of Flutter code.
+- An action (e.g., "City Rampage" or "Crush Tanks") can specify which scenario to load (e.g., "Metropolis Ruins" or "Containment Ward").
+- Crucially, the backend can **rebind actions to different scenarios dynamically** via parameters. For example, if a special event features city destruction in a futuristic skyline or containment inside an arctic silo, the backend overrides the action's target scenario to `"metropolis_ruins"` or `"hospital_bed"` without modifying a single line of Flutter code.
 
 ```mermaid
 flowchart TD
-    Action["Action: 'practice_basketball'"]
+    Action["Action: 'city_destruction'"]
     BackendOverride{"Backend specifies\nscenario_id"}
 
     Action --> BackendOverride
-    BackendOverride -->|"scenario_id: 'basketball_court'"| Court["Basketball Court Scenario\n(Hoop, bleachers, hardwood sprites)"]
-    BackendOverride -->|"scenario_id: 'hospital_bed'"| Hospital["Hospital Bed Scenario\n(IV drip, vital monitor, bed sprites)"]
-    BackendOverride -->|"scenario_id: 'default_room'"| Room["Default Terminal Room"]
+    BackendOverride -->|"scenario_id: 'metropolis_ruins'"| Ruins["Metropolis Ruins Scenario\n(Skyscrapers, dithered smoke, rubble sprites\nmatching Desing References/Godzila.webp)"]
+    BackendOverride -->|"scenario_id: 'hospital_bed'"| Hospital["Hospital Bed Scenario\n(Containment clinic, vital monitor, bed sprites)"]
+    BackendOverride -->|"scenario_id: 'default_room'"| Room["Default Terminal Habitat Room\n(Kaiju room with bed, chair, desk, kitchen)"]
 ```
 
 ---
@@ -106,21 +106,21 @@ class HospitalBedScenarioPlugin extends ScenarioPlugin {
 
 ---
 
-## 4. Implementation: Basketball Court Scenario (`lib/plugins/scenarios/basketball_court_scenario.dart`)
+## 4. Implementation: Metropolis Ruins Scenario (`lib/plugins/scenarios/metropolis_ruins_scenario.dart`)
 
 ```dart
 import 'package:flame/components.dart';
 import '../interfaces/scenario_plugin.dart';
 
-class BasketballCourtScenarioPlugin extends ScenarioPlugin {
+class MetropolisRuinsScenarioPlugin extends ScenarioPlugin {
   @override
-  String get id => 'basketball_court';
+  String get id => 'metropolis_ruins';
 
   @override
-  String get displayName => 'Terminal Basketball Arena';
+  String get displayName => 'Metropolis Ruins Destruction Zone';
 
   @override
-  Vector2 get petAnchorPoint => Vector2(128, 180);
+  Vector2 get petAnchorPoint => Vector2(128, 160);
 
   @override
   Component buildScene({
@@ -129,26 +129,34 @@ class BasketballCourtScenarioPlugin extends ScenarioPlugin {
   }) {
     final sceneRoot = PositionComponent(position: Vector2.zero());
 
-    // Hardwood court floor
+    // Metropolis shattered skyline background (matching Desing References/Godzila.webp)
     sceneRoot.add(SpriteComponent(
-      sprite: Sprite(/* load hardwood_floor.png */),
+      sprite: Sprite(/* load metropolis_skyline.png */),
       position: Vector2.zero(),
       size: Vector2(256, 256),
       priority: 0,
     ));
 
-    // Basketball Hoop prop
+    // Crumbling skyscraper prop behind Kaiju
     sceneRoot.add(SpriteComponent(
-      sprite: Sprite(/* load bball_hoop.png */),
-      position: Vector2(96, 40),
-      size: Vector2(64, 128),
+      sprite: Sprite(/* load crumbling_skyscraper.png */),
+      position: Vector2(30, 80),
+      size: Vector2(80, 160),
       priority: 5,
     ));
 
-    // Position the pet on the free throw line
+    // Position the giant Kaiju towering over ruins
     petComponent.position = petAnchorPoint;
     petComponent.priority = 10;
     sceneRoot.add(petComponent);
+
+    // Foreground rubble, crushed vehicles, and Bayer-dithered smoke
+    sceneRoot.add(SpriteComponent(
+      sprite: Sprite(/* load rubble_smoke_foreground.png */),
+      position: Vector2(0, 180),
+      size: Vector2(256, 76),
+      priority: 55,
+    ));
 
     return sceneRoot;
   }

@@ -41,7 +41,7 @@ erDiagram
     }
 
     PET_CATALOG {
-        text pet_type PK "e.g. bunny, cat"
+        text pet_type PK "e.g. godzilla, cyber_godzilla"
         text display_name
         integer base_price_credits "e.g. 120"
         jsonb spritesheet_data
@@ -62,7 +62,7 @@ erDiagram
     }
 
     ACTION_PLUGINS {
-        text id PK "e.g. eat, practice_basketball"
+        text id PK "e.g. eat, city_destruction"
         text display_name
         text action_type "USER_TRIGGERED | AUTONOMOUS"
         boolean is_enabled
@@ -73,7 +73,7 @@ erDiagram
     }
 
     SCENARIO_PLUGINS {
-        text id PK "e.g. default_room, hospital_bed"
+        text id PK "e.g. default_room, metropolis_ruins"
         text display_name
         boolean is_enabled
         jsonb parameters

@@ -4,8 +4,8 @@
 
 The Unix Tamagotchi notification system serves two primary functions:
 
-1. **Pet Care Alerts** — notifying players when their pet's stats reach critical thresholds.
-2. **Partner Activity Notifications** — reinforcing the couple bond by surfacing your partner's care actions in real-time.
+1. **Kaiju Care & Containment Alerts** — notifying players when their Titan's vitals reach critical thresholds.
+2. **Partner Activity Notifications** — reinforcing the couple bond by surfacing your partner's containment and care actions in real-time.
 
 All notifications are delivered via **Firebase Cloud Messaging (FCM)** for Android and **Apple Push Notification Service (APNs)** for iOS, both triggered from **Supabase Edge Functions**. Notifications are scoped per-user and respect individual preferences.
 
@@ -16,27 +16,29 @@ All notifications are delivered via **Firebase Cloud Messaging (FCM)** for Andro
 ## 2. Notification Types
 
 ### 2.1 Emergency Care Alerts
-Triggered when a pet's stat drops to a critical threshold and **no group member is currently online**.
+Triggered when a Kaiju's stat drops to a critical threshold and **no group member is currently online**.
 
 | Trigger | Threshold | Terminal-Style Copy |
 |---|---|---|
-| Hunger critical | `hunger < 15` | `[ SYS_DIAG ] WARN: NUTRITION_FAIL. <PetName> requires feeding immediately.` |
-| Energy critical | `energy < 10` | `[ SYS_DIAG ] WARN: POWER_LOW. <PetName> needs rest. INITIATE SLEEP SEQUENCE.` |
-| Happiness critical | `happiness < 10` | `[ SYS_DIAG ] WARN: MOOD_CRITICAL. <PetName> is showing signs of system distress.` |
-| All stats critical | all < 15 | `[ SYS_DIAG ] PRIORITY_OMEGA: VITALS FAILING. <PetName> requires immediate attention.` |
+| Hunger critical | `hunger < 15` | `[ SYS_DIAG ] WARN: NUTRITION_FAIL. <PetName> requires human sphere feeding immediately.` |
+| Energy critical | `energy < 10` | `[ SYS_DIAG ] WARN: REACTOR_DEPLETED. <PetName> needs rest. INITIATE DORMANCY SEQUENCE.` |
+| Happiness critical | `happiness < 10` | `[ SYS_DIAG ] WARN: AGITATION_CRITICAL. <PetName> shows signs of containment breach.` |
+| All stats critical | all < 15 | `[ SYS_DIAG ] PRIORITY_OMEGA: TITAN UNSTABLE. <PetName> requires immediate intervention.` |
 
 **Deduplication**: If one group member resolves the issue while others still have the notification unread, the backend sends a cancellation push to dismiss it on all other devices.
 
 ---
 
 ### 2.2 Partner Action Notifications (Couple Mode)
-Sent to the **offline partner** when the **online partner** completes a care action. Default: enabled. Can be toggled off per user.
+Sent to the **offline partner** when the **online partner** completes an action. Default: enabled. Can be toggled off per user.
 
 | Action | Copy |
 |---|---|
-| Feed | `> <PartnerName> fed <PetName>. SATURATION +25.` |
-| Sleep | `> <PartnerName> put <PetName> to sleep. ENERGY RECHARGING.` |
-| Play | `> <PartnerName> played with <PetName>. JOY INDEX ELEVATED.` |
+| Feed | `> <PartnerName> fed <PetName> a ball of humans. SATURATION +25.` |
+| Sleep | `> <PartnerName> placed <PetName> in dormancy pod. ENERGY RECHARGING.` |
+| Play | `> <PartnerName> played with <PetName> (toy skyscraper smashed). JOY INDEX ELEVATED.` |
+| City Rampage (Work) | `> <PetName> completed city rampage shift. +50 CREDITS EARNED.` |
+| Demolition Academy (Study) | `> <PetName> completed demolition study. INTELLECT ELEVATED.` |
 
 ---
 

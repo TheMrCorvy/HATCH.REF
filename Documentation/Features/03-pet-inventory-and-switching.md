@@ -1,29 +1,29 @@
-# Features: 03 Pet Inventory and Switching
+# Features: 03 Kaiju Inventory and Switching
 
-This document specifies the pet inventory architecture, companion switching mechanics, and stat preservation rules for the **Unix Tamagotchi**.
+This document specifies the Kaiju specimen inventory architecture, companion switching mechanics, and stat preservation rules for the **Unix Tamagotchi**.
 
 ---
 
 ## 1. Dynamic Inventory Model
 
-The player's inventory dynamically accommodates all adopted pets:
+The player's inventory dynamically accommodates all adopted Kaijus:
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│ SUB_SYS: PET INVENTORY (DYNAMIC CAPACITY)                   │
+│ SUB_SYS: KAIJU INVENTORY (DYNAMIC CAPACITY)                 │
 ├─────────────────────────────────────────────────────────────┤
-│ PET #01: [ ACTIVE COMPANION ]                               │
-│ PID: pet_1714200001 | TYPE: Bunny | NICK: BUNNY_01          │
+│ SPECIMEN #01: [ ACTIVE COMPANION ]                          │
+│ PID: kaiju_1714200001 | TYPE: Godzilla | NICK: GODZILLA_01 │
 │ HUNGER: 75% | ENERGY: 80% | MOOD: 90%                       │
-│ STATUS: Active in Securing Session Viewport                 │
+│ STATUS: Active in Habitat Session Viewport                  │
 ├─────────────────────────────────────────────────────────────┤
-│ PET #02: [ STANDBY ]                                        │
-│ PID: pet_1714200002 | TYPE: Cat   | NICK: CYBER_CAT         │
+│ SPECIMEN #02: [ STANDBY ]                                   │
+│ PID: kaiju_1714200002 | TYPE: Cyber Godzilla | NICK: CYBER_01│
 │ HUNGER: 85% | ENERGY: 60% | MOOD: 70%                       │
-│ STATUS: Resting in Standby Storage                          │
+│ STATUS: Resting in Subterranean Standby Containment         │
 ├─────────────────────────────────────────────────────────────┤
-│ PET #03..N: [ STANDBY COMPANIONS ]                          │
-│ Additional companions resting safely in standby memory.     │
+│ SPECIMEN #03..N: [ STANDBY KAIJUS ]                         │
+│ Additional Kaiju titans resting safely in standby memory.   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -31,7 +31,7 @@ The player's inventory dynamically accommodates all adopted pets:
 
 ## 2. Active vs. Standby Rules
 
-1. **One Active Companion in Room**: Actions (`Eat`, `Sleep`, `Play`, `Basketball`) target the currently designated active companion.
+1. **One Active Companion in Room**: Actions (`Eat`, `Sleep`, `Play`, `Crush Tanks`) target the currently designated active companion.
 2. **Standby Stat Decay Suppression**: While resting in standby, a pet's stats decay at a heavily reduced rate ($0.1\times$ normal rate) so the player is never penalized for rotating companions.
 3. **Instant Switching**: Switching between companions is instantaneous with zero loading latency, updating the game state immediately.
 
