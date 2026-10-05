@@ -1,4 +1,4 @@
-# Ownership: 02 Group Dissolution & Pet Cloning
+# Ownership: 02 Group Dissolution & Kaiju Cloning
 
 ## 1. Dissolution Overview
 Group dissolution requires **member consensus**, not unilateral admin action:
@@ -6,13 +6,13 @@ Group dissolution requires **member consensus**, not unilateral admin action:
 - **COUPLE (2 members)**: Both partners must accept the dissolution request. Either member can initiate it, but the other must confirm.
 - **FAMILY / FRIENDS (2–6 members)**: A majority vote is required (50 % + 1). The initiator’s vote is cast automatically.
 
-A `dissolution_requests` row is created when a member initiates the process (see `Architecture/05-database-and-auth.md` for the DDL). The request expires in 48 hours if quorum is not reached. Once all required votes are cast, `dissolve_group_and_clone_pets()` is executed atomically. Because pets are deeply invested entities, they are never deleted — every member receives a clone.
+A `dissolution_requests` row is created when a member initiates the process (see `Architecture/05-database-and-auth.md` for the DDL). The request expires in 48 hours if quorum is not reached. Once all required votes are cast, `dissolve_group_and_clone_pets()` is executed atomically. Because kaijus are deeply invested entities, they are never deleted — every member receives a clone.
 
-## 2. Pet Cloning Protocol
-Upon group dissolution, **every member receives an exact clone of every shared pet**, placed into their personal `SOLO` group.
+## 2. Kaiju Cloning Protocol
+Upon group dissolution, **every member receives an exact clone of every shared kaiju**, placed into their personal `SOLO` group.
 
 ### Clone Properties
-- **Retained**: Pet type, nickname, current stats (hunger, energy, happiness), age, spritesheet data.
+- **Retained**: Kaiju type, nickname, current stats (hunger, energy, happiness), age, spritesheet data.
 - **New**: The clone receives a NEW unique `UUID` and a new `last_interaction_at` timestamp.
 
 ## 3. Asset Reconciliation
@@ -38,7 +38,7 @@ sequenceDiagram
     MemberB->>API: POST /dissolution-requests/{id}/vote (accept)
     API->>API: votes_cast=2 ≥ votes_required=2 → status=ACCEPTED
     API->>DB Function: dissolve_group_and_clone_pets(group_id)
-    DB Function->>Member_Solo_X: Insert cloned pets (New UUIDs) for each member
+    DB Function->>Member_Solo_X: Insert cloned kaijus (New UUIDs) for each member
     DB Function->>Member_Solo_X: Transfer purchased furniture/customizations
     DB Function->>API: DELETE groups CASCADE
     API-->>MemberA: Dissolution Complete
@@ -63,9 +63,9 @@ BEGIN
         SELECT id INTO member_solo_group_id FROM groups 
         WHERE admin_id = member_record.user_id AND group_type = 'SOLO' LIMIT 1;
 
-        -- 2. Clone every pet from the target group into the member's SOLO group
-        FOR pet_record IN SELECT * FROM pets WHERE group_id = target_group_id LOOP
-            INSERT INTO pets (
+        -- 2. Clone every kaiju from the target group into the member's SOLO group
+        FOR pet_record IN SELECT * FROM kaijus WHERE group_id = target_group_id LOOP
+            INSERT INTO kaijus (
                 group_id, name, type, hunger, energy, happiness, spritesheet_data, last_interaction_at
             ) VALUES (
                 member_solo_group_id, 
@@ -84,7 +84,7 @@ BEGIN
 
     END LOOP;
 
-    -- 3. Delete the target group (Cascades to old pets and group_members)
+    -- 3. Delete the target group (Cascades to old kaijus and group_members)
     DELETE FROM groups WHERE id = target_group_id;
     
 END;
@@ -92,4 +92,4 @@ $$ LANGUAGE plpgsql;
 ```
 
 ## 6. Edge Cases
-- **Kicked Members**: If a member is involuntarily kicked from a group, the *exact same cloning rules apply*. They receive clones of the pets up to the point of their removal, deposited into their `SOLO` group.
+- **Kicked Members**: If a member is involuntarily kicked from a group, the *exact same cloning rules apply*. They receive clones of the kaijus up to the point of their removal, deposited into their `SOLO` group.

@@ -7,8 +7,8 @@ This document specifies the architecture, scheduling, and deterministic executio
 ## 1. Architectural Concept
 
 Unlike user actions triggered by button taps, **Non-User-Triggered Actions** trigger autonomously based on:
-1. **Circumstantial Conditions**: Pet reaching adult age, pet sickness, or low stat thresholds.
-2. **Scheduled Working Hours**: Configured time intervals (e.g. 09:00 to 17:00) where the pet goes to work to generate credits.
+1. **Circumstantial Conditions**: Kaiju reaching adult age, kaiju sickness, or low stat thresholds.
+2. **Scheduled Working Hours**: Configured time intervals (e.g. 09:00 to 17:00) where the kaiju goes to work to generate credits.
 3. **Automated Lifecycle Routines**: Career development, higher education, or hospital recovery.
 
 ```mermaid
@@ -41,14 +41,14 @@ abstract class AutonomousActionPlugin extends ActionPlugin {
 
   /// Checks if conditions are met for this action to engage
   bool shouldTrigger({
-    required PetState pet,
+    required KaijuState kaiju,
     required Map<String, dynamic> backendParams,
     required DateTime currentTime,
   });
 
   /// Computes deterministic state changes over elapsed time
   AutonomousExecutionResult computeElapsedProgress({
-    required PetState pet,
+    required KaijuState kaiju,
     required DateTime startTime,
     required DateTime endTime,
     required Map<String, dynamic> backendParams,
@@ -91,7 +91,7 @@ class CityDestructionActionPlugin extends AutonomousActionPlugin {
 
   @override
   bool shouldTrigger({
-    required PetState pet,
+    required KaijuState kaiju,
     required Map<String, dynamic> backendParams,
     required DateTime currentTime,
   }) {
@@ -99,17 +99,17 @@ class CityDestructionActionPlugin extends AutonomousActionPlugin {
     if (backendParams['is_enabled'] != true) return false;
 
     // Condition 2: Age gate — city destruction requires ADULT phase
-    if (!isAgeEligible(pet.currentPhase)) return false;
+    if (!isAgeEligible(kaiju.currentPhase)) return false;
 
     // Condition 3: Sufficient energy
-    if (pet.energy < 20) return false;
+    if (kaiju.energy < 20) return false;
 
     return true;
   }
 
   @override
   AutonomousExecutionResult computeElapsedProgress({
-    required PetState pet,
+    required KaijuState kaiju,
     required DateTime startTime,
     required DateTime endTime,
     required Map<String, dynamic> backendParams,
@@ -128,14 +128,14 @@ class CityDestructionActionPlugin extends AutonomousActionPlugin {
       creditsEarned: credits,
       energyDelta: energyDrain,
       hungerDelta: hungerDrain,
-      statusSummary: '${pet.nickname} leveled urban sectors over a ${actualHoursWorked.toStringAsFixed(1)}hr rampage and earned $credits credits!',
+      statusSummary: '${kaiju.nickname} leveled urban sectors over a ${actualHoursWorked.toStringAsFixed(1)}hr rampage and earned $credits credits!',
       overrideScenarioId: 'metropolis_ruins',
     );
   }
 
   @override
   ActionResult execute({
-    required PetState currentPet,
+    required KaijuState currentPet,
     required Map<String, dynamic> backendParams,
     required DateTime triggeredAt,
   }) {
@@ -189,19 +189,19 @@ class DestructionStudyActionPlugin extends AutonomousActionPlugin {
 
   @override
   bool shouldTrigger({
-    required PetState pet,
+    required KaijuState kaiju,
     required Map<String, dynamic> backendParams,
     required DateTime currentTime,
   }) {
     if (backendParams['is_enabled'] != true) return false;
-    if (!isAgeEligible(pet.currentPhase)) return false;
-    if (pet.energy < 15) return false;
+    if (!isAgeEligible(kaiju.currentPhase)) return false;
+    if (kaiju.energy < 15) return false;
     return true;
   }
 
   @override
   AutonomousExecutionResult computeElapsedProgress({
-    required PetState pet,
+    required KaijuState kaiju,
     required DateTime startTime,
     required DateTime endTime,
     required Map<String, dynamic> backendParams,
@@ -216,11 +216,11 @@ class DestructionStudyActionPlugin extends AutonomousActionPlugin {
       energyDelta: -(cappedHours * 4).round(),
       happinessDelta: (cappedHours * 2).round(),
       statusSummary:
-          '> [ACADEMY] ${pet.nickname} studied ${cappedHours.toStringAsFixed(1)}h of urban demolition tactics. INTEL +${(cappedHours * intelligenceGain).round()}.',
+          '> [ACADEMY] ${kaiju.nickname} studied ${cappedHours.toStringAsFixed(1)}h of urban demolition tactics. INTEL +${(cappedHours * intelligenceGain).round()}.',
     );
   }
 }
 ```
 
-> `advanced_demolition` follows the same pattern with `minAgePhase: AgePhase.young`, `maxAgePhase: AgePhase.young`, and a higher `intel_per_hour` reward. See `Features/05-pet-lifecycle-and-aging.md` for the full plugin availability matrix.
+> `advanced_demolition` follows the same pattern with `minAgePhase: AgePhase.young`, `maxAgePhase: AgePhase.young`, and a higher `intel_per_hour` reward. See `Features/05-kaiju-lifecycle-and-aging.md` for the full plugin availability matrix.
 

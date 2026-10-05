@@ -6,7 +6,7 @@ This document specifies the architecture, rendering engine, and composability ru
 
 ## 1. Architectural Concept: Decoupled Scenarios
 
-In traditional pet games, rooms are static background images. In **Unix Tamagotchi**, scenarios are independent plugins residing in `lib/plugins/scenarios/`.
+In traditional kaiju games, rooms are static background images. In **Unix Tamagotchi**, scenarios are independent plugins residing in `lib/plugins/scenarios/`.
 
 Scenarios are **completely decoupled from actions**:
 - An action (e.g., "City Rampage" or "Crush Tanks") can specify which scenario to load (e.g., "Metropolis Ruins" or "Containment Ward").
@@ -28,7 +28,7 @@ flowchart TD
 ## 2. Unified 1-Bit Dithered Scene Rendering
 
 Every scenario plugin generates a scene for the Flame engine viewport. The rendering pipeline operates in two stages:
-1. **Low-Resolution Compositing**: The scenario builds a scene graph of `SpriteComponent` and `PositionComponent` objects representing the background, environment props, and the pet. These are drawn at a low virtual resolution (e.g., 256x256).
+1. **Low-Resolution Compositing**: The scenario builds a scene graph of `SpriteComponent` and `PositionComponent` objects representing the background, environment props, and the kaiju. These are drawn at a low virtual resolution (e.g., 256x256).
 2. **Post-Processing Pipeline**: A global Fragment Shader is applied to the viewport, processing the scene using an ordered Bayer matrix to achieve the signature 1-bit dithered shading. The final output is upscaled using nearest-neighbor filtering to provide crisp, chunky pixels underneath the Flutter native-resolution UI layer.
 
 ---
@@ -52,7 +52,7 @@ class HospitalBedScenarioPlugin extends ScenarioPlugin {
   @override
   Component buildScene({
     required Map<String, dynamic> scenarioParams,
-    required Component petComponent,
+    required Component kaijuComponent,
   }) {
     final showVitalMonitor = scenarioParams['vital_monitor'] ?? true;
     final ivDripLevel = scenarioParams['iv_drip_level'] ?? 'FULL';
@@ -86,17 +86,17 @@ class HospitalBedScenarioPlugin extends ScenarioPlugin {
       ));
     }
 
-    // Anchor the pet sprite onto the bed
-    petComponent.position = petAnchorPoint;
-    petComponent.priority = 20; // Ensure pet renders above the bed
-    sceneRoot.add(petComponent);
+    // Anchor the kaiju sprite onto the bed
+    kaijuComponent.position = petAnchorPoint;
+    kaijuComponent.priority = 20; // Ensure kaiju renders above the bed
+    sceneRoot.add(kaijuComponent);
 
-    // Optional foreground IV Drip prop that overlaps the pet
+    // Optional foreground IV Drip prop that overlaps the kaiju
     sceneRoot.add(SpriteComponent(
       sprite: Sprite(/* load iv_drip_$ivDripLevel.png */),
       position: Vector2(160, 120),
       size: Vector2(16, 64),
-      priority: 30, // Rendered on top of the pet
+      priority: 30, // Rendered on top of the kaiju
     ));
 
     return sceneRoot;
@@ -125,7 +125,7 @@ class MetropolisRuinsScenarioPlugin extends ScenarioPlugin {
   @override
   Component buildScene({
     required Map<String, dynamic> scenarioParams,
-    required Component petComponent,
+    required Component kaijuComponent,
   }) {
     final sceneRoot = PositionComponent(position: Vector2.zero());
 
@@ -146,9 +146,9 @@ class MetropolisRuinsScenarioPlugin extends ScenarioPlugin {
     ));
 
     // Position the giant Kaiju towering over ruins
-    petComponent.position = petAnchorPoint;
-    petComponent.priority = 10;
-    sceneRoot.add(petComponent);
+    kaijuComponent.position = petAnchorPoint;
+    kaijuComponent.priority = 10;
+    sceneRoot.add(kaijuComponent);
 
     // Foreground rubble, crushed vehicles, and Bayer-dithered smoke
     sceneRoot.add(SpriteComponent(
@@ -172,21 +172,21 @@ Instead of manipulating multi-line text strings, the **Unix Tamagotchi** relies 
 ```dart
 void compositeScene({
   required Component sceneRoot,
-  required Component petComponent,
+  required Component kaijuComponent,
   required Vector2 anchorPoint,
 }) {
-  // 1. Establish pet anchor position
-  petComponent.position = anchorPoint;
+  // 1. Establish kaiju anchor position
+  kaijuComponent.position = anchorPoint;
   
-  // 2. Set default pet z-index to a middle layer
-  petComponent.priority = 50; 
+  // 2. Set default kaiju z-index to a middle layer
+  kaijuComponent.priority = 50; 
   
   // 3. Add to the scene root. The Flame engine automatically sorts
   // components by their priority field during the render loop.
   // - Backgrounds (Priority: 0 - 20)
-  // - Environment Props behind pet (Priority: 21 - 49)
-  // - Pet Sprite (Priority: 50)
+  // - Environment Props behind kaiju (Priority: 21 - 49)
+  // - kaiju sprite (Priority: 50)
   // - Foreground Props / Effects (Priority: 51 - 100)
-  sceneRoot.add(petComponent);
+  sceneRoot.add(kaijuComponent);
 }
 ```

@@ -58,7 +58,7 @@ CREATE TABLE public.minigame_ghost_recordings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     minigame_id TEXT NOT NULL REFERENCES public.minigame_plugins(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-    pet_id UUID NOT NULL REFERENCES public.pets(id) ON DELETE CASCADE,
+    kaiju_id UUID NOT NULL REFERENCES public.kaijus(id) ON DELETE CASCADE,
     score INTEGER,
     result TEXT NOT NULL CHECK (result IN ('PASS', 'FAIL')),
     -- Sparse event timeline for client-side ghost replay (see doc 02 for schema)

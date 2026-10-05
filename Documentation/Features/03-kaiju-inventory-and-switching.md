@@ -32,25 +32,25 @@ The player's inventory dynamically accommodates all adopted Kaijus:
 ## 2. Active vs. Standby Rules
 
 1. **One Active Companion in Room**: Actions (`Eat`, `Sleep`, `Play`, `Crush Tanks`) target the currently designated active companion.
-2. **Standby Stat Decay Suppression**: While resting in standby, a pet's stats decay at a heavily reduced rate ($0.1\times$ normal rate) so the player is never penalized for rotating companions.
+2. **Standby Stat Decay Suppression**: While resting in standby, a kaiju's stats decay at a heavily reduced rate ($0.1\times$ normal rate) so the player is never penalized for rotating companions.
 3. **Instant Switching**: Switching between companions is instantaneous with zero loading latency, updating the game state immediately.
 
 ---
 
 ## 3. Switching Implementation
 
-Switching logic ensures the new pet is correctly loaded into the active scene state:
+Switching logic ensures the new kaiju is correctly loaded into the active scene state:
 
 ```text
-FUNCTION switchActivePet(gameState, targetPetId):
-  // Find the requested pet in the player's inventory
-  targetPet = FIND pet IN gameState.ownedPets WHERE pet.id == targetPetId
+FUNCTION switchActiveKaiju(gameState, targetKaijuId):
+  // Find the requested kaiju in the player's inventory
+  targetKaiju = FIND kaiju IN gameState.ownedKaijus WHERE kaiju.id == targetKaijuId
   
-  IF targetPet IS NULL THEN
-    THROW ERROR("Pet not found in memory")
+  IF targetKaiju IS NULL THEN
+    THROW ERROR("Kaiju not found in memory")
     
   // Update the active reference in the global state
-  gameState.setActivePet(targetPet.id)
+  gameState.setActiveKaiju(targetKaiju.id)
   
-  LOG("> Switched active companion to " + targetPet.nickname)
+  LOG("> Switched active companion to " + targetKaiju.nickname)
 ```

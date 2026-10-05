@@ -16,7 +16,7 @@ This document specifies the in-game Kaiju store, credit balance economics, and d
 
 ## 2. Store Catalog
 
-| Item ID | Pet Type | Display Name | Cost | Traits |
+| Item ID | Kaiju Type | Display Name | Cost | Traits |
 | :--- | :--- | :--- | :--- | :--- |
 | `item_godzilla` | `godzilla` | **Godzilla** | 120 Credits | Apex saurian titan, dorsal plates, atomic breath animations, balanced stats, 1-bit dithered pixel sprite (see `Desing References/Godzila.webp`). |
 | `item_cyber_godzilla` | `cyber_godzilla` | **Cyber Godzilla** | 120 Credits | Cybernetic apex titan, steel hull, laser blast animations, higher energy drain, 1-bit dithered pixel sprite. |
@@ -25,10 +25,10 @@ This document specifies the in-game Kaiju store, credit balance economics, and d
 
 ## 3. Transaction Logic
 
-The core logic for processing a pet adoption in the store ensures that players meet both capacity and financial requirements. This can be expressed in the following pseudocode:
+The core logic for processing a kaiju acquisition in the store ensures that players meet both capacity and financial requirements. This can be expressed in the following pseudocode:
 
 ```text
-FUNCTION processStorePurchase(currentCredits, ownedPets, catalogItem, customNickname):
+FUNCTION processStorePurchase(currentCredits, ownedKaijus, catalogItem, customNickname):
 
   // Check: Available credits
   IF currentCredits < catalogItem.priceCredits THEN
@@ -38,14 +38,14 @@ FUNCTION processStorePurchase(currentCredits, ownedPets, catalogItem, customNick
   IF customNickname IS PROVIDED AND NOT EMPTY THEN
     nickname = uppercase(customNickname)
   ELSE
-    nickname = uppercase(catalogItem.petType) + "_0" + (count(ownedPets) + 1)
+    nickname = uppercase(catalogItem.kaijuType) + "_0" + (count(ownedKaijus) + 1)
 
-  // Create new pet instance
-  newPet = CREATE PetInstance WITH:
+  // Create new kaiju instance
+  newKaiju = CREATE KaijuInstance WITH:
     id = GENERATE_UNIQUE_ID()
-    petType = catalogItem.petType
+    kaijuType = catalogItem.kaijuType
     nickname = nickname
     lastInteractionTimestamp = CURRENT_TIME()
 
-  RETURN Success("Adopted " + nickname + " for " + catalogItem.priceCredits + " credits!", newPet)
+  RETURN Success("Acquired " + nickname + " for " + catalogItem.priceCredits + " credits!", newKaiju)
 ```

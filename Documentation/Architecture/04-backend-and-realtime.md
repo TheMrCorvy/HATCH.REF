@@ -1,6 +1,6 @@
 # Architecture: 04 Backend and Realtime Architecture
 
-While the Initial Proof of Concept (PoC) operates 100% offline, the backend architecture is designed to connect the Flutter mobile client to **Supabase** (PostgreSQL, GoTrue Auth, Realtime WebSockets) for dynamic plugin manifests, cloud backups, and multiplayer shared pet care interactions.
+While the Initial Proof of Concept (PoC) operates 100% offline, the backend architecture is designed to connect the Flutter mobile client to **Supabase** (PostgreSQL, GoTrue Auth, Realtime WebSockets) for dynamic plugin manifests, cloud backups, and multiplayer shared kaiju care interactions.
 
 ---
 

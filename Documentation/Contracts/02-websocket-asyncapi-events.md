@@ -17,7 +17,7 @@ wss://realtime.tamagotchi.internal/socket
 │   └── Server Push  : Autonomous work rewards & clinic updates
 │
 └── Channel: playroom:{roomId} (Multiplayer Presence Channel)
-    ├── Client Broadcast: Pet emote, 1-bit dithered animation triggers
+    ├── Client Broadcast: Kaiju emote, 1-bit dithered animation triggers
     └── Presence State  : Live peer list, online status
 ```
 
@@ -56,7 +56,7 @@ Emitted when a Kaiju's environment scenario changes (e.g. deployed to metropolis
   "event": "PET_SCENARIO_TRANSITIONED",
   "topic": "user:usr_998124",
   "payload": {
-    "petId": "pet_17140001",
+    "kaijuId": "pet_17140001",
     "previousScenarioId": "default_room",
     "newScenarioId": "hospital_bed",
     "scenarioParams": {

@@ -279,7 +279,7 @@ class SystemHeaderBar extends StatelessWidget {
 ```
 
 ### `<CameraReticleOverlay>`
-Decorative camera corner marks around the pet viewport.
+Decorative camera corner marks around the kaiju viewport.
 
 ```dart
 import 'package:flutter/material.dart';

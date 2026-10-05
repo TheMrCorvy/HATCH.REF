@@ -17,7 +17,7 @@ All documentation must be stored in `Documentation/` using **one subfolder per g
 | `Plugins/` | Plugin interfaces, action/scenario contracts, backend plugin schema |
 | `GameDesign/` | Balance curves, stat math, economy, progression |
 | `Furniture/` | Furniture catalog, data model, placement, stat modifiers |
-| `Multiplayer/` | Shared pet care, group types, real-time sync |
+| `Multiplayer/` | Shared kaiju care, group types, real-time sync |
 | `Ownership/` | Ownership model, group lifecycle, solo ↔ group transitions |
 | `Payments/` | IAP, store compliance, payout rules, anti-cheat |
 | `DevOps/` | CI/CD, build pipeline, release process |
@@ -98,7 +98,7 @@ When an agent produces a research report or a design decision that must persist,
 **Purpose**: Implement business logic, Riverpod state notifiers, plugin contracts, and navigation.
 
 **Domain**:
-- `lib/state/` — `PetStateNotifier`, `InventoryNotifier`, `CreditsNotifier`
+- `lib/state/` — `KaijuStateNotifier`, `InventoryNotifier`, `CreditsNotifier`
 - `lib/plugins/` — plugin registry, interfaces, and all action/scenario plugin classes
 - `lib/features/*/logic/` — feature-level controllers and use-case classes
 - `lib/app.dart` — router configuration (`go_router` or `Navigator`)
@@ -109,9 +109,9 @@ When an agent produces a research report or a design decision that must persist,
 - `Documentation/Plugins/01-plugin-architecture-overview.md`
 - `Documentation/Plugins/02-user-triggered-actions.md`
 - `Documentation/Plugins/03-non-user-triggered-actions.md`
-- `Documentation/Features/01-core-pet-actions.md`
-- `Documentation/Features/02-pet-store-and-credits.md`
-- `Documentation/Features/03-pet-inventory-and-switching.md`
+- `Documentation/Features/01-core-kaiju-actions.md`
+- `Documentation/Features/02-kaiju-store-and-credits.md`
+- `Documentation/Features/03-kaiju-inventory-and-switching.md`
 - `Documentation/GameDesign/02-balance-curves-and-math.md`
 
 **Inputs from Architect**: Feature name, the plugin or state contract to implement, and any interface already defined by another agent.
@@ -132,11 +132,11 @@ When an agent produces a research report or a design decision that must persist,
 
 **Domain**:
 - `assets/shaders/bayer_dither.frag` — the Bayer matrix fragment shader
-- `lib/core/dither_engine/` — `DitheredViewport`, `PetGame` (FlameGame subclass), `BayerDitherPainter`
+- `lib/core/dither_engine/` — `DitheredViewport`, `KaijuGame` (FlameGame subclass), `BayerDitherPainter`
 - `pubspec.yaml § flutter.shaders` — shader AOT registration
 
 **Spec sources**:
-- `Documentation/Design/03-pet-dithered-sprite-engine.md`
+- `Documentation/Design/03-kaiju-dithered-sprite-engine.md`
 - `Documentation/Design/06-1bit-dithering-rendering-pipeline.md`
 
 **Prerequisite**: The research-agent must have resolved all three gaps listed in `CLAUDE.md § Known Implementation Gaps` before this agent begins.
@@ -145,7 +145,7 @@ When an agent produces a research report or a design decision that must persist,
 
 **Outputs**:
 - `assets/shaders/bayer_dither.frag` — GLSL shader with `uTexture`, `uResolution`, `uColorLight`, `uColorDark` uniforms
-- `lib/core/dither_engine/pet_game.dart` — `FlameGame` subclass that renders the pet scene
+- `lib/core/dither_engine/kaiju_game.dart` — `FlameGame` subclass that renders the kaiju scene
 - `lib/core/dither_engine/dithered_viewport.dart` — Flutter widget that composites the Flame game through the Bayer shader using `SnapshotWidget` or equivalent
 - `pubspec.yaml` update: shader file registered under `flutter.shaders`
 
@@ -164,7 +164,7 @@ When an agent produces a research report or a design decision that must persist,
 **Domain**:
 - `test/unit/` — pure Dart unit tests for state notifiers, plugin logic, balance math
 - `test/widget/` — Flutter widget tests for all components in `lib/core/widgets/` and feature screens
-- `test/integration/` — end-to-end flows (feed pet → state update → UI re-render)
+- `test/integration/` — end-to-end flows (feed kaiju → state update → UI re-render)
 
 **Spec sources**: Any `Documentation/` file that defines behavior. GameDesign balance curves (`GameDesign/02`) define numeric assertions.
 

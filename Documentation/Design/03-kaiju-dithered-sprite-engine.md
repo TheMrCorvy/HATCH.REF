@@ -1,6 +1,6 @@
 # Design: 03 1-Bit Dithered Sprite Engine (Flame)
 
-This document details the multi-frame bitmap spritesheet data structures, high-framerate animation engine, and character rendering rules for digital pets in the **Unix Tamagotchi**, utilizing Flame.
+This document details the multi-frame bitmap spritesheet data structures, high-framerate animation engine, and character rendering rules for digital kaijus in the **Unix Tamagotchi**, utilizing Flame.
 
 ---
 
@@ -16,11 +16,11 @@ This document details the multi-frame bitmap spritesheet data structures, high-f
 
 ## 2. Dart Spritesheet Models & Catalog (`lib/core/sprite_engine/`)
 
-The `PetDefinition` model references asset paths and grid data:
+The `KaijuDefinition` model references asset paths and grid data:
 
 ```dart
-class PetDefinition {
-  final String petType;
+class KaijuDefinition {
+  final String kaijuType;
   final String displayName;
   final int priceCredits;
   final String spriteSheetAsset; // e.g. 'kaijus/godzilla_spritesheet.png'
@@ -28,8 +28,8 @@ class PetDefinition {
   final int frameHeight;
   final Map<String, SpriteAnimationData> actions;
 
-  const PetDefinition({
-    required this.petType,
+  const KaijuDefinition({
+    required this.kaijuType,
     required this.displayName,
     required this.priceCredits,
     required this.spriteSheetAsset,
@@ -51,8 +51,8 @@ class PetDefinition {
 ```dart
 import 'package:flame/sprite.dart';
 
-final godzillaDefinition = PetDefinition(
-  petType: 'godzilla',
+final godzillaDefinition = KaijuDefinition(
+  kaijuType: 'godzilla',
   displayName: 'Godzilla',
   priceCredits: 120,
   spriteSheetAsset: 'kaijus/godzilla_spritesheet.png',
@@ -96,66 +96,66 @@ final godzillaDefinition = PetDefinition(
 
 ---
 
-## 4. Flame Integration: Pet Viewport Widget
+## 4. Flame Integration: Kaiju Viewport Widget
 
-The `PetViewport` is implemented as a Flame `GameWidget`, containing a `SpriteAnimationComponent`. This entirely replaces the old text-based approach.
+The `KaijuViewport` is implemented as a Flame `GameWidget`, containing a `SpriteAnimationComponent`. This entirely replaces the old text-based approach.
 
 ```dart
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-class PetGame extends FlameGame {
-  final PetDefinition petDef;
+class KaijuGame extends FlameGame {
+  final KaijuDefinition kaijuDef;
   String currentAction;
-  late SpriteAnimationComponent petComponent;
+  late SpriteAnimationComponent kaijuComponent;
 
-  PetGame({required this.petDef, this.currentAction = 'idle'});
+  KaijuGame({required this.kaijuDef, this.currentAction = 'idle'});
 
   @override
   Future<void> onLoad() async {
-    final spriteSheet = await images.load(petDef.spriteSheetAsset);
+    final spriteSheet = await images.load(kaijuDef.spriteSheetAsset);
     
-    final animationData = petDef.getAnimationData(currentAction)!;
+    final animationData = kaijuDef.getAnimationData(currentAction)!;
     final animation = SpriteAnimation.fromFrameData(spriteSheet, animationData);
 
-    petComponent = SpriteAnimationComponent(
+    kaijuComponent = SpriteAnimationComponent(
       animation: animation,
-      size: Vector2(petDef.frameWidth.toDouble(), petDef.frameHeight.toDouble()),
+      size: Vector2(kaijuDef.frameWidth.toDouble(), kaijuDef.frameHeight.toDouble()),
       position: size / 2,
       anchor: Anchor.center,
     );
 
-    add(petComponent);
+    add(kaijuComponent);
   }
 
   void changeAction(String newAction) async {
     if (newAction == currentAction) return;
     currentAction = newAction;
     
-    final spriteSheet = await images.load(petDef.spriteSheetAsset);
-    final animationData = petDef.getAnimationData(currentAction)!;
-    petComponent.animation = SpriteAnimation.fromFrameData(spriteSheet, animationData);
+    final spriteSheet = await images.load(kaijuDef.spriteSheetAsset);
+    final animationData = kaijuDef.getAnimationData(currentAction)!;
+    kaijuComponent.animation = SpriteAnimation.fromFrameData(spriteSheet, animationData);
   }
 }
 
-class PetViewport extends StatelessWidget {
-  final PetDefinition petDef;
+class KaijuViewport extends StatelessWidget {
+  final KaijuDefinition kaijuDef;
   final String action;
 
-  const PetViewport({
+  const KaijuViewport({
     super.key,
-    required this.petDef,
+    required this.kaijuDef,
     required this.action,
   });
 
   @override
   Widget build(BuildContext context) {
-    // The GameWidget runs the Flame game loop (30+ FPS) rendering the pet
+    // The GameWidget runs the Flame game loop (30+ FPS) rendering the kaiju
     return Container(
       color: const Color(0xFFC5BEAA), // Khaki terminal background
       child: GameWidget(
-        game: PetGame(petDef: petDef, currentAction: action),
+        game: KaijuGame(kaijuDef: kaijuDef, currentAction: action),
       ),
     );
   }

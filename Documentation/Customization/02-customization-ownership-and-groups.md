@@ -4,7 +4,7 @@ This document details the ownership model, database schemas, and state managemen
 
 ## 1. Ownership Rules
 
-The Unix Tamagotchi architecture dictates that pets belong to GROUPS, not individual users. Customizations, however, are managed with the following rules:
+The Unix Tamagotchi architecture dictates that kaijus belong to GROUPS, not individual users. Customizations, however, are managed with the following rules:
 
 - **Set By (User):** Customizations are created and owned by a specific `user_id`. This ownership never changes.
 - **Applied To (Group):** Customizations are applied to the active `group_id` the user is currently part of.
@@ -15,8 +15,8 @@ The Unix Tamagotchi architecture dictates that pets belong to GROUPS, not indivi
 ## 2. Visibility Rules
 
 - **Client-Side Rendering:** The server stores per-user preferences. Each client renders the environment according to its authenticated user's preferences.
-- **Isolated Views:** In a group, each member sees their own visual customizations (e.g., User A sees a green palette, User B sees an amber palette, both interacting with the same pet).
-- **Shared Exceptions:** Pet nicknames are shared globally across the group.
+- **Isolated Views:** In a group, each member sees their own visual customizations (e.g., User A sees a green palette, User B sees an amber palette, both interacting with the same kaiju).
+- **Shared Exceptions:** Kaiju nicknames are shared globally across the group.
 
 ## 3. Database Schema
 

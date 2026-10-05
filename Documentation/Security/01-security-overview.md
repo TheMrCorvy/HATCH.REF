@@ -23,7 +23,7 @@ This document consolidates the security posture of Unix Tamagotchi across client
 | Backend | Supabase RLS — deny-first, per-table access policies | Phase 2 |
 | Backend | `add_credits` server function — client cannot write credit balance | Phase 2 |
 | Backend | Immutable `credit_ledger` — append-only audit trail | Phase 2 |
-| Backend | Pet action rate limiting (cooldown enforcement) | Phase 2 |
+| Backend | Kaiju action rate limiting (cooldown enforcement) | Phase 2 |
 | Backend | IAP receipt idempotency via `store_order_id` UNIQUE | Phase 4 |
 | Backend | IAP server-side verification (Google RTDN / Apple App Store V2) | Phase 4 |
 | Pairing | One-time NFC/BLE tokens with 60s TTL | Phase 4 |
@@ -48,7 +48,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER enforce_interaction_timestamp
-BEFORE UPDATE OF last_interaction_at ON public.pets
+BEFORE UPDATE OF last_interaction_at ON public.kaijus
 FOR EACH ROW EXECUTE FUNCTION validate_interaction_timestamp();
 ```
 
@@ -64,9 +64,9 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "profiles_self_only" ON public.profiles
     USING (auth.uid() = id);
 
--- pets: only members of the owning group can read/write
-ALTER TABLE public.pets ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "pets_group_members_only" ON public.pets
+-- kaijus: only members of the owning group can read/write
+ALTER TABLE public.kaijus ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "kaijus_group_members_only" ON public.kaijus
     USING (
         group_id IN (
             SELECT group_id FROM public.group_members WHERE user_id = auth.uid()
@@ -94,7 +94,7 @@ CREATE POLICY "scenario_plugins_read_only" ON public.scenario_plugins
 
 ---
 
-## 4. Pet Action Rate Limiting (Phase 2)
+## 4. Kaiju Action Rate Limiting (Phase 2)
 
 Prevents stat manipulation through rapid repeated action calls. The cooldown window is configurable per action type via the `action_plugins.parameters` JSONB field.
 
@@ -106,7 +106,7 @@ DECLARE
     cooldown_seconds INTEGER := 5;
 BEGIN
     SELECT last_interaction_at INTO last_action_time
-    FROM public.pets WHERE id = NEW.id;
+    FROM public.kaijus WHERE id = NEW.id;
 
     IF last_action_time IS NOT NULL AND
        EXTRACT(EPOCH FROM (NOW() - last_action_time)) < cooldown_seconds THEN
@@ -156,7 +156,7 @@ The PoC uses Hive for game state persistence. The following data must never be s
 | User PII | Supabase only (post-PoC) |
 | IAP receipt data | Supabase only (post-PoC) |
 
-Hive should only contain game state: pet stats, credit balance, and inventory. Never authentication material.
+Hive should only contain game state: kaiju stats, credit balance, and inventory. Never authentication material.
 
 ---
 

@@ -1,4 +1,4 @@
-# Features: 01 Core Pet Actions (As Plugins)
+# Features: 01 Core Kaiju Actions (As Plugins)
 
 This document specifies how the **3 core Tamagotchi actions** (**Eat**, **Sleep**, and **Play**) are implemented as the initial **User-Triggered Action Plugins** in the **Unix Tamagotchi**.
 

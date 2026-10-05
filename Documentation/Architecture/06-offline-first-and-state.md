@@ -32,7 +32,7 @@ flowchart LR
 import 'package:flutter/foundation.dart';
 
 @immutable
-class PetInstance {
+class KaijuInstance {
   final String id;
   final String groupId; // maps to groups.id; 'solo_<userId>' during PoC offline phase
   final String petType; // 'godzilla' | 'cyber_godzilla'
@@ -45,7 +45,7 @@ class PetInstance {
   final String activeScenarioId;   // e.g. 'default_room' | 'metropolis_ruins'
   final DateTime lastInteractionTimestamp;
 
-  const PetInstance({
+  const KaijuInstance({
     required this.id,
     required this.groupId,
     required this.petType,
@@ -59,7 +59,7 @@ class PetInstance {
     required this.lastInteractionTimestamp,
   });
 
-  PetInstance copyWith({
+  KaijuInstance copyWith({
     int? hunger,
     int? energy,
     int? happiness,
@@ -68,7 +68,7 @@ class PetInstance {
     String? activeScenarioId,
     DateTime? lastInteractionTimestamp,
   }) {
-    return PetInstance(
+    return KaijuInstance(
       id: id,
       groupId: groupId,
       petType: petType,
@@ -97,7 +97,7 @@ import '../plugins/plugin_registry.dart';
 
 class GameState {
   final int credits;
-  final List<PetInstance> ownedPets;
+  final List<KaijuInstance> ownedPets;
   final String? activePetId;
 
   const GameState({
@@ -106,7 +106,7 @@ class GameState {
     this.activePetId,
   });
 
-  PetInstance? get activePet {
+  KaijuInstance? get activePet {
     if (activePetId == null || ownedPets.isEmpty) return null;
     return ownedPets.firstWhere(
       (p) => p.id == activePetId,
@@ -123,7 +123,7 @@ class GameNotifier extends StateNotifier<GameState> {
           activePetId: null,
         ));
 
-  /// Purchase a pet: Dynamic capacity (no hardcoded 2-pet limit)
+  /// Purchase a kaiju: Dynamic capacity (no hardcoded 2-kaiju limit)
   bool buyPet({
     required String petType,
     required String nickname,
@@ -133,7 +133,7 @@ class GameNotifier extends StateNotifier<GameState> {
       return false; // Insufficient credits
     }
 
-    final newPet = PetInstance(
+    final newPet = KaijuInstance(
       id: 'pet_${DateTime.now().millisecondsSinceEpoch}',
       petType: petType,
       nickname: nickname,
@@ -161,12 +161,12 @@ class GameNotifier extends StateNotifier<GameState> {
 
   /// Executes an Action Plugin dynamically
   void executePluginAction(ActionPlugin plugin) {
-    final pet = state.activePet;
-    if (pet == null) return;
+    final kaiju = state.activePet;
+    if (kaiju == null) return;
 
     final backendParams = PluginRegistry().getActiveParamsForAction(plugin.id);
     final result = plugin.execute(
-      currentPet: pet,
+      currentPet: kaiju,
       backendParams: backendParams,
       triggeredAt: DateTime.now(),
     );
@@ -174,10 +174,10 @@ class GameNotifier extends StateNotifier<GameState> {
     if (!result.success) return;
 
     // Apply stat deltas
-    final updatedPet = pet.copyWith(
-      hunger: (pet.hunger + result.hungerDelta).clamp(0, 100),
-      energy: (pet.energy + result.energyDelta).clamp(0, 100),
-      happiness: (pet.happiness + result.happinessDelta).clamp(0, 100),
+    final updatedPet = kaiju.copyWith(
+      hunger: (kaiju.hunger + result.hungerDelta).clamp(0, 100),
+      energy: (kaiju.energy + result.energyDelta).clamp(0, 100),
+      happiness: (kaiju.happiness + result.happinessDelta).clamp(0, 100),
       currentActionState: result.animationTrigger,
       activeScenarioId: result.targetScenarioId,
       lastInteractionTimestamp: DateTime.now(),
@@ -185,7 +185,7 @@ class GameNotifier extends StateNotifier<GameState> {
 
     state = GameState(
       credits: state.credits + result.creditsEarned,
-      ownedPets: state.ownedPets.map((p) => p.id == pet.id ? updatedPet : p).toList(),
+      ownedPets: state.ownedPets.map((p) => p.id == kaiju.id ? updatedPet : p).toList(),
       activePetId: state.activePetId,
     );
 

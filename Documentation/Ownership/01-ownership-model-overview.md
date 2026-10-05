@@ -4,12 +4,12 @@
 Every user in the Unix Tamagotchi ecosystem gets a personal `SOLO` group upon registration. This group forms the foundation of the player experience. 
 
 ### Core Principle
-**Pets belong to GROUPS, not to individual users.** 
+**Kaijus belong to GROUPS, not to individual users.** 
 
-This unified 'group of 1' ownership model reconciles solo and multiplayer gameplay. Instead of separate `pets` and `shared_pets` concepts, all pets exist within a group context.
+This unified 'group of 1' ownership model reconciles solo and multiplayer gameplay. Instead of separate `kaijus` and `shared_pets` concepts, all kaijus exist within a group context.
 
 ## 2. Group Types
-The `group_type` dictates not only capacity but also subtle shifts in pet personality and behavior.
+The `group_type` dictates not only capacity but also subtle shifts in kaiju personality and behavior.
 
 > **Marketing Note**: The game is **primarily marketed as a couple experience**. `COUPLE` is the flagship group type. `SOLO`, `FAMILY`, and `FRIENDS` are fully supported but are not the product's primary audience.
 
@@ -31,7 +31,7 @@ stateDiagram-v2
 ```
 
 ## 4. Unified Entity-Relationship Diagram (ERD)
-This replaces the old `profiles -> pets` direct relationship.
+This replaces the old `profiles -> kaijus` direct relationship.
 
 ```mermaid
 erDiagram
@@ -63,7 +63,7 @@ erDiagram
     PETS {
         uuid id PK
         uuid group_id FK
-        string pet_type FK
+        string kaiju_type FK
         string nickname
         int hunger
         int energy
@@ -94,11 +94,11 @@ CREATE TABLE group_members (
     PRIMARY KEY (group_id, user_id)
 );
 
--- Pets Table (Unified)
-CREATE TABLE pets (
+-- Kaijus Table (Unified)
+CREATE TABLE kaijus (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    pet_type TEXT NOT NULL,
+    kaiju_type TEXT NOT NULL,
     nickname TEXT NOT NULL,
     hunger INTEGER DEFAULT 100,
     energy INTEGER DEFAULT 100,
@@ -139,18 +139,18 @@ CREATE TRIGGER on_user_created_solo_group
 
 ## 7. Row Level Security (RLS)
 > [!IMPORTANT]
-> Users can only interact with pets that belong to a group they are currently a member of.
+> Users can only interact with kaijus that belong to a group they are currently a member of.
 
 ```sql
-ALTER TABLE pets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kaijus ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view and update pets in their groups" 
-ON pets
+CREATE POLICY "Users can view and update kaijus in their groups" 
+ON kaijus
 FOR ALL 
 USING (
     EXISTS (
         SELECT 1 FROM group_members
-        WHERE group_members.group_id = pets.group_id
+        WHERE group_members.group_id = kaijus.group_id
         AND group_members.user_id = auth.uid()
     )
 );

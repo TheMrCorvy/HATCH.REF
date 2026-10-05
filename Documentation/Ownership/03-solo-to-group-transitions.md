@@ -5,18 +5,18 @@ The player lifecycle seamlessly flows between solo and multiplayer contexts with
 
 1. **Registration**: Auto-creation of `SOLO` group.
 2. **Multiplayer**: User invites/joins a shared group (`COUPLE`, `FAMILY`, `FRIENDS`).
-3. **Dissolution/Leaving**: Group disbands, user returns to `SOLO` group (with cloned shared pets).
+3. **Dissolution/Leaving**: Group disbands, user returns to `SOLO` group (with cloned shared kaijus).
 
 ## 2. Transition Mechanics
 
 ### Joining a Group
 When a user joins a multiplayer group, their personal `SOLO` group becomes **dormant**.
-- The existing pets in the `SOLO` group stay in the `SOLO` group.
-- The shared multiplayer group has its own distinct set of pets.
-- **Standby Mechanics**: While a user is actively viewing a multiplayer group, their `SOLO` group pets experience heavily reduced stat decay (e.g., 0.1x normal rate) to prevent punishment for engaging in multiplayer.
+- The existing kaijus in the `SOLO` group stay in the `SOLO` group.
+- The shared multiplayer group has its own distinct set of kaijus.
+- **Standby Mechanics**: While a user is actively viewing a multiplayer group, their `SOLO` group kaijus experience heavily reduced stat decay (e.g., 0.1x normal rate) to prevent punishment for engaging in multiplayer.
 
 ### Leaving a Group
-When a user leaves (or the group dissolves), they receive clones of the shared pets, which are added to their `SOLO` group. The `SOLO` group fully reactivates.
+When a user leaves (or the group dissolves), they receive clones of the shared kaijus, which are added to their `SOLO` group. The `SOLO` group fully reactivates.
 
 ### Switching Active Groups
 A user can potentially belong to multiple groups (their `SOLO` group + a multiplayer group). The application UI shows **one active group at a time**.
@@ -43,7 +43,7 @@ stateDiagram-v2
     }
     
     ActiveMultiplayer --> ActiveSolo: Leave/Switch to Solo
-    ActiveMultiplayer --> ActiveSolo: Group Dissolves (Clone Pets)
+    ActiveMultiplayer --> ActiveSolo: Group Dissolves (Clone Kaijus)
 ```
 
 ## 4. Flutter/Dart Implementation Model
@@ -83,7 +83,7 @@ class ActiveGroupNotifier extends StateNotifier<GroupContext?> {
   ActiveGroupNotifier() : super(null);
 
   void switchGroup(GroupContext newGroup) {
-    // Save current group state, trigger UI transition, load new group pets
+    // Save current group state, trigger UI transition, load new group kaijus
     state = newGroup;
   }
 }
@@ -94,4 +94,4 @@ final activeGroupProvider = StateNotifierProvider<ActiveGroupNotifier, GroupCont
 ```
 
 ## 5. Edge Cases
-- **Accumulation on Dissolution**: If a user has 5 pets in their `SOLO` group, joins a multiplayer group with 3 pets, and that group dissolves, the user ends up with 8 pets. Since there is no server-side pet cap, this is valid. The UI must handle variable-length pet lists (scrollable terminal view).
+- **Accumulation on Dissolution**: If a user has 5 kaijus in their `SOLO` group, joins a multiplayer group with 3 kaijus, and that group dissolves, the user ends up with 8 kaijus. Since there is no server-side kaiju cap, this is valid. The UI must handle variable-length kaiju lists (scrollable terminal view).

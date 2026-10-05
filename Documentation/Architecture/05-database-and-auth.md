@@ -1,6 +1,6 @@
 # Architecture: 05 Database and Authentication
 
-This document details the PostgreSQL relational schema, Row-Level Security (RLS) policies, and social authentication architecture for the **Unix Tamagotchi**. Pet ownership is **unbounded by design** — any user may own as many pets as their credit balance allows; no server-side quota field exists.
+This document details the PostgreSQL relational schema, Row-Level Security (RLS) policies, and social authentication architecture for the **Unix Tamagotchi**. Kaiju ownership is **unbounded by design** — any user may own as many kaijus as their credit balance allows; no server-side quota field exists.
 
 ---
 
@@ -11,10 +11,10 @@ erDiagram
     PROFILES ||--o{ GROUP_MEMBERS : "is member of"
     PROFILES ||--o{ TRANSACTIONS : executes
     GROUPS ||--o{ GROUP_MEMBERS : contains
-    GROUPS ||--o{ PETS : owns
-    PET_CATALOG ||--o{ PETS : defines
+    GROUPS ||--o{ KAIJUS : owns
+    PET_CATALOG ||--o{ KAIJUS : defines
     SCENARIO_PLUGINS ||--o{ ACTION_PLUGINS : binds_to
-    PETS }o--|| PET_LIFECYCLE_CONFIG : "phase config"
+    KAIJUS }o--|| PET_LIFECYCLE_CONFIG : "phase config"
     GROUPS ||--o{ DISSOLUTION_REQUESTS : "has pending"
 
     PROFILES {
@@ -41,17 +41,17 @@ erDiagram
     }
 
     PET_CATALOG {
-        text pet_type PK "e.g. godzilla, cyber_godzilla"
+        text kaiju_type PK "e.g. godzilla, cyber_godzilla"
         text display_name
         integer base_price_credits "e.g. 120"
         jsonb spritesheet_data
         boolean is_available
     }
 
-    PETS {
+    KAIJUS {
         uuid id PK
         uuid group_id FK "References groups.id"
-        text pet_type FK "References pet_catalog.pet_type"
+        text kaiju_type FK "References kaiju_catalog.kaiju_type"
         text nickname
         integer hunger "0 to 100"
         integer energy "0 to 100"
@@ -84,13 +84,13 @@ erDiagram
         uuid user_id FK "References profiles.id"
         text transaction_type "STORE_PURCHASE | IAP_CREDIT"
         integer amount_credits
-        text pet_type FK
+        text kaiju_type FK
         text store_order_id
         timestamp created_at
     }
 
     PET_LIFECYCLE_CONFIG {
-        text pet_type PK,FK
+        text kaiju_type PK,FK
         integer phase_index PK
         text phase_name
         integer min_age_days
@@ -138,7 +138,7 @@ CREATE TABLE public.groups (
 );
 
 -- 1c. Group Members Table
--- PARENT/CHILD roles are dialogue labels for FAMILY groups (how the pet addresses members).
+-- PARENT/CHILD roles are dialogue labels for FAMILY groups (how the kaiju addresses members).
 -- They do not grant or restrict app permissions beyond ADMIN/MEMBER.
 CREATE TABLE public.group_members (
     group_id UUID REFERENCES public.groups(id) ON DELETE CASCADE,
@@ -148,17 +148,17 @@ CREATE TABLE public.group_members (
     PRIMARY KEY (group_id, user_id)
 );
 
--- 1d. Active Pet Sessions (per-user, per-group)
--- Replaces the old is_active boolean on pets, allowing each member to track their own active pet.
-CREATE TABLE public.active_pet_sessions (
+-- 1d. Active Kaiju Sessions (per-user, per-group)
+-- Replaces the old is_active boolean on kaijus, allowing each member to track their own active kaiju.
+CREATE TABLE public.active_kaiju_sessions (
     user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
-    pet_id UUID NOT NULL REFERENCES public.pets(id) ON DELETE CASCADE,
+    kaiju_id UUID NOT NULL REFERENCES public.kaijus(id) ON DELETE CASCADE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     PRIMARY KEY (user_id, group_id)
 );
 
--- 1e. Group Type Configuration (drives per-group-type pet personality and behavior)
+-- 1e. Group Type Configuration (drives per-group-type kaiju personality and behavior)
 CREATE TABLE public.group_type_config (
     group_type TEXT PRIMARY KEY CHECK (group_type IN ('SOLO', 'COUPLE', 'FAMILY', 'FRIENDS')),
     affection_rate NUMERIC(4,2) NOT NULL DEFAULT 1.0,
@@ -200,9 +200,9 @@ CREATE TABLE public.action_plugins (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 4. Pet Catalog
-CREATE TABLE public.pet_catalog (
-    pet_type TEXT PRIMARY KEY,
+-- 4. Kaiju Catalog
+CREATE TABLE public.kaiju_catalog (
+    kaiju_type TEXT PRIMARY KEY,
     display_name TEXT NOT NULL,
     base_price_credits INTEGER NOT NULL DEFAULT 120,
     spritesheet_data JSONB NOT NULL,
@@ -210,12 +210,12 @@ CREATE TABLE public.pet_catalog (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 5. Pets Table
--- Owned by a GROUP, not an individual user. is_active removed — see active_pet_sessions.
-CREATE TABLE public.pets (
+-- 5. Kaijus Table
+-- Owned by a GROUP, not an individual user. is_active removed — see active_kaiju_sessions.
+CREATE TABLE public.kaijus (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
-    pet_type TEXT NOT NULL REFERENCES public.pet_catalog(pet_type),
+    kaiju_type TEXT NOT NULL REFERENCES public.kaiju_catalog(kaiju_type),
     nickname TEXT NOT NULL,
     hunger INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
     energy INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
@@ -225,17 +225,17 @@ CREATE TABLE public.pets (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 6. Pet Lifecycle Configuration (per-species aging schedule, Phase 2+)
--- See Features/05-pet-lifecycle-and-aging.md for design intent and example seed data.
-CREATE TABLE public.pet_lifecycle_config (
-    pet_type TEXT NOT NULL REFERENCES public.pet_catalog(pet_type) ON DELETE CASCADE,
+-- 6. Kaiju Lifecycle Configuration (per-kaiju type aging schedule, Phase 2+)
+-- See Features/05-kaiju-lifecycle-and-aging.md for design intent and example seed data.
+CREATE TABLE public.kaiju_lifecycle_config (
+    kaiju_type TEXT NOT NULL REFERENCES public.kaiju_catalog(kaiju_type) ON DELETE CASCADE,
     phase_index INTEGER NOT NULL CHECK (phase_index BETWEEN 0 AND 4),
     phase_name TEXT NOT NULL CHECK (phase_name IN ('baby', 'child', 'young', 'adult', 'elder')),
     min_age_days INTEGER NOT NULL,
     stat_decay_modifiers JSONB NOT NULL DEFAULT '{"hunger": 1.0, "energy": 1.0, "happiness": 1.0}'::jsonb,
     sprite_pool_id TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (pet_type, phase_index)
+    PRIMARY KEY (kaiju_type, phase_index)
 );
 
 -- 7. Dissolution Requests (consensus-based group dissolution, Phase 4+)

@@ -1,6 +1,6 @@
 # Payments: 01 App Store & Google Play In-App Purchase Rules
 
-This document outlines the policy requirements, fee tiers, and compliance rules imposed by **Google Play** and the **Apple App Store** for selling digital pets and currency in the **Unix Tamagotchi**.
+This document outlines the policy requirements, fee tiers, and compliance rules imposed by **Google Play** and the **Apple App Store** for selling digital kaijus and currency in the **Unix Tamagotchi**.
 
 ---
 
@@ -10,7 +10,7 @@ Both Google and Apple enforce strict rules regarding in-app monetization:
 
 > [!IMPORTANT]
 > **Mandatory In-App Billing for In-Game Currency**:
-> Any currency, digital pet, skin, or consumable item used exclusively within a mobile app **MUST** be processed using the platform's proprietary billing system:
+> Any currency, digital kaiju, skin, or consumable item used exclusively within a mobile app **MUST** be processed using the platform's proprietary billing system:
 > - **Android**: Google Play Billing Library.
 > - **iOS**: Apple StoreKit 2.
 >
@@ -38,11 +38,11 @@ In-app products in mobile stores belong to one of four categories. For the **Uni
 │ Product Type            │ Tamagotchi Implementation   │
 ├─────────────────────────┼─────────────────────────────┤
 │ 1. Consumable           │ Credit Packs (e.g., 500 $)  │
-│    (Can be bought       │ - Used to buy pets          │
+│    (Can be bought       │ - Used to buy kaijus          │
 │     multiple times)     │ - Consumed upon spending    │
 ├─────────────────────────┼─────────────────────────────┤
-│ 2. Non-Consumable       │ Exclusive Pet Unlock        │
-│    (Purchased once,     │ - e.g. "Dragon 1-bit Pet"   │
+│ 2. Non-Consumable       │ Exclusive Kaiju Unlock        │
+│    (Purchased once,     │ - e.g. "Godzilla 1-bit Kaiju"   │
 │     restorable across   │ - Restored via              │
 │     devices)            │   "Restore Purchases"       │
 ├─────────────────────────┼─────────────────────────────┤

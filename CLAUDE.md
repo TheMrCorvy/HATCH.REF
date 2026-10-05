@@ -39,7 +39,7 @@ Every document must live in the folder that matches the game domain it describes
 | `Plugins/` | Plugin interface contracts, action/scenario definitions, backend plugin schema |
 | `GameDesign/` | Game balance, stat curves, economy math, progression rules |
 | `Furniture/` | Furniture catalog, data model, placement rules, stat modifiers |
-| `Multiplayer/` | Shared pet care architecture, group types, real-time sync contracts |
+| `Multiplayer/` | Shared kaiju care architecture, group types, real-time sync contracts |
 | `Ownership/` | Ownership model, group lifecycle, solo ↔ group transitions |
 | `Payments/` | IAP architecture, store compliance, payout rules, anti-cheat |
 | `DevOps/` | CI/CD pipelines, build and release process |
@@ -144,13 +144,13 @@ The following are the only items in scope for the initial PoC. Delegate in this 
 - [ ] Design system & theme (`lib/core/theme/`)
 - [ ] Terminal widget library (`lib/core/widgets/`)
 - [ ] Bayer dither shader + Flame integration (`lib/core/dither_engine/`)
-- [ ] Pet sprite engine (`lib/core/sprite_engine/`)
-- [ ] Riverpod state: `PetStateNotifier`, `InventoryNotifier`
+- [ ] Kaiju sprite engine (`lib/core/sprite_engine/`)
+- [ ] Riverpod state: `KaijuStateNotifier`, `InventoryNotifier`
 - [ ] Plugin registry + 3 core plugins: `EatAction`, `SleepAction`, `PlayAction`
 - [ ] `DefaultRoomScenario` plugin
-- [ ] Screen: Pet Room (viewport + action bar)
-- [ ] Screen: Inventory / Pet Switcher
-- [ ] Screen: Pet Store (240 starting credits)
+- [ ] Screen: Containment Room (viewport + action bar)
+- [ ] Screen: Inventory / Kaiju Switcher
+- [ ] Screen: Kaiju Store (240 starting credits)
 - [ ] Screen: Furniture Store + placement
 - [ ] Screen: Evolution History (static mock — `EVO_MGR`)
 - [ ] Screen: Settings / Diagnostics

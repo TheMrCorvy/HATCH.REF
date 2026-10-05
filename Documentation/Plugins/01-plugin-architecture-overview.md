@@ -12,7 +12,7 @@ In **Unix Tamagotchi**, all capabilities are implemented as **modular plugins** 
 1. **Activation State**: Whether the plugin is currently enabled (`is_enabled: true`).
 2. **Availability Window**: Specific dates and times when the plugin is active (`valid_from`, `valid_until`).
 3. **Execution Parameters**: Dynamic variables passed to the plugin (e.g. payout rates, difficulty, energy drain).
-4. **Target Scenario Binding**: Which environment scenario the pet will transition to when the action is executed.
+4. **Target Scenario Binding**: Which environment scenario the kaiju will transition to when the action is executed.
 
 ```mermaid
 flowchart TD
@@ -78,7 +78,7 @@ lib/plugins/
 
 ### A. Age Phase Enum (`lib/models/age_phase.dart`)
 
-All age-gate logic references this enum. During the PoC, every pet starts at `AgePhase.child` as a static value; the real computation is introduced in Phase 2 via `Features/05-pet-lifecycle-and-aging.md`. Starting at `child` ensures the three core PoC actions (Eat, Sleep, Play) are all unlocked from day one.
+All age-gate logic references this enum. During the PoC, every kaiju starts at `AgePhase.child` as a static value; the real computation is introduced in Phase 2 via `Features/05-kaiju-lifecycle-and-aging.md`. Starting at `child` ensures the three core PoC actions (Eat, Sleep, Play) are all unlocked from day one.
 
 ```dart
 /// Ordered by lifecycle progression — ordinal comparisons are intentional.
@@ -111,10 +111,10 @@ abstract class ActionPlugin {
 
   // Priority — lower value = higher priority (0 overrides everything)
   // Used by the PluginRegistry to resolve conflicts between autonomous plugins.
-  // TBD: exact values finalized in Features/05-pet-lifecycle-and-aging.md
+  // TBD: exact values finalized in Features/05-kaiju-lifecycle-and-aging.md
   int get priority => 50;
 
-  /// Returns false if the pet's current phase is outside this plugin's age gate.
+  /// Returns false if the kaiju's current phase is outside this plugin's age gate.
   bool isAgeEligible(AgePhase petPhase) {
     final min = minAgePhase;
     final max = maxAgePhase;
@@ -123,9 +123,9 @@ abstract class ActionPlugin {
     return true;
   }
 
-  /// Executes the action given the current pet state and backend-provided parameters
+  /// Executes the action given the current kaiju state and backend-provided parameters
   ActionResult execute({
-    required PetState currentPet,
+    required KaijuState currentPet,
     required Map<String, dynamic> backendParams,
     required DateTime triggeredAt,
   });
@@ -171,10 +171,10 @@ abstract class ScenarioPlugin {
   /// pipeline applies the Bayer dithering shader to this entire scene graph.
   Component buildScene({
     required Map<String, dynamic> scenarioParams,
-    required Component petComponent,
+    required Component kaijuComponent,
   });
 
-  /// The coordinate layout for where the pet sprite is anchored within the scene.
+  /// The coordinate layout for where the kaiju sprite is anchored within the scene.
   Vector2 get petAnchorPoint;
 }
 ```

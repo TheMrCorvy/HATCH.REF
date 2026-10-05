@@ -1,6 +1,6 @@
 # Payments: 04 Security & Anti-Cheat Architecture (Flutter)
 
-This document specifies the defense-in-depth mechanisms for protecting credit balances, in-app purchases, and pet state integrity in Flutter for the **Unix Tamagotchi**.
+This document specifies the defense-in-depth mechanisms for protecting credit balances, in-app purchases, and kaiju state integrity in Flutter for the **Unix Tamagotchi**.
 
 ---
 

@@ -6,7 +6,7 @@
 
 **Unix Tamagotchi** is a retro digital companion **primarily marketed toward couples** — two partners sharing, nurturing, and managing a giant Kaiju specimen (inspired by the Godzillaverse) together. Families, friend groups, and solo players are also fully supported, but the game's identity, onboarding, and social features are centered on the couple experience.
 
-Instead of ordinary domestic animals (like bunnies, cats, or dogs), the companions are towering **Kaijus from the Godzillaverse** rendered in hand-crafted **1-bit dithered pixel art sprites** (taking direct visual inspiration from `Desing References/Godzila.webp`, featuring Godzilla looming over city skylines and unleashing dithered atomic breath). In a delightful retro-surreal contrast, the giant Kaiju lives inside an authentic monospace terminal habitat equipped with an oversized bed, chair/couch, desktop workstation, and kitchen. Its daily routine includes devouring compressed balls of human people for sustenance, going to work to destroy cities, and attending academy studies to master urban demolition techniques.
+Instead of ordinary domestic animals, the companions are towering **Kaijus from the Godzillaverse** rendered in hand-crafted **1-bit dithered pixel art sprites** (taking direct visual inspiration from `Desing References/Godzila.webp`, featuring Godzilla looming over city skylines and unleashing dithered atomic breath). In a delightful retro-surreal contrast, the giant Kaiju lives inside an authentic monospace terminal habitat equipped with an oversized bed, chair/couch, desktop workstation, and kitchen. Its daily routine includes devouring compressed balls of human people for sustenance, going to work to destroy cities, and attending academy studies to master urban demolition techniques.
 
 ### Key Pillars
 1. **Authentic Hacker Aesthetic**: Monospace typography (`VT323`), ANSI block characters (`█ ▓ ▒ ░`), prompt syntax (`[ > ACTION ]`), and retro hardware audio beeps.
@@ -29,9 +29,9 @@ flowchart TD
     end
 
     subgraph MacroLoop["Daily Session Loop (1-5 Minutes)"]
-        CheckIn["Check in on Active Pet"]
+        CheckIn["Check in on Active Kaiju"]
         MaintainStats["Top off Hunger & Energy"]
-        SwitchCompanion["Switch to Secondary Pet in Slot 2"]
+        SwitchCompanion["Switch to Secondary Kaiju in Slot 2"]
         CheckIn --> MaintainStats --> SwitchCompanion
     end
 ```

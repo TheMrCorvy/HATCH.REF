@@ -1,6 +1,6 @@
 # Name Generation: 02 Per-Type Name Pools
 
-This document contains the full curated name pools for every registered pet type, the JoJo's Bizarre Adventure Stand references that inspired them, and the rules for extending pools when new pet types are added.
+This document contains the full curated name pools for every registered kaiju type, the JoJo's Bizarre Adventure Stand references that inspired them, and the rules for extending pools when new kaiju types are added.
 
 ---
 
@@ -36,7 +36,7 @@ Examples from the source material:
 | **Tusk** | Part 7 | Fleetwood Mac — *Tusk* |
 | **Dirty Deeds Done Dirt Cheap** | Part 7 | AC/DC — *Dirty Deeds Done Dirt Cheap* |
 
-The pet name pools mirror this structure: expressive tokens that stand on their own as cool system identifiers, but carry an additional layer of meaning for JoJo fans.
+The kaiju designation pools mirror this structure: expressive tokens that stand on their own as cool system identifiers, but carry an additional layer of meaning for JoJo fans.
 
 ---
 
@@ -204,12 +204,12 @@ METAMORPHIC_CHITIN
 
 ## 5. Extending Pools for New Titan Types
 
-When a new `pet_type` is registered in `pet_catalog`, a matching name pool must be created. Follow this checklist:
+When a new `kaiju_type` is registered in `pet_catalog`, a matching name pool must be created. Follow this checklist:
 
-1. **Define the archetype** — 2-3 sentences describing the pet's personality and power theme.
+1. **Define the archetype** — 2-3 sentences describing the kaiju's personality and power theme.
 2. **Select 3–5 source Stands** from JoJo's Bizarre Adventure that match the archetype. Prefer Stands with:
    - Evocative band/album origin names.
-   - Thematic alignment with the pet's stats profile (e.g., a high-energy pet → aggressive Stand names).
+   - Thematic alignment with the kaiju's stats profile (e.g., a high-energy kaiju → aggressive Stand names).
 3. **Compose the pool** following the token structure rules (Section 3 of [01-name-generation-overview.md](./01-name-generation-overview.md)):
    - Minimum 8 names per pool.
    - At least 4 common (2-token) names.

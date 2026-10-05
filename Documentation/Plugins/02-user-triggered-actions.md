@@ -24,7 +24,7 @@ flowchart LR
 
 ## 2. Dynamic UI Action Injection
 
-Instead of hardcoding static buttons in the Pet Room, the screen dynamically queries the `PluginRegistry` through a Riverpod provider to generate monospace bracket buttons:
+Instead of hardcoding static buttons in the containment room, the screen dynamically queries the `PluginRegistry` through a Riverpod provider to generate monospace bracket buttons:
 
 ```dart
 // lib/features/room/widgets/action_button_bar.dart
@@ -88,7 +88,7 @@ class EatActionPlugin extends ActionPlugin {
 
   @override
   ActionResult execute({
-    required PetState currentPet,
+    required KaijuState currentPet,
     required Map<String, dynamic> backendParams,
     required DateTime triggeredAt,
   }) {
@@ -131,7 +131,7 @@ class CrushTankActionPlugin extends ActionPlugin {
 
   @override
   ActionResult execute({
-    required PetState currentPet,
+    required KaijuState currentPet,
     required Map<String, dynamic> backendParams,
     required DateTime triggeredAt,
   }) {

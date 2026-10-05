@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-> **PoC Status**: Aging is **deferred to Phase 2+** (requires the Supabase backend). During the PoC, all Kaijus remain in a static phase. The `age_in_days` field exists in the model but does not increment. Phase thresholds and durations come from the backend (`pet_lifecycle_config` table, per pet type) and are never hardcoded in the client.
+> **PoC Status**: Aging is **deferred to Phase 2+** (requires the Supabase backend). During the PoC, all Kaijus remain in a static phase. The `age_in_days` field exists in the model but does not increment. Phase thresholds and durations come from the backend (`kaiju_lifecycle_config` table, per kaiju type) and are never hardcoded in the client.
 
 The Unix Tamagotchi Kaiju lifecycle is divided into **5 sequential phases**. Each phase unlocks or locks specific plugins, changes the Kaiju's animations and personality responses, and affects the rate at which stats decay. The total lifespan of a Kaiju titan is open-ended — an elder Kaiju does not die, it simply enters a stable late-life state with altered behavior.
 
@@ -18,7 +18,7 @@ The Unix Tamagotchi Kaiju lifecycle is divided into **5 sequential phases**. Eac
 | **Adult** | 3 | ~14 days | 11 ≤ age < 25 | Full Apex Titan. City Destruction work plugins unlock. Study plugins lock. |
 | **Elder** | 4 | Indefinite | 25 ≤ age | Ancient Titan. Slower stat decay. City Destruction work plugins lock. Requires more care. |
 
-> All numeric values above are **TBD**. Final durations will be defined per Kaiju type in the `pet_lifecycle_config` backend table. The values here are design reference points, not implementation targets.
+> All numeric values above are **TBD**. Final durations will be defined per kaiju type in the `kaiju_lifecycle_config` backend table. The values here are design reference points, not implementation targets.
 
 ---
 
@@ -44,13 +44,13 @@ The backend can override any cell in this matrix via the `min_age_phase` / `max_
 Inspired by the mechanics of the most successful Tamagotchi lineups (Gen 1-4, Tamagotchi P's, Tamagotchi Uni), adapted for this game's backend-driven architecture:
 
 ### 4.1 Real-Time Age Progression
-Age advances based on **real-world elapsed time**, not on app usage sessions. A pet ages whether or not the player opens the app. This is computed server-side via a daily `pg_cron` job that increments `pets.age_in_days` and checks phase thresholds.
+Age advances based on **real-world elapsed time**, not on app usage sessions. A kaiju ages whether or not the player opens the app. This is computed server-side via a daily `pg_cron` job that increments `kaijus.age_in_days` and checks phase thresholds.
 
 ```
 EVERY DAY:
-  For each pet:
+  For each kaiju:
     age_in_days += 1
-    new_phase = resolve_phase(pet_type, age_in_days)
+    new_phase = resolve_phase(kaiju_type, age_in_days)
     IF new_phase != current_phase:
       trigger phase_transition event
       broadcast to all group members
@@ -59,13 +59,13 @@ EVERY DAY:
 
 ### 4.2 Phase Transition Events
 When a phase boundary is crossed:
-- A push notification is sent to all group members: `[ EVO_MGR ] <PetName> has reached phase: <PHASE_NAME>.`
-- The pet's sprite and animation pool update to the new phase's assets.
+- A push notification is sent to all group members: `[ EVO_MGR ] <KaijuName> has reached phase: <PHASE_NAME>.`
+- The kaiju's sprite and animation pool update to the new phase's assets.
 - The `PluginRegistry` is re-synced with the backend to apply any new age-gate changes.
 - A phase transition animation plays on next app open (similar to the Tamagotchi evolution animation).
 
 ### 4.3 Care Quality Influence (TBD)
-In classic Tamagotchis, how well you care for the pet during childhood determines which character variant it evolves into. A similar system is **planned but not yet designed** for this game:
+In classic Tamagotchis, how well you care for the kaiju during childhood determines which character variant it evolves into. A similar system is **planned but not yet designed** for this game:
 - High average stats during `child` phase → unlocks premium `young` sprite variant.
 - Consistent feeding during `young` → unlocks bonus stat multiplier in `adult` phase.
 - This is a post-Phase-2 consideration and must not be implemented prematurely.
@@ -81,18 +81,18 @@ Each phase has a stat decay multiplier applied on top of the base rates from `Ga
 | Adult | 1.0× | 1.0× | 1.0× |
 | Elder | 0.7× (slower) | 0.7× (slower) | 0.8× |
 
-> These multipliers are **TBD** and will be tunable from the backend via `pet_lifecycle_config.stat_decay_modifiers`.
+> These multipliers are **TBD** and will be tunable from the backend via `kaiju_lifecycle_config.stat_decay_modifiers`.
 
 ---
 
-## 5. Backend Configuration — `pet_lifecycle_config` Table
+## 5. Backend Configuration — `kaiju_lifecycle_config` Table
 
-Phase durations are **per pet type** and come exclusively from the backend. This ensures different pet species feel distinct without requiring client updates.
+Phase durations are **per kaiju type** and come exclusively from the backend. This ensures different kaiju types feel distinct without requiring client updates.
 
 ```sql
--- Defines the aging schedule for each pet type
-CREATE TABLE public.pet_lifecycle_config (
-    pet_type TEXT NOT NULL REFERENCES public.pet_catalog(pet_type) ON DELETE CASCADE,
+-- Defines the aging schedule for each kaiju type
+CREATE TABLE public.kaiju_lifecycle_config (
+    kaiju_type TEXT NOT NULL REFERENCES public.kaiju_catalog(kaiju_type) ON DELETE CASCADE,
     phase_index INTEGER NOT NULL CHECK (phase_index BETWEEN 0 AND 4),
     phase_name TEXT NOT NULL CHECK (phase_name IN ('baby', 'child', 'young', 'adult', 'elder')),
     min_age_days INTEGER NOT NULL,           -- Age (in days) at which this phase begins
@@ -103,11 +103,11 @@ CREATE TABLE public.pet_lifecycle_config (
     }'::jsonb,
     sprite_pool_id TEXT,                    -- Which sprite set to load for this phase
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (pet_type, phase_index)
+    PRIMARY KEY (kaiju_type, phase_index)
 );
 
 -- Example seed data (all durations TBD)
-INSERT INTO public.pet_lifecycle_config VALUES
+INSERT INTO public.kaiju_lifecycle_config VALUES
 ('godzilla', 0, 'baby',   0,  '{"hunger": 1.5, "energy": 1.5, "happiness": 1.5}'::jsonb, 'godzilla_baby'),
 ('godzilla', 1, 'child',  1,  '{"hunger": 1.2, "energy": 1.2, "happiness": 1.2}'::jsonb, 'godzilla_child'),
 ('godzilla', 2, 'young',  4,  '{"hunger": 1.0, "energy": 1.0, "happiness": 1.0}'::jsonb, 'godzilla_young'),
@@ -116,12 +116,12 @@ INSERT INTO public.pet_lifecycle_config VALUES
 ```
 
 ### Client-Side Phase Resolution
-The client resolves the current phase from the cached lifecycle config and `pet.ageInDays`:
+The client resolves the current phase from the cached lifecycle config and `kaiju.ageInDays`:
 
 ```dart
-AgePhase resolvePhase(String petType, int ageInDays, List<LifecycleConfig> config) {
+AgePhase resolvePhase(String kaijuType, int ageInDays, List<LifecycleConfig> config) {
   final sorted = config
-      .where((c) => c.petType == petType)
+      .where((c) => c.kaijuType == kaijuType)
       .toList()
       ..sort((a, b) => b.minAgeDays.compareTo(a.minAgeDays)); // descending
 
@@ -144,8 +144,8 @@ Age gates are stored as `min_age_phase` and `max_age_phase` string fields on eac
 
 ```
 Plugin is renderable only if:
-  pet.currentPhase >= plugin.minAgePhase  (if defined)
-  pet.currentPhase <= plugin.maxAgePhase  (if defined)
+  kaiju.currentPhase >= plugin.minAgePhase  (if defined)
+  kaiju.currentPhase <= plugin.maxAgePhase  (if defined)
   AND all other enable conditions are met
 ```
 
@@ -155,7 +155,7 @@ Plugin is renderable only if:
 
 > **Status**: This section is in early definition. The infrastructure will be built with this in mind, but the exact priority values and conflict rules are not finalized.
 
-When multiple autonomous plugins could trigger simultaneously (e.g., a pet is both sick and at working age), a priority system resolves conflicts. Lower priority values win.
+When multiple autonomous plugins could trigger simultaneously (e.g., a kaiju is both sick and at working age), a priority system resolves conflicts. Lower priority values win.
 
 ### Intended Priority Tiers
 

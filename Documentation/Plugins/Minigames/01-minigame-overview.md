@@ -1,6 +1,6 @@
 # Minigames Plugin: 01 Overview & Architecture
 
-This document describes the **Minigame Plugin subsystem** for **Unix Tamagotchi** — an extension of the core plugin engine that introduces interactive, time-constrained game sessions playable directly from the pet's terminal environment.
+This document describes the **Minigame Plugin subsystem** for **Unix Tamagotchi** — an extension of the core plugin engine that introduces interactive, time-constrained game sessions playable directly from the kaiju's terminal environment.
 
 > **Scope Note**: Minigames are **not part of the PoC**. They are a **low-priority, post-Phase-4** feature. All schemas and contracts defined here must be treated as design intent, not active implementation targets.
 
@@ -8,7 +8,7 @@ This document describes the **Minigame Plugin subsystem** for **Unix Tamagotchi*
 
 ## 1. What Is a Minigame Plugin?
 
-A minigame is a self-contained interactive session (30 seconds to 2 minutes) launched from the pet room as a user-triggered action. Unlike core actions (Eat, Sleep, Play) which execute a single animation and immediately apply stat deltas, a minigame opens a **dedicated full-screen Flame viewport** in which the player actively participates.
+A minigame is a self-contained interactive session (30 seconds to 2 minutes) launched from the containment room as a user-triggered action. Unlike core actions (Eat, Sleep, Play) which execute a single animation and immediately apply stat deltas, a minigame opens a **dedicated full-screen Flame viewport** in which the player actively participates.
 
 Minigames are modular **dormant plugins** living in `lib/plugins/minigames/`. The backend controls activation, scheduling, rewards, and difficulty through two tables: the existing `action_plugins` (for lifecycle and scheduling) and a new `minigame_plugins` (for minigame-specific configuration).
 
@@ -21,7 +21,7 @@ Minigames compose with the existing plugin engine via a **foreign key from `mini
 - `is_enabled` toggle
 - `valid_from` / `valid_until` time window (event scheduling)
 - `priority` (conflict resolution against other active plugins)
-- `blocking_conditions` (e.g., blocked when pet is sick or sleeping)
+- `blocking_conditions` (e.g., blocked when kaiju is sick or sleeping)
 - `min_age_phase` / `max_age_phase` age gates
 - `target_scenario_id` (the background scenario rendered beneath the minigame HUD)
 
@@ -53,7 +53,7 @@ erDiagram
         UUID id PK
         TEXT minigame_id FK
         UUID user_id FK
-        UUID pet_id FK
+        UUID kaiju_id FK
         INTEGER score
         TEXT result
         JSONB recording_payload
@@ -74,7 +74,7 @@ erDiagram
 | **SOLO_VS_PC** | Single player against a configurable PC opponent. Difficulty set via backend JSON parameters. | Simulated |
 | **PVP** | Player competes alongside a **ghost** — a replay recording from another player's past session, selected at random from the ghost pool. The opponent is never live. | Async Ghost |
 
-> **PVP Ghost Design Rationale**: Real-time PVP requires both users online simultaneously and introduces complex concurrency. The ghost model allows PVP-flavored competition without those constraints. The player sees the ghost pet performing actions in real-time alongside their own pet. The ghost session was captured from an actual past run by another user.
+> **PVP Ghost Design Rationale**: Real-time PVP requires both users online simultaneously and introduces complex concurrency. The ghost model allows PVP-flavored competition without those constraints. The player sees the ghost kaiju performing actions in real-time alongside their own kaiju. The ghost session was captured from an actual past run by another user.
 
 ---
 

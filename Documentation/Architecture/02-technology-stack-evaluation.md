@@ -6,7 +6,7 @@ This document details the definitive technical stack for the **Unix Tamagotchi**
 
 ## 1. Framework Evaluation: Why Flutter + Flame Wins
 
-The application demands a hybrid rendering model: ~70% of the experience consists of complex terminal UI (scrollable lists, store catalogs, tabs, sliders, data tables), while ~30% is a highly stylized, shader-driven pet viewport.
+The application demands a hybrid rendering model: ~70% of the experience consists of complex terminal UI (scrollable lists, store catalogs, tabs, sliders, data tables), while ~30% is a highly stylized, shader-driven kaiju viewport.
 
 | Framework | UI Capabilities | Custom Shader/VFX | Ecosystem | Overall Score |
 | :--- | :--- | :--- | :--- | :--- |
@@ -18,7 +18,7 @@ The application demands a hybrid rendering model: ~70% of the experience consist
 ### Key Deciding Factors:
 1. **App-Heavy Layout Architecture**: Building complex scrollable store catalogs, inventory lists, and evolution history screens in Godot's UI system would require 3-4x more effort. Flutter's widget system natively solves these UI challenges.
 2. **Flame Engine Integration**: Flame embeds seamlessly into Flutter, providing a lightweight game loop, sprite animation management, and access to Dart's `FragmentProgram` API for custom GLSL shaders without the overhead of Unity or Godot.
-3. **1-Bit Dithering Pipeline**: Flame allows rendering the pet scene to an off-screen low-resolution canvas, applying our custom Bayer matrix dither shader, and upscaling to the native UI via nearest-neighbor filtering.
+3. **1-Bit Dithering Pipeline**: Flame allows rendering the kaiju scene to an off-screen low-resolution canvas, applying our custom Bayer matrix dither shader, and upscaling to the native UI via nearest-neighbor filtering.
 4. **Dart 3 Soundness**: Dart 3 pattern matching and records make building the dormant plugin architecture robust and compile-time safe.
 
 ---
@@ -29,7 +29,7 @@ The following packages constitute the core stack for the application:
 
 | Package | pub.dev Link | Role in Unix Tamagotchi |
 | :--- | :--- | :--- |
-| **`flame`** | [pub.dev/packages/flame](https://pub.dev/packages/flame) | **2D Engine Core**: Manages the pet viewport, sprite animation loops, particle stippling effects, and the fragment shader pipeline for 1-bit dithering. |
+| **`flame`** | [pub.dev/packages/flame](https://pub.dev/packages/flame) | **2D Engine Core**: Manages the kaiju viewport, sprite animation loops, particle stippling effects, and the fragment shader pipeline for 1-bit dithering. |
 | **`flutter_riverpod`** | [pub.dev/packages/flutter_riverpod](https://pub.dev/packages/flutter_riverpod) | **Reactive State Management**: Compile-safe, testable state management ideal for dynamic plugin registration and offline-first state. |
 | **`hive_flutter`** | [pub.dev/packages/hive_flutter](https://pub.dev/packages/hive_flutter) | **Zero-Latency Storage**: Lightning-fast local binary key-value database for offline PoC state. |
 | **`supabase_flutter`** | [pub.dev/packages/supabase_flutter](https://pub.dev/packages/supabase_flutter) | **Backend SDK**: Connects to the PostgreSQL database for dynamic plugin manifests, multiplayer syncing, and user data. |
@@ -55,7 +55,7 @@ To achieve the "Tactical 1-Bit Cyber-Specimen OS" look, we leverage Flutter's `F
 2. **Safe Dynamic Provider Discovery**:
    As new action plugins are loaded from the backend, Riverpod providers can dynamically adapt without rebuilding the root widget tree.
 3. **Immutability & Code Generation**:
-   Combined with `freezed`, pet state mutations are completely pure and deterministic.
+   Combined with `freezed`, kaiju state mutations are completely pure and deterministic.
 
 ---
 

@@ -11,7 +11,7 @@ flowchart TD
     subgraph Phase1["Phase 1: Standalone Flutter PoC (Offline-First)"]
         FlutterUI["Flutter 3.x UI (Terminal Overlay)"]
         FlameEngine["Flame Engine (Viewport & Shaders)"]
-        RiverpodState["Riverpod State Management (PetStateNotifier)"]
+        RiverpodState["Riverpod State Management (KaijuStateNotifier)"]
         PluginSubsystem["Dormant Plugin Engine\n(lib/plugins/: Actions & Scenarios)"]
         Storage1["Local Hive / SharedPreferences (Encrypted)"]
 
@@ -48,7 +48,7 @@ flowchart TD
   - **Kaiju Scene Layer (Flame Viewport)**: 1-bit dithered bitmap sprites rendered at low virtual resolution (taking visual reference from `Desing References/Godzila.webp`). Applies dithering shader via Flame `FragmentProgram` and upscales with nearest-neighbor filtering.
   - **UI Layer (Flutter Overlay)**: Native resolution monospace terminal text, bracket-style buttons, hazard stripe decorations, and system diagnostic labels.
 - **Engine Core & Riverpod**:
-  - `PetNotifier`: Orchestrates Kaiju interactions, energy/hunger balance, and cooldown timers.
+  - `KaijuNotifier`: Orchestrates Kaiju interactions, energy/hunger balance, and cooldown timers.
   - `PluginRegistry`: Service locator containing compiled action and scenario plugins.
   - `Flame Game Component`: Manages sprite animation, particle effects, and the Bayer matrix fragment shader pipeline.
   - `InventoryNotifier`: Manages owned Kaijus (unlimited capacity) and the 240 starting credits.
@@ -60,7 +60,11 @@ flowchart TD
 - `plugins/scenarios/`: Dynamic visual environments (Terminal Habitat Room, Metropolis Ruins, Clinic Ward).
 
 ### 3. Backend & Cloud Services (`backend/` & Supabase)
-- **Database & Row-Level Security**: Supabase PostgreSQL housing player profiles, pet inventories, transactions, and the `action_plugins` / `scenario_plugins` tables.
+- **Database & Row-Level Security**: Supabase PostgreSQL housing player profiles, kaiju inventories, transactions, and the `action_plugins` / `scenario_plugins` tables.
 - **Authentication**: Social OAuth with Google Identity, Sign in with Apple, and Twitter (X).
 - **Real-Time Engine**: WebSocket channels for remote action broadcasting, presence, and live multiplayer.
 - **In-App Purchase Webhook Handler**: Validates Google Play Real-Time Developer Notifications (RTDN) and Apple App Store Server Notifications V2 before crediting user accounts.
+
+
+> [!NOTE]
+> **Humor & Lore Note:** The contrast of a giant kaiju living in a normal containment room, going to school, and getting hungry like a regular tamagotchi is an explicit design choice. This absurdity is central to the game's charm.

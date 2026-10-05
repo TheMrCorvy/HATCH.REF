@@ -33,14 +33,14 @@ CREATE TABLE public.action_plugins (
     valid_from TIMESTAMPTZ,                   -- Start of seasonal event (nullable = always active)
     valid_until TIMESTAMPTZ,                  -- End of event
     target_scenario_id TEXT REFERENCES public.scenario_plugins(id) ON DELETE SET NULL,
-    -- Age gates: pet must be within [min_age_phase, max_age_phase] for plugin to be eligible.
+    -- Age gates: kaiju must be within [min_age_phase, max_age_phase] for plugin to be eligible.
     -- NULL on either bound means that bound is unconstrained.
     -- Values: 'baby' | 'child' | 'young' | 'adult' | 'elder'
     min_age_phase TEXT DEFAULT NULL CHECK (min_age_phase IN ('baby','child','young','adult','elder')),
     max_age_phase TEXT DEFAULT NULL CHECK (max_age_phase IN ('baby','child','young','adult','elder')),
     -- Priority: lower value = higher precedence when resolving plugin conflicts.
     -- A priority-0 plugin (e.g. hospital_recovery) overrides all others.
-    -- TBD: exact values — see Features/05-pet-lifecycle-and-aging.md for design intent.
+    -- TBD: exact values — see Features/05-kaiju-lifecycle-and-aging.md for design intent.
     priority INTEGER NOT NULL DEFAULT 50,
     -- blocking_conditions: JSON array of runtime conditions that suppress this plugin.
     -- Each entry: {"condition": "<state_key>"} — presence of the condition is sufficient to block.

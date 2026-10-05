@@ -1,6 +1,6 @@
-# Customization: 03 Pet Name Customization
+# Customization: 03 Kaiju Name Customization
 
-This document specifies the manual pet rename feature: its UX behavior, validation rules, backend API contract, and group synchronization logic. This feature is **deferred to post-PoC** (Phase 2 — Supabase backend).
+This document specifies the manual kaiju rename feature: its UX behavior, validation rules, backend API contract, and group synchronization logic. This feature is **deferred to post-PoC** (Phase 2 — Supabase backend).
 
 ---
 
@@ -10,11 +10,11 @@ This document specifies the manual pet rename feature: its UX behavior, validati
 | :--- | :--- |
 | **PoC availability** | 🔴 Not available — `[ RENAME ]` button is not rendered |
 | **Phase introduced** | Phase 2 (Supabase backend) |
-| **Who can rename** | The pet's owner only |
+| **Who can rename** | The kaiju's owner only |
 | **Rename frequency** | Unlimited (no cooldown in base design) |
 | **Auto-generated name** | Assigned at adoption; persists until player renames |
 | **Group sync** | 🟢 Synced globally — all group members see the updated name in real-time |
-| **Name persistence** | `PETS.nickname` column in PostgreSQL |
+| **Name persistence** | `KAIJUS.nickname` column in PostgreSQL |
 
 For the auto-generation logic that produces the initial default name, see [NameGeneration/01-name-generation-overview.md](../NameGeneration/01-name-generation-overview.md).
 
@@ -22,7 +22,7 @@ For the auto-generation logic that produces the initial default name, see [NameG
 
 ## 2. PoC Behavior (Read-Only Name)
 
-In the PoC, the pet's designation is **read-only**. The name is auto-generated at adoption (see [NameGeneration/01-name-generation-overview.md](../NameGeneration/01-name-generation-overview.md)) and displayed throughout the UI with no rename controls present.
+In the PoC, the kaiju's designation is **read-only**. The name is auto-generated at adoption (see [NameGeneration/01-name-generation-overview.md](../NameGeneration/01-name-generation-overview.md)) and displayed throughout the UI with no rename controls present.
 
 The `[ RENAME ]` button is **not rendered** in the Customization screen during the PoC. There is no greyed-out placeholder — the row is simply absent to avoid user confusion.
 
@@ -110,7 +110,7 @@ Validation is enforced on **both the client** (immediate feedback) and **the ser
 ### 4.1 Rename Endpoint
 
 ```
-PATCH /pets/{pet_id}/name
+PATCH /kaijus/{kaiju_id}/name
 Authorization: Bearer <user_jwt>
 Content-Type: application/json
 
@@ -125,14 +125,14 @@ Content-Type: application/json
 | :--- | :--- | :--- |
 | `200 OK` | `{ "nickname": "STEEL_BALL_RUNNER" }` | Rename successful |
 | `400 Bad Request` | `{ "error": "VALIDATION_FAILED", "detail": "..." }` | Validation rule violated |
-| `403 Forbidden` | `{ "error": "NOT_OWNER" }` | Authenticated user is not the pet's owner |
-| `404 Not Found` | `{ "error": "PET_NOT_FOUND" }` | `pet_id` does not exist |
+| `403 Forbidden` | `{ "error": "NOT_OWNER" }` | Authenticated user is not the kaiju's owner |
+| `404 Not Found` | `{ "error": "PET_NOT_FOUND" }` | `kaiju_id` does not exist |
 
 **Row-Level Security (RLS) policy:**
 ```sql
--- Only the pet's owning group member can rename it
+-- Only the kaiju's owning group member can rename it
 CREATE POLICY "owner_can_rename_pet"
-ON pets
+ON kaijus
 FOR UPDATE
 USING (
     owner_id = auth.uid()
@@ -146,7 +146,7 @@ For future anti-abuse tracking, a `pet_name_history` table can be introduced:
 ```sql
 CREATE TABLE pet_name_history (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    pet_id      UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+    kaiju_id      UUID NOT NULL REFERENCES kaijus(id) ON DELETE CASCADE,
     old_name    TEXT NOT NULL,
     new_name    TEXT NOT NULL,
     changed_by  UUID NOT NULL REFERENCES profiles(id),
@@ -158,7 +158,7 @@ CREATE TABLE pet_name_history (
 
 ## 5. Group Synchronization
 
-Pet nicknames are **shared globally within a group** — all members see the same designation, regardless of who renamed it. This is consistent with the multiplayer visibility rules defined in [02-customization-ownership-and-groups.md](./02-customization-ownership-and-groups.md).
+Kaiju nicknames are **shared globally within a group** — all members see the same designation, regardless of who renamed it. This is consistent with the multiplayer visibility rules defined in [02-customization-ownership-and-groups.md](./02-customization-ownership-and-groups.md).
 
 When a rename is committed:
 
@@ -170,12 +170,12 @@ sequenceDiagram
     participant RT as Supabase Realtime
     participant Others as Other Group Members
 
-    Owner->>API: PATCH /pets/{id}/name { nickname: "STEEL_BALL_RUNNER" }
-    API->>DB: UPDATE pets SET nickname = 'STEEL_BALL_RUNNER' WHERE id = {id}
+    Owner->>API: PATCH /kaijus/{id}/name { nickname: "STEEL_BALL_RUNNER" }
+    API->>DB: UPDATE kaijus SET nickname = 'STEEL_BALL_RUNNER' WHERE id = {id}
     DB-->>API: OK
-    API->>RT: broadcast("pet_renamed", { pet_id, new_name })
+    API->>RT: broadcast("pet_renamed", { kaiju_id, new_name })
     RT-->>Others: pet_renamed event received
-    Others->>Others: Update local Riverpod PetState.nickname
+    Others->>Others: Update local Riverpod KaijuState.nickname
     API-->>Owner: 200 OK { nickname: "STEEL_BALL_RUNNER" }
 ```
 
@@ -192,18 +192,18 @@ sequenceDiagram
 
 ### 6.1 Riverpod State Update
 
-The rename triggers a targeted update to the `PetState` provider:
+The rename triggers a targeted update to the `KaijuState` provider:
 
 ```dart
 // In the rename notifier
-Future<void> renamePet(String petId, String newName) async {
-  final validated = PetNameValidator.validate(newName);
-  if (!validated.isValid) throw PetNameValidationException(validated.error);
+Future<void> renamePet(String kaijuId, String newName) async {
+  final validated = KaijuNameValidator.validate(newName);
+  if (!validated.isValid) throw KaijuNameValidationException(validated.error);
 
-  await _petsRepository.updateNickname(petId, newName);
+  await _petsRepository.updateNickname(kaijuId, newName);
 
   state = state.copyWith(
-    pets: state.pets.map((p) => p.id == petId ? p.copyWith(nickname: newName) : p).toList(),
+    kaijus: state.kaijus.map((p) => p.id == kaijuId ? p.copyWith(nickname: newName) : p).toList(),
   );
 }
 ```
@@ -211,7 +211,7 @@ Future<void> renamePet(String petId, String newName) async {
 ### 6.2 Client-Side Validation
 
 ```dart
-class PetNameValidator {
+class KaijuNameValidator {
   static const int minLength = 3;
   static const int maxLength = 24;
   static final RegExp _allowedChars = RegExp(r'^[A-Z0-9_]+$');
@@ -246,8 +246,8 @@ class PetNameValidator {
 ## 7. Cross-References
 
 - [NameGeneration/01-name-generation-overview.md](../NameGeneration/01-name-generation-overview.md) — How the initial auto-generated name is created.
-- [NameGeneration/02-per-type-name-pools.md](../NameGeneration/02-per-type-name-pools.md) — Curated name pools per pet type.
+- [NameGeneration/02-per-type-name-pools.md](../NameGeneration/02-per-type-name-pools.md) — Curated name pools per kaiju type.
 - [Customization/01-customization-overview.md](./01-customization-overview.md) — Parent customization system; rename lives in this UI.
 - [Customization/02-customization-ownership-and-groups.md](./02-customization-ownership-and-groups.md) — Group visibility rules for nicknames.
-- [Architecture/05-database-and-auth.md](../Architecture/05-database-and-auth.md) — `PETS.nickname` column; RLS policies.
-- [Contracts/01-openapi-spec.yaml](../Contracts/01-openapi-spec.yaml) — `PATCH /pets/{id}/name` endpoint definition.
+- [Architecture/05-database-and-auth.md](../Architecture/05-database-and-auth.md) — `KAIJUS.nickname` column; RLS policies.
+- [Contracts/01-openapi-spec.yaml](../Contracts/01-openapi-spec.yaml) — `PATCH /kaijus/{id}/name` endpoint definition.

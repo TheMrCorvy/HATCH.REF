@@ -20,10 +20,10 @@ Triggered when a Kaiju's stat drops to a critical threshold and **no group membe
 
 | Trigger | Threshold | Terminal-Style Copy |
 |---|---|---|
-| Hunger critical | `hunger < 15` | `[ SYS_DIAG ] WARN: NUTRITION_FAIL. <PetName> requires human sphere feeding immediately.` |
-| Energy critical | `energy < 10` | `[ SYS_DIAG ] WARN: REACTOR_DEPLETED. <PetName> needs rest. INITIATE DORMANCY SEQUENCE.` |
-| Happiness critical | `happiness < 10` | `[ SYS_DIAG ] WARN: AGITATION_CRITICAL. <PetName> shows signs of containment breach.` |
-| All stats critical | all < 15 | `[ SYS_DIAG ] PRIORITY_OMEGA: TITAN UNSTABLE. <PetName> requires immediate intervention.` |
+| Hunger critical | `hunger < 15` | `[ SYS_DIAG ] WARN: NUTRITION_FAIL. <KaijuName> requires human sphere feeding immediately.` |
+| Energy critical | `energy < 10` | `[ SYS_DIAG ] WARN: REACTOR_DEPLETED. <KaijuName> needs rest. INITIATE DORMANCY SEQUENCE.` |
+| Happiness critical | `happiness < 10` | `[ SYS_DIAG ] WARN: AGITATION_CRITICAL. <KaijuName> shows signs of containment breach.` |
+| All stats critical | all < 15 | `[ SYS_DIAG ] PRIORITY_OMEGA: TITAN UNSTABLE. <KaijuName> requires immediate intervention.` |
 
 **Deduplication**: If one group member resolves the issue while others still have the notification unread, the backend sends a cancellation push to dismiss it on all other devices.
 
@@ -34,11 +34,11 @@ Sent to the **offline partner** when the **online partner** completes an action.
 
 | Action | Copy |
 |---|---|
-| Feed | `> <PartnerName> fed <PetName> a ball of humans. SATURATION +25.` |
-| Sleep | `> <PartnerName> placed <PetName> in dormancy pod. ENERGY RECHARGING.` |
-| Play | `> <PartnerName> played with <PetName> (toy skyscraper smashed). JOY INDEX ELEVATED.` |
-| City Rampage (Work) | `> <PetName> completed city rampage shift. +50 CREDITS EARNED.` |
-| Demolition Academy (Study) | `> <PetName> completed demolition study. INTELLECT ELEVATED.` |
+| Feed | `> <PartnerName> fed <KaijuName> a ball of humans. SATURATION +25.` |
+| Sleep | `> <PartnerName> placed <KaijuName> in dormancy pod. ENERGY RECHARGING.` |
+| Play | `> <PartnerName> played with <KaijuName> (toy skyscraper smashed). JOY INDEX ELEVATED.` |
+| City Rampage (Work) | `> <KaijuName> completed city rampage shift. +50 CREDITS EARNED.` |
+| Demolition Academy (Study) | `> <KaijuName> completed demolition study. INTELLECT ELEVATED.` |
 
 ---
 
@@ -47,9 +47,9 @@ Scheduled by Supabase Edge Function cron jobs (`pg_cron`).
 
 | Milestone | Trigger | Copy |
 |---|---|---|
-| Pet birthday | 1 year since `pets.created_at` | `[ ANNIVERSARY_LOG ] <PetName> has completed 365 CYCLES. Celebrate together.` |
+| Kaiju birthday | 1 year since `kaijus.created_at` | `[ ANNIVERSARY_LOG ] <KaijuName> has completed 365 CYCLES. Celebrate together.` |
 | Couple anniversary | Custom date set at COUPLE group creation | `[ PAIR_BOND_ANNIVERSARY ] <N> YEARS LOGGED. Status: NOMINAL.` |
-| Pet evolution | Lifecycle phase threshold reached | `[ EVO_MGR ] <PetName> has reached a new lifecycle phase. Check your terminal.` |
+| Kaiju evolution | Lifecycle phase threshold reached | `[ EVO_MGR ] <KaijuName> has reached a new lifecycle phase. Check your terminal.` |
 
 ---
 
@@ -58,9 +58,9 @@ Sent when no group member has opened the app within the configured window.
 
 | Window | Copy |
 |---|---|
-| 8 hours | `[ IDLE_ALERT ] <PetName> is waiting. Last interaction: 8 HOURS AGO.` |
-| 24 hours | `[ SYS_WARNING ] <PetName> shows elevated decay metrics. Return to terminal.` |
-| 48 hours | `[ CRITICAL_IDLE ] SYSTEM DEGRADATION DETECTED. <PetName> needs care urgently.` |
+| 8 hours | `[ IDLE_ALERT ] <KaijuName> is waiting. Last interaction: 8 HOURS AGO.` |
+| 24 hours | `[ SYS_WARNING ] <KaijuName> shows elevated decay metrics. Return to terminal.` |
+| 48 hours | `[ CRITICAL_IDLE ] SYSTEM DEGRADATION DETECTED. <KaijuName> needs care urgently.` |
 
 ---
 
@@ -70,7 +70,7 @@ Sent when no group member has opened the app within the configured window.
 |---|---|
 | Pair-bond invite received | `[ PAIR_BOND_REQUEST ] <SenderName> wants to establish a PAIR_BOND. Accept?` |
 | Partner joined group | `[ SYS_LOG ] <PartnerName> has joined the session. PAIR_BOND ACTIVE.` |
-| Partner left / group dissolved | `[ DISSOLUTION_ALERT ] PAIR_BOND terminated. Pet clones transferred to SOLO group.` |
+| Partner left / group dissolved | `[ DISSOLUTION_ALERT ] PAIR_BOND terminated. Kaiju clones transferred to SOLO group.` |
 
 ---
 
@@ -98,7 +98,7 @@ flowchart TD
 
 | Source | Notification Type |
 |---|---|
-| PostgreSQL trigger on `pets` stat update | Emergency care alerts |
+| PostgreSQL trigger on `kaijus` stat update | Emergency care alerts |
 | Supabase Realtime presence (all members offline) | Emergency care alerts |
 | `pg_cron` scheduled job | Milestones, anniversaries, inactivity |
 | Realtime broadcast on group action | Partner action notifications |

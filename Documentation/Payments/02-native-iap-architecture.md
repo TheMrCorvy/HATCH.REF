@@ -53,7 +53,7 @@ class InAppPurchaseService {
   static const Set<String> _kProductIds = {
     'credits_240',
     'credits_500',
-    'exclusive_dragon_pet',
+    'exclusive_godzilla_kaiju',
   };
 
   void initialize({required String userId}) {

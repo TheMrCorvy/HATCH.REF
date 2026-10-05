@@ -174,7 +174,7 @@ The Supabase Flutter SDK constructs all queries through PostgREST's HTTP API, wh
 ```dart
 // Safe — SDK handles parameterization
 final result = await supabase
-    .from('pets')
+    .from('kaijus')
     .select()
     .eq('group_id', groupId);    // groupId is bound, never interpolated into SQL
 ```
@@ -184,11 +184,11 @@ Edge Functions that execute raw SQL must **always** use parameterized queries. S
 
 ```typescript
 // ❌ NEVER do this
-const result = await db.query(`SELECT * FROM pets WHERE nickname = '${nickname}'`)
+const result = await db.query(`SELECT * FROM kaijus WHERE nickname = '${nickname}'`)
 
 // ✅ Always use parameters
 const result = await db.query(
-  'SELECT * FROM pets WHERE nickname = $1',
+  'SELECT * FROM kaijus WHERE nickname = $1',
   [nickname]
 )
 ```
@@ -197,7 +197,7 @@ const result = await db.query(
 All user-supplied strings entering the database must be validated in the Edge Function before the DB call:
 
 ```typescript
-function validatePetNickname(name: string): string {
+function validateKaijuDesignation(name: string): string {
   if (typeof name !== 'string') throw new Error('Invalid type')
   const trimmed = name.trim()
   if (trimmed.length < 1 || trimmed.length > 32) throw new Error('Length out of bounds')
@@ -266,7 +266,7 @@ CREATE TABLE public.transactions (
 );
 ```
 
-### 6.2 Pet Action Cooldowns
+### 6.2 Kaiju Action Cooldowns
 Already defined in `Security/01-security-overview.md`. The server-side trigger rejects duplicate actions within the cooldown window regardless of how many times the client calls the endpoint.
 
 ### 6.3 Pair-Bond Token Single Use
@@ -323,6 +323,6 @@ Every security-relevant action should produce an immutable log entry:
 | Pair-bond token created | `pair_bond_tokens` | initiator_user_id, created_at, expires_at |
 | Pair-bond token accepted | `pair_bond_tokens` | used=true, accepted_at |
 | Group dissolved | `group_dissolution_log` (TBD) | group_id, triggered_by, timestamp |
-| Failed timestamp validation | Server log (Supabase Edge Function) | user_id, pet_id, deviation_seconds |
+| Failed timestamp validation | Server log (Supabase Edge Function) | user_id, kaiju_id, deviation_seconds |
 
 Logs must be retained for a minimum of 90 days and stored outside the primary database (ship to a log aggregator such as Loki, as already configured in `logs-server/`).

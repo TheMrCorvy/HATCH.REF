@@ -39,13 +39,13 @@ MEMORY: 48KB/64KB  SECURED_SESSION  PID: 8832
 
 ---
 
-## 2. Kaiju Acquisition Screen (PETS_LAB)
+## 2. Kaiju Acquisition Screen (KAIJU_LAB)
 
 Where players acquire new Kaijus using their credits.
 
 ```text
 ==================================================
-SYS: PETS_LAB // ACQUISITION          CR: 1,450
+SYS: KAIJU_LAB // ACQUISITION          CR: 1,450
 ==================================================
 
 AVAILABLE SPECIMENS:
@@ -140,7 +140,7 @@ MEMORY: 48KB/64KB  SECURED_SESSION  PID: 8832
 
 ## 5. Evolution Screen (EVO_MGR)
 
-Tracking pet growth and metrics.
+Tracking kaiju growth and metrics.
 
 ```text
 ==================================================
@@ -173,7 +173,7 @@ MEMORY: 55KB/64KB  SECURED_SESSION  PID: 8832
 ## 6. Critical Failure (ERR_SYS)
 
 > [!NOTE]
-> **Phase 2+ Feature**: This screen is not included in the initial PoC. Pets do not die or reach critical failure states in Phase 1. This wireframe serves as a visual reference for future implementation.
+> **Phase 2+ Feature**: This screen is not included in the initial PoC. Kaijus do not die or reach critical failure states in Phase 1. This wireframe serves as a visual reference for future implementation.
 
 Death or critical state (Rendered entirely with the Crimson emergency palette).
 

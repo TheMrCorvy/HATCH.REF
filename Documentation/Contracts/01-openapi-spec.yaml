@@ -19,7 +19,7 @@ paths:
 
   /profile:
     get:
-      summary: Get user profile, credits, and active pet
+      summary: Get user profile, credits, and active kaiju
       responses:
         '200':
           content:
@@ -27,9 +27,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Profile'
 
-  /pets:
+  /kaijus:
     get:
-      summary: List all owned pets (dynamic capacity)
+      summary: List all owned kaijus (dynamic capacity)
       responses:
         '200':
           content:
@@ -37,13 +37,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Pet'
+                  $ref: '#/components/schemas/Kaiju'
 
-  /pets/{petId}/action:
+  /kaijus/{kaijuId}/action:
     post:
       summary: Commit an interaction action plugin
       parameters:
-        - name: petId
+        - name: kaijuId
           in: path
           required: true
           schema:
@@ -64,7 +64,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Pet'
+                $ref: '#/components/schemas/Kaiju'
 
   /store/purchase:
     post:
@@ -75,9 +75,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [petType]
+              required: [kaijuType]
               properties:
-                petType:
+                kaijuType:
                   type: string
                   enum: [godzilla, cyber_godzilla]
                 nickname:
@@ -87,7 +87,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Pet'
+                $ref: '#/components/schemas/Kaiju'
 
   /iap/verify:
     post:
@@ -191,19 +191,19 @@ components:
         credits:
           type: integer
           example: 240
-        maxPetsAllowed:
+        maxKaijusAllowed:
           type: integer
           nullable: true
           example: null
 
-    Pet:
+    Kaiju:
       type: object
       properties:
         id:
           type: string
         ownerId:
           type: string
-        petType:
+        kaijuType:
           type: string
         nickname:
           type: string

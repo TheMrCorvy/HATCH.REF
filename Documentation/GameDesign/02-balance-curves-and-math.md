@@ -43,23 +43,23 @@ $$\Delta H = -\lfloor \text{Rampage Hours} \times 4.0 \rfloor$$
 When resuming the game, the deterministic calculation applying offline stat decay is:
 
 ```text
-FUNCTION computeElapsedOfflineState(pet, currentTime, isActive):
-  elapsedMinutes = DIFFERENCE_IN_MINUTES(currentTime, pet.lastInteractionTimestamp)
+FUNCTION computeElapsedOfflineState(kaiju, currentTime, isActive):
+  elapsedMinutes = DIFFERENCE_IN_MINUTES(currentTime, kaiju.lastInteractionTimestamp)
   elapsedHours = elapsedMinutes / 60.0
 
   IF elapsedHours < 0.02 THEN
-    RETURN pet // Less than 1 minute elapsed
+    RETURN kaiju // Less than 1 minute elapsed
 
-  // Standby pets decay at 10% rate
+  // Standby kaijus decay at 10% rate
   multiplier = isActive ? 1.0 : 0.1
 
   hungerDecay = ROUND(5.0 * elapsedHours * multiplier)
   energyDecay = ROUND(4.0 * elapsedHours * multiplier)
   happinessDecay = ROUND(6.0 * elapsedHours * multiplier)
 
-  RETURN NEW PetInstance WITH:
-    hunger = CLAMP(pet.hunger - hungerDecay, 0, 100)
-    energy = CLAMP(pet.energy - energyDecay, 0, 100)
-    happiness = CLAMP(pet.happiness - happinessDecay, 0, 100)
+  RETURN NEW KaijuInstance WITH:
+    hunger = CLAMP(kaiju.hunger - hungerDecay, 0, 100)
+    energy = CLAMP(kaiju.energy - energyDecay, 0, 100)
+    happiness = CLAMP(kaiju.happiness - happinessDecay, 0, 100)
     lastInteractionTimestamp = currentTime
 ```

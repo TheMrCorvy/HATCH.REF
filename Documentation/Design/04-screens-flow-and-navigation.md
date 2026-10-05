@@ -8,10 +8,10 @@ This document specifies the screen navigation architecture, dynamic action bar i
 
 ```mermaid
 flowchart TD
-    AppLaunch([Flutter App Launch]) --> CheckPets{Are any pets owned?}
+    AppLaunch([Flutter App Launch]) --> CheckPets{Are any kaijus owned?}
 
-    CheckPets -->|No: Empty Inventory| StoreScreen["02: Pet Store Screen\n(Adopt pet with 240 credits)"]
-    CheckPets -->|Yes: Active Pet Selected| RoomScreen["01: Pet Room Screen\n(Flame Viewport + Flutter UI overlay)"]
+    CheckPets -->|No: Empty Inventory| StoreScreen["02: Kaiju Store Screen\n(Acquire kaiju with 240 credits)"]
+    CheckPets -->|Yes: Active Kaiju Selected| RoomScreen["01: Kaiju Room Screen\n(Flame Viewport + Flutter UI overlay)"]
 
     subgraph BottomNav["Persistent Bottom Nav Bar"]
         NavRoom["[01:ROOM]"]
@@ -25,10 +25,10 @@ flowchart TD
 
     NavRoom --> RoomScreen
     NavStore --> StoreScreen
-    NavSwitch --> SwitchScreen["03: Pet Switcher Screen\n(Scrollable list of all owned pets)"]
+    NavSwitch --> SwitchScreen["03: Kaiju Switcher Screen\n(Scrollable list of all owned kaijus)"]
     NavSettings --> SettingsScreen["04: Settings Screen\n(Audio, Luminance, Refresh Rate)"]
 
-    subgraph RoomDynamic["Inside Pet Room Screen"]
+    subgraph RoomDynamic["Inside Kaiju Room Screen"]
         CompositingLayer["Two-Layer Compositing\n1. Flame GameWidget (Base)\n2. Flutter UI (Overlay)"]
         ActionBar["Dynamic Action Button Bar\n(Iterates over PluginRegistry.getEnabledUserActions)"]
     end
@@ -40,8 +40,8 @@ flowchart TD
 
 ## 2. Dynamic Room Screen Composition
 
-The Pet Room screen utilizes a two-layer compositing architecture:
-1. **Flame GameWidget Viewport**: A low-resolution render surface where the 1-bit dithered pet sprite and scenario exist, processed via a dithering fragment shader.
+The Kaiju Room screen utilizes a two-layer compositing architecture:
+1. **Flame GameWidget Viewport**: A low-resolution render surface where the 1-bit dithered kaiju sprite and scenario exist, processed via a dithering fragment shader.
 2. **Flutter UI Overlay**: High-resolution monospace terminal text, hazard stripes, diagnostic labels, and action buttons overlaid on top of or around the viewport.
 
 The UI also dynamically coordinates an **Action Button Bar** which reads all active `UserActionPlugin` entries and renders them horizontally in a scrollable bar.
@@ -56,10 +56,10 @@ class RoomScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pet = ref.watch(gameStateProvider.select((s) => s.activePet));
+    final kaiju = ref.watch(gameStateProvider.select((s) => s.activeKaiju));
 
-    if (pet == null) {
-      return const Center(child: Text('> NO ACTIVE PET DETECTED. VISIT SHOP.'));
+    if (kaiju == null) {
+      return const Center(child: Text('> NO ACTIVE KAIJU DETECTED. VISIT SHOP.'));
     }
 
     return Scaffold(
@@ -74,18 +74,18 @@ class RoomScreen extends ConsumerWidget {
             Expanded(
               child: Center(
                 child: CameraReticleOverlay(
-                  child: PetViewport(
-                    petDef: pet.definition,
-                    action: pet.currentAction,
+                  child: KaijuViewport(
+                    kaijuDef: kaiju.definition,
+                    action: kaiju.currentAction,
                   ),
                 ),
               ),
             ),
 
             // 3. Stat Progress Meters (Flutter Overlay)
-            TerminalProgressBar(label: 'VITALS.HUNGER', value: pet.hunger),
-            TerminalProgressBar(label: 'VITALS.ENERGY', value: pet.energy),
-            TerminalProgressBar(label: 'VITALS.JOY', value: pet.happiness),
+            TerminalProgressBar(label: 'VITALS.HUNGER', value: kaiju.hunger),
+            TerminalProgressBar(label: 'VITALS.ENERGY', value: kaiju.energy),
+            TerminalProgressBar(label: 'VITALS.JOY', value: kaiju.happiness),
             const SizedBox(height: 12),
 
             // 4. Dynamic Action Button Bar (Injected from Plugin Registry)
@@ -108,7 +108,7 @@ class RoomScreen extends ConsumerWidget {
   - Purchase is permitted as long as `credits >= item.price`. 
 - **Kaiju Switcher Screen (SWAP)**:
   - Displays a scrollable `ListView` of all owned Kaijus.
-  - Tapping `[ SWAP TO THIS COMPANION ]` invokes `ref.read(gameStateProvider.notifier).switchActivePet(pet.id)` and redirects to the Room Screen.
+  - Tapping `[ SWAP TO THIS COMPANION ]` invokes `ref.read(gameStateProvider.notifier).switchActiveKaiju(kaiju.id)` and redirects to the Room Screen.
 - **Settings Screen (CONF)**:
   - Instead of theme switching, provides immersive hardware controls:
     - Audio (volume/mute).

@@ -17,7 +17,7 @@ Documentation/
 │   ├── 02-technology-stack-evaluation.md  # In-depth Tech Stack Evaluation (Flutter+Flame)
 │   ├── 03-monorepo-structure.md           # Flutter app + Supabase backend structure
 │   ├── 04-backend-and-realtime.md         # Supabase PostgreSQL, Realtime & plugin configuration
-│   ├── 05-database-and-auth.md            # PostgreSQL ERD with plugin tables & dynamic pet capacity
+│   ├── 05-database-and-auth.md            # PostgreSQL ERD with plugin tables & dynamic kaiju capacity
 │   └── 06-offline-first-and-state.md      # Flutter Riverpod state store, Hive & plugin registry
 │
 ├── Plugins/                               # Action & Scenario Plugin Architecture
@@ -34,22 +34,22 @@ Documentation/
 ├── Design/                                # Design system, themes, wireframes & animations
 │   ├── 01-design-system-and-theming.md    # Unified Industrial Terminal Palette & Typography
 │   ├── 02-terminal-component-library.md   # Flutter widgets (Bracket Buttons, Hazard Stripes)
-│   ├── 03-pet-dithered-sprite-engine.md   # 1-Bit Dithered Sprites & Flame Shader Engine
+│   ├── 03-kaiju-dithered-sprite-engine.md  # 1-Bit Dithered Sprites & Flame Shader Engine
 │   ├── 04-screens-flow-and-navigation.md  # Dynamic action injections & scenario viewport routing
 │   ├── 05-1bit-terminal-wireframes.md     # Multi-screen wireframes with dynamic scenarios
 │   └── 06-1bit-dithering-rendering-pipeline.md # Compositing Flame viewport with Flutter UI
 │
-├── Multiplayer/                           # Shared Pet Care & Social Play
-│   ├── 01-shared-pet-care-architecture.md # Co-op care logic — primarily for couples; families and friends also supported
+├── Multiplayer/                           # Shared Kaiju Care & Social Play
+│   ├── 01-shared-kaiju-care-architecture.md # Co-op care logic — primarily for couples; families and friends also supported
 │   ├── 02-group-types-and-targeting.md    # Group personality system & real-time state sync
 │   └── 03-pair-bond-connection.md         # NFC/BLE physical pairing for couple onboarding
 │
 ├── Features/                              # PoC functional specification & future roadmap
-│   ├── 01-core-pet-actions.md             # Eat, Sleep, Play as initial user-triggered plugins
-│   ├── 02-pet-store-and-credits.md        # 240 starting credits, pet pricing & dynamic capacity
-│   ├── 03-pet-inventory-and-switching.md  # Dynamic pet inventory & active companion switching
+│   ├── 01-core-kaiju-actions.md            # Eat, Sleep, Play as initial user-triggered plugins
+│   ├── 02-kaiju-store-and-credits.md       # 240 starting credits, kaiju pricing & dynamic capacity
+│   ├── 03-kaiju-inventory-and-switching.md # Dynamic kaiju inventory & active companion switching
 │   ├── 04-poc-scope-and-future-roadmap.md # Strict PoC boundaries vs Future Roadmap
-│   └── 05-pet-lifecycle-and-aging.md      # 5-phase aging system, age-gated plugins & priority system
+│   └── 05-kaiju-lifecycle-and-aging.md     # 5-phase aging system, age-gated plugins & priority system
 │
 ├── Payments/                              # In-App Purchases & Argentine payout compliance
 │   ├── 01-app-store-google-play-rules.md  # Google Play & Apple StoreKit digital goods compliance
@@ -59,7 +59,7 @@ Documentation/
 │
 ├── Ownership/                             # Solo ↔ Group Unified Ownership Model
 │   ├── 01-ownership-model-overview.md     # Group-of-1 architecture, unified ERD & DDL
-│   ├── 02-group-dissolution-and-cloning.md # Pet cloning, furniture/customization reversion
+│   ├── 02-group-dissolution-and-cloning.md # Kaiju cloning, furniture/customization reversion
 │   └── 03-solo-to-group-transitions.md    # Lifecycle: solo → group → solo transitions
 │
 ├── Furniture/                             # Furniture Store & Habitat Customization
@@ -67,14 +67,14 @@ Documentation/
 │   ├── 02-furniture-data-model.md         # Database schema, ownership rules
 │   └── 03-furniture-placement-and-rendering.md # Flame viewport rendering & stat modifiers
 │
-├── NameGeneration/                        # Automated pet naming & JoJo-inspired pools
+├── NameGeneration/                        # Automated kaiju naming & JoJo-inspired pools
 │   ├── 01-name-generation-overview.md     # System overview, PoC Dart pools, post-PoC DB design
-│   └── 02-per-type-name-pools.md          # Full curated wordlists per pet type & JoJo source map
+│   └── 02-per-type-name-pools.md          # Full curated wordlists per kaiju type & JoJo source map
 │
 ├── Customization/                         # Per-User Visual Customization
 │   ├── 01-customization-overview.md       # Room palettes, boot messages, ambient effects
 │   ├── 02-customization-ownership-and-groups.md # Ownership rules, visibility in groups
-│   └── 03-pet-name-customization.md       # Manual rename feature (post-PoC), validation & API
+│   └── 03-kaiju-name-customization.md     # Manual rename feature (post-PoC), validation & API
 │
 ├── GameDesign/                            # Game Design Document (GDD) & game mechanics
 │   ├── 01-game-design-document.md         # Emotional pillars, loops, moods & sound FX
@@ -102,21 +102,21 @@ Documentation/
 ## Core Principles & Decisions
 
 1. **Framework: 100% Flutter + Flame (Dart 3.x)**:
-   - The game is developed directly in Flutter, utilizing the **Flame** 2D game engine for the pet viewport.
+   - The game is developed directly in Flutter, utilizing the **Flame** 2D game engine for the kaiju viewport.
    - Built to target **Android and iOS** exclusively.
    - Core packages include:
-     - `flame` — 2D game engine for pet viewport, sprite animation, fragment shader pipeline.
+     - `flame` — 2D game engine for kaiju viewport, sprite animation, fragment shader pipeline.
      - `flutter_riverpod` — Reactive state management.
      - `hive_flutter` — Zero-latency local binary storage.
 2. **Unified Visual Style: Tactical 1-Bit Cyber-Specimen OS**:
    - A singular, cohesive aesthetic combining a low-resolution Flame viewport with 1-bit dithered bitmap sprites (using Bayer matrix shaders, with `Desing References/Godzila.webp` as the prime visual standard for Godzilla looming over skylines and breathing dithered atomic breath) and a native-resolution Flutter UI mimicking an industrial diagnostic terminal.
-3. **Multiplayer Shared Pet Care**:
+3. **Multiplayer Shared Kaiju Care**:
    - **Primarily designed and marketed for couples** who co-manage and nurture a shared giant Kaiju together. Solo play and larger groups (families, friends) are also fully supported, but the product identity and UX are centered on the two-player couple experience.
 4. **Dormant Action & Scenario Plugin Architecture**:
    - Actions and environments are compiled into the app as modular plugins.
    - Plugins remain dormant until the backend enables them and supplies runtime parameters.
-5. **Dynamic Pet Capacity**:
-   - No hardcoded 2-pet limit in the client!
+5. **Dynamic Kaiju Capacity**:
+   - No hardcoded 2-kaiju limit in the client!
    - Capacity is governed by available credits and dynamic backend configurations.
 6. **PoC Scope**:
    - Strictly client-side / offline-first for Day 1 with **Flutter Riverpod** and local persistent storage.
@@ -124,8 +124,8 @@ Documentation/
 7. **In-App Purchases & Argentine Repatriation**:
    - Native integration via Flutter `in_app_purchase` package with direct SWIFT international wires to an Argentine USD bank account, complying with Argentine Central Bank and ARCA/AFIP regulations.
 8. **Unified Ownership Model (Group-of-1)**:
-   - Every user starts in a personal SOLO group. Pets belong to groups, not individual users.
-   - This architecture enables seamless transition from solo play to multiplayer shared pet care.
+   - Every user starts in a personal SOLO group. Kaijus belong to groups, not individual users.
+   - This architecture enables seamless transition from solo play to multiplayer shared kaiju care.
 9. **Furniture & Habitat Customization**:
    - Furniture items (oversized beds, chairs, workstations, kitchens, lamps) are purchased by users and placed in group habitat rooms where the giant Kaiju lives.
    - Cosmetic customizations (palette themes, boot messages) are per-user preferences.

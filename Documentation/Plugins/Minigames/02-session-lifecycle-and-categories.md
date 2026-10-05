@@ -6,7 +6,7 @@ This document specifies the full session lifecycle for a minigame and the behavi
 
 ## 1. Session Lifecycle Overview
 
-A minigame session follows a strict state machine from the moment the player taps the button to the moment they return to the pet room.
+A minigame session follows a strict state machine from the moment the player taps the button to the moment they return to the containment room.
 
 ```mermaid
 stateDiagram-v2
@@ -21,7 +21,7 @@ stateDiagram-v2
     CountdownScreen --> ActiveSession : countdown expires (3-2-1-GO)
     ActiveSession --> ResultScreen : session_duration_seconds elapsed OR early completion
     ResultScreen --> RewardDispatch : result confirmed
-    RewardDispatch --> Idle : return to pet room
+    RewardDispatch --> Idle : return to containment room
 
     ErrorScreen --> Idle : player dismisses
 ```
@@ -30,12 +30,12 @@ stateDiagram-v2
 
 | State | Duration | Description |
 | :--- | :--- | :--- |
-| **PreflightCheck** | Instant | Client verifies `min_energy_required` and `blocking_conditions` against current pet state. |
+| **PreflightCheck** | Instant | Client verifies `min_energy_required` and `blocking_conditions` against current kaiju state. |
 | **GhostFetch** | < 500ms | For PVP only: client fetches one ghost recording from `minigame_ghost_recordings` using the configured `ghost_pool_strategy`. |
 | **CountdownScreen** | 3 seconds | Full-screen 3-2-1-GO overlay rendered in 1-bit terminal style before the Flame session starts. |
 | **ActiveSession** | `session_duration_seconds` | The interactive Flame minigame runs. Input is captured, score accumulates, ghost animates (if PVP). |
 | **ResultScreen** | ~3 seconds | Pass/fail verdict displayed with final score (if `score_tracking_enabled`), reward preview, and terminal log. |
-| **RewardDispatch** | Instant | Backend applies rewards to the player's account and pet stats. |
+| **RewardDispatch** | Instant | Backend applies rewards to the player's account and kaiju stats. |
 
 ---
 
@@ -59,7 +59,7 @@ flowchart LR
   "score_threshold": 50,         // Minimum score to PASS
   "lives": 3,                    // Attempts before FAIL
   "obstacle_density": "medium",  // Drives Flame scene config
-  "pet_sprite_override": null    // null = use active pet sprite
+  "pet_sprite_override": null    // null = use active kaiju sprite
 }
 ```
 
@@ -117,8 +117,8 @@ sequenceDiagram
     Note over Client: Countdown 3-2-1-GO
 
     loop Session Duration
-        Client->>Client: Player input → update player pet state
-        Client->>Client: Replay ghost timeline → animate ghost pet
+        Client->>Client: Player input → update player kaiju state
+        Client->>Client: Replay ghost timeline → animate ghost kaiju
     end
 
     Client->>Client: Compare final scores → PASS / FAIL
@@ -229,7 +229,7 @@ abstract class MinigamePlugin extends UserActionPlugin {
   /// Minigame category: 'SOLO', 'SOLO_VS_PC', or 'PVP'.
   String get category;
 
-  /// Minimum pet energy required to enter the session.
+  /// Minimum kaiju energy required to enter the session.
   int get minEnergyRequired;
 
   /// Maximum session duration in seconds before auto-end.

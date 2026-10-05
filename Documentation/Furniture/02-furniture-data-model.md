@@ -30,12 +30,12 @@ CREATE INDEX idx_furniture_group_id ON furniture_instances(placed_in_group_id);
 
 ## 2. Ownership & Dissolution Rules
 
-The Unix Tamagotchi ecosystem groups pets, but limits true asset ownership to individuals.
+The Unix Tamagotchi ecosystem groups kaijus, but limits true asset ownership to individuals.
 
 > [!IMPORTANT]
 > A user's `purchased_by_user_id` **never changes**. This ensures no loss of virtual property when relationships/groups change.
 
-*   **Group Sharing:** All members (SOLO, COUPLE, FAMILY, FRIENDS) in a group can see the furniture in their shared habitat. Any pet belonging to the group receives the passive stat modifiers.
+*   **Group Sharing:** All members (SOLO, COUPLE, FAMILY, FRIENDS) in a group can see the furniture in their shared habitat. Any kaiju belonging to the group receives the passive stat modifiers.
 *   **Dissolution Protocol:** If a group is dissolved (e.g., a COUPLE breaks up):
     *   The backend triggers a re-assignment query.
     *   `UPDATE furniture_instances SET placed_in_group_id = (user's solo group id) WHERE purchased_by_user_id = user.id`

@@ -1,4 +1,4 @@
-# Unix Tamagotchi: Shared Pet Care Architecture
+# Unix Tamagotchi: Shared Kaiju Care Architecture
 
 ## 1. Concept Overview
 The core of Unix Tamagotchi's multiplayer experience is the "Care Group." Instead of individual, isolated experiences, users form a group to collaboratively manage and nurture a shared giant Kaiju (Titan). All users interact with the exact same Titan instance, fostering cooperation and shared containment responsibility within an industrial terminal aesthetic.
@@ -12,10 +12,10 @@ Care Groups are the fundamental social unit. The group creation process involves
 - **Deep Links**: Direct URLs that open the application and prompt the user to join.
 - **QR Codes**: Scannable matrix barcodes styled as tactical system diagnostics.
 
-## 3. Shared Pet Ownership
+## 3. Shared Kaiju Ownership
 The digital Kaiju entity is bound to the *group*, not an individual user.
 - Any group member can execute care actions (e.g., `[ FEED ]`, `[ SLEEP ]`, `[ PLAY ]`).
-- Pet care interactions and shared habitat furniture are accessible to all group members. **Credits (the in-game currency) are always per-user and are never pooled or shared.** Each member's credit balance is independent of group membership.
+- Kaiju care interactions and shared habitat furniture are accessible to all group members. **Credits (the in-game currency) are always per-user and are never pooled or shared.** Each member's credit balance is independent of group membership.
 - The Kaiju's lifecycle, evolution, and containment status are mutually managed.
 
 ## 4. Real-Time Sync Architecture
@@ -32,24 +32,24 @@ All care actions broadcast their state to online members:
 
 ## 6. Presence System
 The terminal UI includes a "Secured Session" presence tracker.
-- Group members currently online and viewing the pet are displayed in the UI (e.g., `ACTIVE_USERS: [ USER_A, USER_B ]`).
+- Group members currently online and viewing the kaiju are displayed in the UI (e.g., `ACTIVE_USERS: [ USER_A, USER_B ]`).
 - This helps coordinate care efforts and avoids duplication of actions.
 
 ## 7. Conflict Resolution
-With multiple users managing one pet, concurrent actions are possible.
+With multiple users managing one kaiju, concurrent actions are possible.
 - **Optimistic UI**: The client assumes the action will succeed and plays the local 1-bit animation.
-- **Server Reconciliation**: The server acts as the source of truth. If User A and User B feed the pet at the exact same millisecond and the pet only has capacity for one food item, the server processes the first request. The second request returns a conflict state.
-- **UI Correction**: The rejected client rolls back the state and displays a terminal error (e.g., `> ERR: ACTION CONFLICT. PET STATUS ALREADY UPDATED.`).
+- **Server Reconciliation**: The server acts as the source of truth. If User A and User B feed the kaiju at the exact same millisecond and the kaiju only has capacity for one food item, the server processes the first request. The second request returns a conflict state.
+- **UI Correction**: The rejected client rolls back the state and displays a terminal error (e.g., `> ERR: ACTION CONFLICT. KAIJU STATUS ALREADY UPDATED.`).
 
 ## 8. Notification System
-Push notifications are dispatched to alert members when the pet requires care, specifically targeting offline members.
-- If the pet's hunger drops to critical levels, and *no group member is currently online*, the system sends an emergency notification.
+Push notifications are dispatched to alert members when the kaiju requires care, specifically targeting offline members.
+- If the kaiju's hunger drops to critical levels, and *no group member is currently online*, the system sends an emergency notification.
 - Example: `[ SYS_DIAG ] WARNING: VITAL SIGNS DROPPING. NUTRITION REQUIRED.`
 - If one member resolves the issue, the notification is dismissed for the rest of the group.
 
 ## 9. Permission Model
 - **Admin**: The group creator. Has permissions to generate invites, remove members, and disband the group.
-- **Standard Member**: Can interact with the pet, spend shared currency, and view logs.
+- **Standard Member**: Can interact with the kaiju, spend shared currency, and view logs.
 
 ## 10. Data Architecture
 
@@ -74,10 +74,10 @@ erDiagram
         string role
         timestamp joined_at
     }
-    pets {
+    kaijus {
         uuid id PK
         uuid group_id FK
-        string pet_type FK
+        string kaiju_type FK
         string nickname
         integer hunger
         integer energy
@@ -89,7 +89,7 @@ erDiagram
     
     users ||--o{ group_members : "joins"
     groups ||--o{ group_members : "contains"
-    groups ||--o{ pets : "owns"
+    groups ||--o{ kaijus : "owns"
     users ||--o{ groups : "administers"
 ```
 
