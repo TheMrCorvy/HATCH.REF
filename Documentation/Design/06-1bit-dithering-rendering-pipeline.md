@@ -64,49 +64,69 @@ Crucially, the modulo operation $(x \bmod N, y \bmod N)$ is calculated using **s
 
 ---
 
-## 3. Shader Implementation (GLSL / FLSL)
+## 3. Shader Implementation (GLSL / FLSL — Impeller AOT Compatible)
 
-The dithering is handled via a Flutter Fragment Shader (`.frag`).
+The dithering is handled via a Flutter Fragment Shader (`assets/shaders/bayer_dither.frag`) registered under `flutter.shaders` in `pubspec.yaml`.
+
+> **Impeller Compatibility Note**: To guarantee AOT compilation across both Vulkan/Metal Impeller and Skia backends without dynamic array-indexing restrictions, the 4×4 Bayer threshold is resolved via a helper function (`bayer4x4`) and supports a runtime `uLuminanceBias` uniform driven by the `OS_LUMINANCE` diagnostic control in `04:CONF`.
 
 ```glsl
+#version 460 core
 #include <flutter/runtime_effect.glsl>
 
-uniform sampler2D uTexture;
-uniform vec2 uResolution;
-uniform vec4 uColorLight; // e.g., Khaki Background #C5BEAA
-uniform vec4 uColorDark;  // e.g., Charcoal Ink #141512
+uniform vec2 uResolution;      // floats 0, 1
+uniform vec4 uColorLight;      // floats 2, 3, 4, 5 (e.g., Khaki Background #C5BEAA)
+uniform vec4 uColorDark;       // floats 6, 7, 8, 9 (e.g., Charcoal Ink #141512)
+uniform float uLuminanceBias;  // float 10 (range -0.35 to +0.35, default 0.0)
+uniform sampler2D uTexture;    // sampler 0
 
 out vec4 fragColor;
 
-// 4x4 Bayer Matrix
-const float bayerMatrix[16] = float[](
-    0.0/16.0,  8.0/16.0,  2.0/16.0, 10.0/16.0,
-    12.0/16.0, 4.0/16.0, 14.0/16.0,  6.0/16.0,
-    3.0/16.0, 11.0/16.0,  1.0/16.0,  9.0/16.0,
-    15.0/16.0, 7.0/16.0, 13.0/16.0,  5.0/16.0
-);
+float bayer4x4(ivec2 p) {
+    int x = p.x & 3;
+    int y = p.y & 3;
+    int index = y * 4 + x;
+    if (index == 0)  return 0.0 / 16.0;
+    if (index == 1)  return 8.0 / 16.0;
+    if (index == 2)  return 2.0 / 16.0;
+    if (index == 3)  return 10.0 / 16.0;
+    if (index == 4)  return 12.0 / 16.0;
+    if (index == 5)  return 4.0 / 16.0;
+    if (index == 6)  return 14.0 / 16.0;
+    if (index == 7)  return 6.0 / 16.0;
+    if (index == 8)  return 3.0 / 16.0;
+    if (index == 9)  return 11.0 / 16.0;
+    if (index == 10) return 1.0 / 16.0;
+    if (index == 11) return 9.0 / 16.0;
+    if (index == 12) return 15.0 / 16.0;
+    if (index == 13) return 7.0 / 16.0;
+    if (index == 14) return 13.0 / 16.0;
+    return 5.0 / 16.0;
+}
 
 void main() {
-    vec2 uv = FlutterFragCoord().xy / uResolution;
+    vec2 fragCoord = FlutterFragCoord().xy;
+    vec2 uv = fragCoord / uResolution;
     vec4 texColor = texture(uTexture, uv);
-    
-    // Ignore transparent pixels
+
+    // Ignore transparent pixels so background shows through cleanly
     if (texColor.a < 0.1) {
-        fragColor = vec4(0.0);
+        fragColor = uColorLight;
         return;
     }
 
-    // Calculate luminance
-    float luminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
+    // Calculate luminance with optional OS_LUMINANCE bias
+    float luminance = clamp(
+        dot(texColor.rgb, vec3(0.299, 0.587, 0.114)) + uLuminanceBias,
+        0.0,
+        1.0
+    );
 
-    // Screen-space pixel coordinates for the matrix
-    int x = int(mod(FlutterFragCoord().x, 4.0));
-    int y = int(mod(FlutterFragCoord().y, 4.0));
-    int bayerIndex = y * 4 + x;
-    
-    float threshold = bayerMatrix[bayerIndex];
+    // Screen-space pixel coordinates mapped to virtual 256x256 grid
+    ivec2 virtualPixel = ivec2(floor(uv * 256.0));
+    float threshold = bayer4x4(virtualPixel);
 
-    // Apply 1-bit thresholding and map to palette
+    // Apply 1-bit thresholding and map to active palette uniforms
     if (luminance > threshold) {
         fragColor = uColorLight;
     } else {
@@ -117,55 +137,35 @@ void main() {
 
 ---
 
-## 4. Flame Engine Integration
+## 4. Off-Screen Render-to-Texture & Flame Integration
 
-To use this shader in Flutter/Flame:
+To composite the Flame `GameWidget` through `bayer_dither.frag` with crisp nearest-neighbor upscaling:
 
-1. **Load the Shader**: Use `FragmentProgram.fromAsset()` to load the compiled shader.
-2. **Bind Uniforms**: Pass the resolution and palette colors (`uColorLight`, `uColorDark`) to the shader. 
-3. **Color Palette Uniform System**: By passing colors as uniforms, the application can easily implement effects like "Emergency Red" without modifying the shader logic. If a critical failure occurs, Flutter simply passes the Crimson emergency color to `uColorDark`.
+1. **Load the Shader**: Use `FragmentProgram.fromAsset('assets/shaders/bayer_dither.frag')` to load the AOT-compiled shader.
+2. **Capture Off-Screen Texture (`uTexture`)**: A `RenderProxyBox` (`DitherShaderRenderObject` inside `DitheredViewport`) paints its child (`RepaintBoundary` wrapping the Flame `GameWidget`) into an `OffsetLayer` and rasterizes it via `layer.toImageSync(Offset.zero & size)` (or a `256×256` virtual canvas buffer).
+3. **Bind Sampler & Uniforms**: Bind the captured `ui.Image` using `_shader.setImageSampler(0, capturedImage)` and set float indices `0..10` (`uResolution`, `uColorLight`, `uColorDark`, `uLuminanceBias`) from the active `AppPalette` and `SettingsState`.
+4. **Nearest-Neighbor Upscaling**: All sprite and texture draws use `FilterQuality.none` so the 256×256 virtual pixel grid stays razor-sharp on high-DPI mobile displays.
 
 ```dart
-import 'dart:ui';
-import 'package:flame/game.dart';
-import 'package:flame/components.dart';
+// Inside DitherShaderRenderObject.paint(PaintingContext context, Offset offset):
+final image = offsetLayer.toImageSync(Offset.zero & size);
+shader
+  ..setFloat(0, size.width)
+  ..setFloat(1, size.height)
+  ..setFloat(2, lightColor.red / 255.0)
+  ..setFloat(3, lightColor.green / 255.0)
+  ..setFloat(4, lightColor.blue / 255.0)
+  ..setFloat(5, 1.0)
+  ..setFloat(6, darkColor.red / 255.0)
+  ..setFloat(7, darkColor.green / 255.0)
+  ..setFloat(8, darkColor.blue / 255.0)
+  ..setFloat(9, 1.0)
+  ..setFloat(10, luminanceBias)
+  ..setImageSampler(0, image);
 
-class DitheredViewport extends PositionComponent {
-  late FragmentProgram _program;
-  late FragmentShader _shader;
-  
-  final Color lightColor = const Color(0xFFC5BEAA);
-  final Color darkColor = const Color(0xFF141512);
-
-  @override
-  Future<void> onLoad() async {
-    _program = await FragmentProgram.fromAsset('shaders/bayer_dither.frag');
-    _shader = _program.fragmentShader();
-  }
-
-  @override
-  void render(Canvas canvas) {
-    // Set uniforms
-    _shader.setFloat(0, size.x); // uResolution.x
-    _shader.setFloat(1, size.y); // uResolution.y
-    
-    // Set Light Color
-    _shader.setFloat(2, lightColor.red / 255);
-    _shader.setFloat(3, lightColor.green / 255);
-    _shader.setFloat(4, lightColor.blue / 255);
-    _shader.setFloat(5, 1.0);
-    
-    // Set Dark Color
-    _shader.setFloat(6, darkColor.red / 255);
-    _shader.setFloat(7, darkColor.green / 255);
-    _shader.setFloat(8, darkColor.blue / 255);
-    _shader.setFloat(9, 1.0);
-
-    final paint = Paint()..shader = _shader;
-    
-    // Render the off-screen buffer using the shader
-    // (Assuming a backing texture or image is sampled here)
-    canvas.drawRect(size.toRect(), paint);
-  }
-}
+final paint = Paint()
+  ..shader = shader
+  ..filterQuality = FilterQuality.none;
+context.canvas.drawRect(offset & size, paint);
+image.dispose();
 ```

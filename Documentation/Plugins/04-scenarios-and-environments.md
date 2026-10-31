@@ -28,7 +28,7 @@ flowchart TD
 ## 2. Unified 1-Bit Dithered Scene Rendering
 
 Every scenario configuration generates a scene for the Flame engine viewport via `GenericScenarioBuilder`. The rendering pipeline operates in two stages:
-1. **Low-Resolution Compositing**: `GenericScenarioBuilder` constructs a scene graph of `SpriteComponent` and `PositionComponent` objects from the scenario's JSON `layers` array (background, environment props, placed group furniture, the Kaiju + any equipped clothing layers, and foreground effects) at a low virtual resolution (e.g., 256×256).
+1. **Low-Resolution Compositing**: `GenericScenarioBuilder` constructs a scene graph of `SpriteComponent` and `PositionComponent` objects from the scenario's JSON `layers` array (background, environment props, placed group furniture, the Kaiju + any equipped clothing layers, and foreground effects) at a low virtual resolution (e.g., 256×256). When layer PNG assets are not yet present in `assets/sprites/` during the PoC, `GenericScenarioBuilder` falls back to procedural pixel-art layer components (`ProceduralScenarioLayerComponent`) drawn directly on the Flame `Canvas`.
 2. **Post-Processing Pipeline**: A global Fragment Shader is applied to the viewport, processing the scene using an ordered Bayer matrix to achieve the signature 1-bit dithered shading. The final output is upscaled using nearest-neighbor filtering to provide crisp, chunky pixels underneath the Flutter native-resolution UI layer.
 
 ---
@@ -43,23 +43,31 @@ import '../models/scenario_plugin_config.dart';
 import '../models/customization_plugin_config.dart';
 
 class GenericScenarioBuilder {
-  /// Builds a complete 1-bit dithered Flame scene graph from data configuration
+  /// Builds a complete 1-bit dithered Flame scene graph from data configuration.
+  /// If [spriteLoader] returns null (e.g. PNG asset not yet bundled in PoC),
+  /// falls back to [proceduralLayerBuilder] so the scene still renders pixel-art layers.
   static Component buildScene({
     required ScenarioPluginConfig scenarioConfig,
     required Component kaijuComponent,
     required List<CustomizationPluginConfig> placedFurniture,
-    required Sprite Function(String assetOrUrl) spriteLoader,
+    required Sprite? Function(String assetOrUrl) spriteLoader,
+    PositionComponent Function(ScenarioLayerConfig layer)? proceduralLayerBuilder,
   }) {
     final sceneRoot = PositionComponent(position: Vector2.zero());
 
     // 1. Add all scenario layers (backgrounds at priority 0-20, props at 21-49, foreground at 51-100)
     for (final layer in scenarioConfig.layers) {
-      sceneRoot.add(SpriteComponent(
-        sprite: spriteLoader(layer.spriteAssetOrUrl),
-        position: layer.position,
-        size: layer.size,
-        priority: layer.priority,
-      ));
+      final sprite = spriteLoader(layer.spriteAssetOrUrl);
+      if (sprite != null) {
+        sceneRoot.add(SpriteComponent(
+          sprite: sprite,
+          position: layer.position,
+          size: layer.size,
+          priority: layer.priority,
+        ));
+      } else if (proceduralLayerBuilder != null) {
+        sceneRoot.add(proceduralLayerBuilder(layer));
+      }
     }
 
     // 2. If this scenario supports room furniture (e.g. 'default_room'), render placed furniture (priority 21-49)
@@ -67,6 +75,8 @@ class GenericScenarioBuilder {
       for (final item in placedFurniture) {
         final spriteUrl = item.renderData['sprite_url'] as String?;
         if (spriteUrl == null) continue;
+        final sprite = spriteLoader(spriteUrl);
+        if (sprite == null) continue;
         final x = (item.renderData['x'] as num?)?.toDouble() ?? 0.0;
         final y = (item.renderData['y'] as num?)?.toDouble() ?? 0.0;
         final w = (item.renderData['width'] as num?)?.toDouble() ?? 32.0;
@@ -74,7 +84,7 @@ class GenericScenarioBuilder {
         final z = (item.renderData['priority'] as num?)?.toInt() ?? 30;
 
         sceneRoot.add(SpriteComponent(
-          sprite: spriteLoader(spriteUrl),
+          sprite: sprite,
           position: Vector2(x, y),
           size: Vector2(w, h),
           priority: z.clamp(21, 49),
@@ -83,7 +93,9 @@ class GenericScenarioBuilder {
     }
 
     // 3. Anchor the Kaiju sprite at the scenario's configured kaijuAnchorPoint (priority 50)
-    kaijuComponent.position = scenarioConfig.kaijuAnchorPoint;
+    if (kaijuComponent is PositionComponent) {
+      kaijuComponent.position = scenarioConfig.kaijuAnchorPoint;
+    }
     kaijuComponent.priority = 50;
     sceneRoot.add(kaijuComponent);
 

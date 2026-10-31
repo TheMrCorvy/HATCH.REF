@@ -7,10 +7,11 @@ This document details the multi-frame bitmap spritesheet data structures, high-f
 ## 1. 1-Bit Dithered Sprite Design Rules
 
 1. **Pixel Art Format**: Kaijus are drawn as authentic pixel art using PNG sprite sheets, rather than ASCII text characters.
-2. **Animation Sheets**: Every Kaiju has a PNG sprite sheet containing all frames for its animation states (idle, eating, sleeping, rampaging/playing), organized in a consistent grid.
-3. **Framerate**: Animations run at smooth **30+ FPS** (with breathing cycles, dorsal fin glow tweens, and atomic breath particle dispersal).
-4. **Visual Standard**: The aesthetic benchmark is defined by `Desing References/Godzila.webp`, depicting Godzilla looming over urban skyscrapers while unleashing a dithered cone of atomic breath.
-5. **Rendering Pipeline**: Sprites are drawn in a Flame game viewport at a low virtual resolution (e.g., 256×256) and upscaled using nearest-neighbor filtering to achieve crisp, chunky pixels. Shading, volume, and energy blasts are processed via a Bayer dithering fragment shader.
+2. **Procedural Pixel-Art Fallback (PoC)**: When PNG sprite sheet assets (`assets/sprites/kaijus/*.png`) are not yet present on disk during the PoC, the engine automatically falls back to `ProceduralPixelRenderer` — a deterministic Flame `PositionComponent` that renders multi-frame grayscale pixel-art representations of `godzilla`, `cyber_godzilla`, and room props directly onto the 256×256 Flame `Canvas` so the Bayer dithering shader processes them identically to bitmap sheets.
+3. **Animation Sheets**: Every Kaiju has a PNG sprite sheet (or procedural frame sequence) containing all frames for its animation states (idle, eating, sleeping, rampaging/playing), organized in a consistent grid.
+4. **Framerate**: Animations run at smooth **30+ FPS** (with breathing cycles, dorsal fin glow tweens, and atomic breath particle dispersal).
+5. **Visual Standard**: The aesthetic benchmark is defined by `Desing References/Godzila.webp`, depicting Godzilla looming over urban skyscrapers while unleashing a dithered cone of atomic breath.
+6. **Rendering Pipeline**: Sprites are drawn in a Flame game viewport at a low virtual resolution (e.g., 256×256) and upscaled using nearest-neighbor filtering to achieve crisp, chunky pixels. Shading, volume, and energy blasts are processed via a Bayer dithering fragment shader.
 
 ---
 

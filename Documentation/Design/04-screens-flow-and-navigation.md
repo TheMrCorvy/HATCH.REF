@@ -108,10 +108,9 @@ class RoomScreen extends ConsumerWidget {
   - Purchase is permitted as long as `credits >= item.price`. 
 - **Kaiju Switcher Screen (SWAP)**:
   - Displays a scrollable `ListView` of all owned Kaijus.
-  - Tapping `[ SWAP TO THIS COMPANION ]` invokes `ref.read(gameStateProvider.notifier).switchActiveKaiju(kaiju.id)` and redirects to the Room Screen.
-- **Settings Screen (CONF)**:
-  - Instead of theme switching, provides immersive hardware controls:
-    - Audio (volume/mute).
-    - Luminance (adjusts the shader's threshold or palette brightness).
-    - Refresh Rate (simulates a slower terminal update rate for aesthetic preference).
-  - Includes a "Hardware Info" panel detailing system version, PID, etc.
+  - Tapping `[ > DEPLOY_TO_ROOM ]` invokes `ref.read(gameStateProvider.notifier).switchActiveKaiju(kaiju.id)` and redirects to the Room Screen.
+  - Includes an `[ > EVO_MGR ]` action button to inspect the static Evolution History teaser (`EvoTeaserScreen`) for the specimen.
+- **Settings & Customization Screen (CONF)**:
+  - Uses a top terminal sub-tab bar (`[ SYS_DIAG ]` / `[ CUSTOMIZE ]`):
+    - **`[ SYS_DIAG ]` sub-tab**: Provides immersive hardware controls (`AUDIO_GAIN` + `[ MUTE ]`, `OS_LUMINANCE` controlling the Bayer shader threshold bias, `REFRESH_RATE` simulating 15/30/60 Hz viewport updates), a `HARDWARE_INFO` diagnostic panel, and a `[ > EVO_MGR // GROWTH_TIMELINE ]` button.
+    - **`[ CUSTOMIZE ]` sub-tab**: Provides per-user `PALETTE` customization plugin selection (dynamically updating `AppPalette` and shader uniforms `uColorLight` / `uColorDark`), `BOOT_MESSAGE` configuration, and read-only specimen designation info.

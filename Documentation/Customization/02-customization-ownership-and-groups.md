@@ -46,40 +46,54 @@ CREATE TABLE user_customizations (
 
 ## 4. Flutter / Dart Implementation
 
+> **PoC Implementation Note**: During Milestone 1.1 (Offline PoC), state and customization models (`KaijuInstance`, `GameState`, `CustomizationPluginConfig`, `SettingsState`) are implemented as hand-written `@immutable` Dart classes with `copyWith` and manual JSON/Hive serialization so no `build_runner` step is required.
+
 ### 4.1 Data Models
 
 ```dart
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:flutter/foundation.dart';
 
-part 'customization_models.freezed.dart';
-part 'customization_models.g.dart';
+@immutable
+class CustomizationPreset {
+  final String id;
+  final String name;
+  final String type;
+  final Map<String, dynamic> parameters;
 
-@freezed
-class CustomizationPreset with _$CustomizationPreset {
-  const factory CustomizationPreset({
-    required String id,
-    required String name,
-    required String type,
-    required Map<String, dynamic> parameters,
-  }) = _CustomizationPreset;
+  const CustomizationPreset({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.parameters,
+  });
 
-  factory CustomizationPreset.fromJson(Map<String, dynamic> json) =>
-      _$CustomizationPresetFromJson(json);
+  factory CustomizationPreset.fromJson(Map<String, dynamic> json) {
+    return CustomizationPreset(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      type: json['type'] as String,
+      parameters: Map<String, dynamic>.from(json['parameters'] as Map? ?? {}),
+    );
+  }
 }
 
-@freezed
-class UserCustomization with _$UserCustomization {
-  const factory UserCustomization({
-    required String userId,
-    required String groupId,
-    required String customizationType,
-    String? presetId,
-    Map<String, dynamic>? customParams,
-    required DateTime setAt,
-  }) = _UserCustomization;
+@immutable
+class UserCustomization {
+  final String userId;
+  final String groupId;
+  final String customizationType;
+  final String? presetId;
+  final Map<String, dynamic>? customParams;
+  final DateTime setAt;
 
-  factory UserCustomization.fromJson(Map<String, dynamic> json) =>
-      _$UserCustomizationFromJson(json);
+  const UserCustomization({
+    required this.userId,
+    required this.groupId,
+    required this.customizationType,
+    this.presetId,
+    this.customParams,
+    required this.setAt,
+  });
 }
 ```
 

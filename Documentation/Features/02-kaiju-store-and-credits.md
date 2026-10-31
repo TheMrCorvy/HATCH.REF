@@ -25,20 +25,17 @@ This document specifies the in-game Kaiju store, credit balance economics, and d
 
 ## 3. Transaction Logic
 
-The core logic for processing a kaiju acquisition in the store ensures that players meet both capacity and financial requirements. This can be expressed in the following pseudocode:
+The core logic for processing a kaiju acquisition in the store ensures that players meet both capacity and financial requirements. In the PoC, specimen designations are strictly auto-generated at adoption via `generateKaijuName(catalogItem.kaijuType)` (read-only in PoC; manual rename is unlocked in Phase 2 per [NameGeneration/01](../NameGeneration/01-name-generation-overview.md)):
 
 ```text
-FUNCTION processStorePurchase(currentCredits, ownedKaijus, catalogItem, customNickname):
+FUNCTION processStorePurchase(currentCredits, ownedKaijus, catalogItem):
 
   // Check: Available credits
   IF currentCredits < catalogItem.priceCredits THEN
     RETURN Failure("Insufficient credits! Need " + catalogItem.priceCredits + ", available: " + currentCredits + ".")
 
-  // Determine nickname (uses JoJo-inspired per-type pool from NameGeneration/01)
-  IF customNickname IS PROVIDED AND NOT EMPTY THEN
-    nickname = uppercase(customNickname)
-  ELSE
-    nickname = generateKaijuName(catalogItem.kaijuType)
+  // Determine nickname: strictly auto-generated via JoJo-inspired per-type pool in PoC
+  nickname = generateKaijuName(catalogItem.kaijuType)
 
   // Create new kaiju instance
   newKaiju = CREATE KaijuInstance WITH:
