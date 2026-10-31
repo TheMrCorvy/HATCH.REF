@@ -12,9 +12,12 @@ erDiagram
     PROFILES ||--o{ TRANSACTIONS : executes
     GROUPS ||--o{ GROUP_MEMBERS : contains
     GROUPS ||--o{ KAIJUS : owns
-    PET_CATALOG ||--o{ KAIJUS : defines
+    KAIJU_CATALOG ||--o{ KAIJUS : defines
+    PLUGINS ||--o{ SCENARIO_PLUGINS : bundles
+    PLUGINS ||--o{ ACTION_PLUGINS : bundles
+    PLUGINS ||--o{ CUSTOMIZATION_PLUGINS : bundles
     SCENARIO_PLUGINS ||--o{ ACTION_PLUGINS : binds_to
-    KAIJUS }o--|| PET_LIFECYCLE_CONFIG : "phase config"
+    KAIJUS }o--|| KAIJU_LIFECYCLE_CONFIG : "phase config"
     GROUPS ||--o{ DISSOLUTION_REQUESTS : "has pending"
 
     PROFILES {
@@ -29,18 +32,19 @@ erDiagram
         uuid id PK
         text name
         uuid admin_id FK "References profiles.id"
-        text group_type "SOLO | COUPLE | FAMILY | FRIENDS"
+        text group_type "SOLO | COUPLE | FRIENDS"
+        uuid active_kaiju_id FK "Shared active Kaiju in the group room"
         timestamp created_at
     }
 
     GROUP_MEMBERS {
         uuid group_id PK,FK
         uuid user_id PK,FK
-        text role "ADMIN | MEMBER | PARENT | CHILD"
+        text role "ADMIN | MEMBER"
         timestamp joined_at
     }
 
-    PET_CATALOG {
+    KAIJU_CATALOG {
         text kaiju_type PK "e.g. godzilla, cyber_godzilla"
         text display_name
         integer base_price_credits "e.g. 120"
@@ -53,30 +57,56 @@ erDiagram
         uuid group_id FK "References groups.id"
         text kaiju_type FK "References kaiju_catalog.kaiju_type"
         text nickname
-        integer hunger "0 to 100"
-        integer energy "0 to 100"
-        integer happiness "0 to 100"
+        integer hunger "0 to 100 (PoC Core)"
+        integer energy "0 to 100 (PoC Core)"
+        integer happiness "0 to 100 (PoC Core)"
+        jsonb extended_stats "Post-PoC stats: intel, comfort, hydration, hp, lume"
+        jsonb status_flags "States: is_exhausted, is_sick, etc."
         integer age_in_days "For autonomous actions"
         timestamp last_interaction_at
         timestamp created_at
     }
 
+    PLUGINS {
+        text id PK "e.g. core_base, military_defense_event, study_academy_pack"
+        text display_name
+        boolean is_enabled
+        timestamp valid_from
+        timestamp valid_until
+        jsonb metadata
+    }
+
     ACTION_PLUGINS {
         text id PK "e.g. eat, city_destruction"
+        text plugin_id FK "References plugins.id"
         text display_name
-        text action_type "USER_TRIGGERED | AUTONOMOUS"
+        text action_type "USER_TRIGGERED | AUTONOMOUS | MINIGAME"
         boolean is_enabled
         timestamp valid_from
         timestamp valid_until
         text target_scenario_id FK
+        jsonb required_furniture "e.g. ['itm_desk', 'itm_chair']"
         jsonb parameters
     }
 
     SCENARIO_PLUGINS {
         text id PK "e.g. default_room, metropolis_ruins"
+        text plugin_id FK "References plugins.id"
         text display_name
         boolean is_enabled
         jsonb parameters
+    }
+
+    CUSTOMIZATION_PLUGINS {
+        text id PK "e.g. itm_desk, hat_crown, palette_amber"
+        text plugin_id FK "References plugins.id"
+        text category "FURNITURE | CLOTHING | SKIN | PALETTE | BOOT_MESSAGE"
+        text display_name
+        integer price_credits
+        boolean is_enabled
+        text required_stat "Stat that must be active for item to appear (e.g. intel)"
+        jsonb stat_modifiers
+        jsonb render_data
     }
 
     TRANSACTIONS {
@@ -89,7 +119,7 @@ erDiagram
         timestamp created_at
     }
 
-    PET_LIFECYCLE_CONFIG {
+    KAIJU_LIFECYCLE_CONFIG {
         text kaiju_type PK,FK
         integer phase_index PK
         text phase_name
@@ -128,50 +158,60 @@ CREATE TABLE public.profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 1b. Groups Table
+-- 1b. Groups Table (Strictly SOLO, COUPLE, and FRIENDS)
 CREATE TABLE public.groups (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     admin_id UUID REFERENCES public.profiles(id),
-    group_type TEXT NOT NULL CHECK (group_type IN ('SOLO', 'COUPLE', 'FAMILY', 'FRIENDS')),
+    group_type TEXT NOT NULL CHECK (group_type IN ('SOLO', 'COUPLE', 'FRIENDS')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 -- 1c. Group Members Table
--- PARENT/CHILD roles are dialogue labels for FAMILY groups (how the kaiju addresses members).
--- They do not grant or restrict app permissions beyond ADMIN/MEMBER.
 CREATE TABLE public.group_members (
     group_id UUID REFERENCES public.groups(id) ON DELETE CASCADE,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-    role TEXT NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('ADMIN', 'MEMBER', 'PARENT', 'CHILD')),
+    role TEXT NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('ADMIN', 'MEMBER')),
     joined_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     PRIMARY KEY (group_id, user_id)
 );
 
--- 1d. Active Kaiju Sessions (per-user, per-group)
--- Replaces the old is_active boolean on kaijus, allowing each member to track their own active kaiju.
-CREATE TABLE public.active_kaiju_sessions (
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
+-- 1d. Active Group Kaiju (per-group, ensuring all members in a COUPLE or FRIENDS group see the exact same active Kaiju in the room)
+CREATE TABLE public.active_group_kaijus (
+    group_id UUID PRIMARY KEY REFERENCES public.groups(id) ON DELETE CASCADE,
     kaiju_id UUID NOT NULL REFERENCES public.kaijus(id) ON DELETE CASCADE,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-    PRIMARY KEY (user_id, group_id)
+    updated_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 -- 1e. Group Type Configuration (drives per-group-type kaiju personality and behavior)
 CREATE TABLE public.group_type_config (
-    group_type TEXT PRIMARY KEY CHECK (group_type IN ('SOLO', 'COUPLE', 'FAMILY', 'FRIENDS')),
+    group_type TEXT PRIMARY KEY CHECK (group_type IN ('SOLO', 'COUPLE', 'FRIENDS')),
     affection_rate NUMERIC(4,2) NOT NULL DEFAULT 1.0,
     energy_decay_modifier NUMERIC(4,2) NOT NULL DEFAULT 1.0,
     animation_pool JSONB NOT NULL DEFAULT '[]'::jsonb,
-    dialogue_labels JSONB NOT NULL DEFAULT '{}'::jsonb, -- e.g. {"caretaker_a": "Mom", "caretaker_b": "Dad"}
+    dialogue_labels JSONB NOT NULL DEFAULT '{}'::jsonb, -- e.g. {"caretaker_a": "Mom", "caretaker_b": "Dad"} for COUPLE
     special_events JSONB NOT NULL DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 2. Scenario Plugins Table
+-- 2. Parent Plugins Table (Bundles scenarios, actions, autonomous actions, and customizations)
+CREATE TABLE public.plugins (
+    id TEXT PRIMARY KEY,
+    display_name TEXT NOT NULL,
+    description TEXT,
+    is_enabled BOOLEAN NOT NULL DEFAULT true,
+    valid_from TIMESTAMPTZ,
+    valid_until TIMESTAMPTZ,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 2b. Scenario Plugins Table
 CREATE TABLE public.scenario_plugins (
     id TEXT PRIMARY KEY,
+    plugin_id TEXT REFERENCES public.plugins(id) ON DELETE CASCADE,
     display_name TEXT NOT NULL,
     is_enabled BOOLEAN NOT NULL DEFAULT true,
     parameters JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -179,11 +219,12 @@ CREATE TABLE public.scenario_plugins (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 3. Action Plugins Table
+-- 3. Action Plugins Table (User-Triggered, Autonomous, and Minigames)
 CREATE TABLE public.action_plugins (
     id TEXT PRIMARY KEY,
+    plugin_id TEXT REFERENCES public.plugins(id) ON DELETE CASCADE,
     display_name TEXT NOT NULL,
-    action_type TEXT NOT NULL CHECK (action_type IN ('USER_TRIGGERED', 'AUTONOMOUS')),
+    action_type TEXT NOT NULL CHECK (action_type IN ('USER_TRIGGERED', 'AUTONOMOUS', 'MINIGAME')),
     is_enabled BOOLEAN NOT NULL DEFAULT false,
     valid_from TIMESTAMPTZ,
     valid_until TIMESTAMPTZ,
@@ -191,11 +232,29 @@ CREATE TABLE public.action_plugins (
     -- Age gates: NULL on either bound means unconstrained on that end.
     min_age_phase TEXT DEFAULT NULL CHECK (min_age_phase IN ('baby','child','young','adult','elder')),
     max_age_phase TEXT DEFAULT NULL CHECK (max_age_phase IN ('baby','child','young','adult','elder')),
+    -- Furniture prerequisites: e.g. '["itm_desk", "itm_chair"]' required in room for 'destruction_study'
+    required_furniture JSONB NOT NULL DEFAULT '[]'::jsonb,
     -- Lower priority value = higher precedence (0 overrides all others).
     priority INTEGER NOT NULL DEFAULT 50,
-    -- blocking_conditions: [{"condition": "is_sick"}] — omit the field, presence alone means blocks=true.
+    -- blocking_conditions: [{"condition": "is_sick"}, {"condition": "is_exhausted"}]
     blocking_conditions JSONB NOT NULL DEFAULT '[]'::jsonb,
     parameters JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 3b. Customization Plugins Table (Furniture, Clothing/Accessories, Skins, Palettes, Boot Messages)
+CREATE TABLE public.customization_plugins (
+    id TEXT PRIMARY KEY,
+    plugin_id TEXT REFERENCES public.plugins(id) ON DELETE CASCADE,
+    category TEXT NOT NULL CHECK (category IN ('FURNITURE', 'CLOTHING', 'SKIN', 'PALETTE', 'BOOT_MESSAGE')),
+    display_name TEXT NOT NULL,
+    price_credits INTEGER NOT NULL DEFAULT 0 CHECK (price_credits >= 0),
+    is_enabled BOOLEAN NOT NULL DEFAULT true,
+    -- Ensures furniture/items that modify a future stat (e.g. 'intel', 'comfort') only activate when that stat is live
+    required_stat TEXT DEFAULT NULL,
+    stat_modifiers JSONB NOT NULL DEFAULT '{}'::jsonb,
+    render_data JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -211,21 +270,25 @@ CREATE TABLE public.kaiju_catalog (
 );
 
 -- 5. Kaijus Table
--- Owned by a GROUP, not an individual user. is_active removed — see active_kaiju_sessions.
+-- Owned by a GROUP, not an individual user. Active kaiju per group is tracked in active_group_kaijus.
 CREATE TABLE public.kaijus (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
     kaiju_type TEXT NOT NULL REFERENCES public.kaiju_catalog(kaiju_type),
     nickname TEXT NOT NULL,
     hunger INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
-    energy INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
-    happiness INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
+    energy INTEGER NOT NULL DEFAULT 80 CHECK (energy BETWEEN 0 AND 100),
+    happiness INTEGER NOT NULL DEFAULT 80 CHECK (happiness BETWEEN 0 AND 100),
+    -- Post-PoC progressive stats (e.g. {"intel": 0, "comfort": 80, "hydration": 80, "hp": 100, "lume": 50})
+    extended_stats JSONB NOT NULL DEFAULT '{}'::jsonb,
+    -- Runtime flags (e.g. {"is_exhausted": false, "is_sick": false})
+    status_flags JSONB NOT NULL DEFAULT '{}'::jsonb,
     age_in_days INTEGER NOT NULL DEFAULT 0,
     last_interaction_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- 6. Kaiju Lifecycle Configuration (per-kaiju type aging schedule, Phase 2+)
+-- 6. Kaiju Lifecycle Configuration (per-kaiju type aging schedule, Phase 3+)
 -- See Features/05-kaiju-lifecycle-and-aging.md for design intent and example seed data.
 CREATE TABLE public.kaiju_lifecycle_config (
     kaiju_type TEXT NOT NULL REFERENCES public.kaiju_catalog(kaiju_type) ON DELETE CASCADE,
@@ -239,13 +302,13 @@ CREATE TABLE public.kaiju_lifecycle_config (
 );
 
 -- 7. Dissolution Requests (consensus-based group dissolution, Phase 4+)
--- COUPLE groups require both members to accept. FAMILY/FRIENDS require majority (50% + 1).
+-- COUPLE groups require both members to accept. FRIENDS groups require majority (50% + 1).
 CREATE TABLE public.dissolution_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
     requested_by UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED')),
-    votes_required INTEGER NOT NULL,   -- set at creation time: 2 for COUPLE, ceil(n/2)+1 for others
+    votes_required INTEGER NOT NULL,   -- set at creation time: 2 for COUPLE, ceil(n/2)+1 for FRIENDS
     votes_cast INTEGER NOT NULL DEFAULT 1,  -- initiator’s vote is counted automatically
     expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '48 hours',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

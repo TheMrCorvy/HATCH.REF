@@ -1,15 +1,15 @@
 openapi: 3.1.0
 info:
   title: Unix Tamagotchi API
-  version: 1.1.0
-  description: REST API contract for cloud sync, dynamic plugin manifests, and IAP verification.
+  version: 1.2.0
+  description: REST API contract for cloud sync, dynamic plugin bundle manifests, shared Kaiju group care, first-time touch pairing, and IAP verification.
 servers:
   - url: https://api.tamagotchi.internal/v1
     description: Production Edge Gateway
 paths:
   /plugins/manifest:
     get:
-      summary: Retrieve the active capability manifest for action and scenario plugins
+      summary: Retrieve the active capability manifest for plugin bundles, scenarios, actions, and customizations
       responses:
         '200':
           content:
@@ -19,7 +19,7 @@ paths:
 
   /profile:
     get:
-      summary: Get user profile, credits, and active kaiju
+      summary: Get user profile, credits, and active group info
       responses:
         '200':
           content:
@@ -29,7 +29,7 @@ paths:
 
   /kaijus:
     get:
-      summary: List all owned kaijus (dynamic capacity)
+      summary: List all kaijus owned by the user's groups (SOLO, COUPLE, FRIENDS)
       responses:
         '200':
           content:
@@ -66,9 +66,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/Kaiju'
 
+  /kaijus/{kaijuId}/name:
+    patch:
+      summary: Rename a Kaiju owned by the user's group (Phase 2+)
+      parameters:
+        - name: kaijuId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 16
+                  example: KRONOS-7
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kaiju'
+
+  /pair-bond/initiate:
+    post:
+      summary: Generate a 60s single-use pairing token for first-time COUPLE or FRIENDS physical touch pairing (or single-use no-NFC code)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupType]
+              properties:
+                groupType:
+                  type: string
+                  enum: [COUPLE, FRIENDS]
+                groupId:
+                  type: string
+                  format: uuid
+                  nullable: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: PB-A3F9-X2K1
+                  expiresAt:
+                    type: string
+                    format: date-time
+
+  /pair-bond/accept:
+    post:
+      summary: Redeem a single-use pairing token (1 use only, invites 1 user into the COUPLE or FRIENDS group)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  example: PB-A3F9-X2K1
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groupId:
+                    type: string
+                    format: uuid
+                  groupType:
+                    type: string
+                    enum: [COUPLE, FRIENDS]
+                  activeKaijuId:
+                    type: string
+                    format: uuid
+                    nullable: true
+
   /store/purchase:
     post:
-      summary: Spend credits to adopt a new digital Kaiju
+      summary: Spend credits to adopt a new digital Kaiju into the target group
       requestBody:
         required: true
         content:
@@ -80,7 +172,10 @@ paths:
                 kaijuType:
                   type: string
                   enum: [godzilla, cyber_godzilla]
-                nickname:
+                groupId:
+                  type: string
+                  format: uuid
+                name:
                   type: string
       responses:
         '201':
@@ -129,6 +224,10 @@ components:
         timestamp:
           type: string
           format: date-time
+        plugins:
+          type: array
+          items:
+            $ref: '#/components/schemas/PluginBundleConfig'
         actions:
           type: array
           items:
@@ -137,6 +236,33 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ScenarioPluginConfig'
+        customizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomizationPluginConfig'
+
+    PluginBundleConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          example: core_habitat_bundle
+        displayName:
+          type: string
+          example: Core Habitat Bundle
+        version:
+          type: string
+          example: 1.0.0
+        isEnabled:
+          type: boolean
+        validFrom:
+          type: string
+          format: date-time
+          nullable: true
+        validUntil:
+          type: string
+          format: date-time
+          nullable: true
 
     ActionPluginConfig:
       type: object
@@ -144,6 +270,9 @@ components:
         id:
           type: string
           example: city_destruction
+        pluginId:
+          type: string
+          example: core_habitat_bundle
         displayName:
           type: string
           example: City Rampage
@@ -163,6 +292,11 @@ components:
         targetScenarioId:
           type: string
           example: metropolis_ruins
+        requiredFurniture:
+          type: array
+          items:
+            type: string
+          example: []
         parameters:
           type: object
 
@@ -172,9 +306,35 @@ components:
         id:
           type: string
           example: metropolis_ruins
+        pluginId:
+          type: string
+          example: core_habitat_bundle
         displayName:
           type: string
           example: Metropolis Ruins Destruction Zone
+        isEnabled:
+          type: boolean
+        parameters:
+          type: object
+
+    CustomizationPluginConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          example: itm_desk
+        pluginId:
+          type: string
+          example: phase3_study_bundle
+        category:
+          type: string
+          enum: [FURNITURE, CLOTHING, SKIN, PALETTE, BOOT_MESSAGE]
+        displayName:
+          type: string
+          example: WORK_STN (Desktop & Chair)
+        priceCredits:
+          type: integer
+          example: 250
         isEnabled:
           type: boolean
         parameters:
@@ -201,19 +361,40 @@ components:
       properties:
         id:
           type: string
-        ownerId:
+          format: uuid
+        groupId:
           type: string
+          format: uuid
         kaijuType:
           type: string
-        nickname:
+          enum: [godzilla, cyber_godzilla]
+        name:
           type: string
-        isActive:
-          type: boolean
+          example: KRONOS-7
+        ageInDays:
+          type: integer
+          example: 14
         activeScenarioId:
           type: string
+          example: default_room
         hunger:
           type: integer
         energy:
           type: integer
         happiness:
           type: integer
+        extendedStats:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            intel: 20
+            comfort: 50
+            hydration: 80
+            hp: 100
+        statusFlags:
+          type: object
+          additionalProperties:
+            type: boolean
+          example:
+            is_exhausted: false

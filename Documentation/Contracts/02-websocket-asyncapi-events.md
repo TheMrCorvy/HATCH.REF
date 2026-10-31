@@ -10,15 +10,15 @@ This document defines the real-time event schemas and communication lifecycle fo
 wss://realtime.tamagotchi.internal/socket
 │
 ├── Channel: public:plugins (Global Operations Channel)
-│   └── Server Push: Manager toggles an action or scenario plugin
+│   └── Server Push: Manager toggles a plugin bundle, action, scenario, or customization plugin
 │
 ├── Channel: user:{userId} (Private Sync Channel)
 │   ├── Client Listen: Cross-device companion sync & IAP approvals
 │   └── Server Push  : Autonomous work rewards & clinic updates
 │
-└── Channel: playroom:{roomId} (Multiplayer Presence Channel)
-    ├── Client Broadcast: Kaiju emote, 1-bit dithered animation triggers
-    └── Presence State  : Live peer list, online status
+└── Channel: playroom:{groupId} (Multiplayer Group Presence & Care Channel)
+    ├── Client Broadcast: Kaiju emote, 1-bit dithered animation triggers, live action broadcasts
+    └── Presence State  : Live peer list (COUPLE / FRIENDS), online status
 ```
 
 ---
@@ -26,7 +26,7 @@ wss://realtime.tamagotchi.internal/socket
 ## 2. Event Specifications
 
 ### Event A: `PLUGIN_MANIFEST_UPDATED` (Global Channel)
-Emitted when a game manager toggles an action plugin or edits event parameters in the backend.
+Emitted when a game manager toggles a plugin bundle, action plugin, scenario plugin, or customization plugin, or edits event parameters in the backend.
 
 ```json
 {
@@ -34,6 +34,7 @@ Emitted when a game manager toggles an action plugin or edits event parameters i
   "topic": "public:plugins",
   "payload": {
     "pluginId": "city_destruction",
+    "bundleId": "core_habitat_bundle",
     "isEnabled": true,
     "validUntil": "2026-10-05T23:59:59.000Z",
     "targetScenarioId": "metropolis_ruins",
@@ -48,22 +49,22 @@ Emitted when a game manager toggles an action plugin or edits event parameters i
 
 ---
 
-### Event B: `PET_SCENARIO_TRANSITIONED` (Private Channel)
+### Event B: `KAIJU_SCENARIO_TRANSITIONED` (Group / Private Channel)
 Emitted when a Kaiju's environment scenario changes (e.g. deployed to metropolis ruins or medical containment pod).
 
 ```json
 {
-  "event": "PET_SCENARIO_TRANSITIONED",
-  "topic": "user:usr_998124",
+  "event": "KAIJU_SCENARIO_TRANSITIONED",
+  "topic": "playroom:grp_998124",
   "payload": {
-    "kaijuId": "pet_17140001",
+    "kaijuId": "kaiju_17140001",
     "previousScenarioId": "default_room",
     "newScenarioId": "hospital_bed",
     "scenarioParams": {
       "vital_monitor": true,
       "iv_drip_level": "FULL"
     },
-    "reason": "Illness recovery protocol engaged"
+    "reason": "Clinic recovery protocol engaged"
   }
 }
 ```

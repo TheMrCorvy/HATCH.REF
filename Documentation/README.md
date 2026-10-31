@@ -2,7 +2,12 @@
 
 Welcome to the comprehensive technical documentation for the **Unix Tamagotchi** project.
 
-This project is a multiplayer digital companion mobile game built **100% in Flutter and Flame (Dart 3.x)** with a "Tactical 1-Bit Cyber-Specimen OS" aesthetic, **primarily marketed toward couples** who share and raise a giant Kaiju specimen together. Instead of conventional domestic animals, the specimens are towering Kaijus from the Godzillaverse (taking strong visual reference from `Desing References/Godzila.webp`), living inside an oversized terminal habitat furnished with their bed, chair, desktop, and kitchen. For nutrition, the Kaiju devours a compressed ball of human people; for work, it carries out shifts destroying cities; and for study, it learns urban demolition tactics. The application features an extensible **Action & Scenario Plugin Engine**, a unique visual style combining 1-bit dithered pixel art with an industrial terminal UI, and dynamic backend orchestration.
+This project is a multiplayer digital companion mobile game built **100% in Flutter and Flame (Dart 3.x)** with a "Tactical 1-Bit Cyber-Specimen OS" aesthetic, **primarily marketed toward couples** who share and raise a giant Kaiju specimen together, while also supporting **groups of friends** and **solo play**. Instead of conventional domestic animals, the specimens are towering Kaijus from the Godzillaverse (taking strong visual reference from `Desing References/Godzila.webp`), living inside an oversized terminal habitat furnished with their bed, chair, desktop, and kitchen. For nutrition, the Kaiju devours a compressed ball of human people; for work, it carries out shifts destroying cities; and for study, it learns urban demolition tactics. The application features a **100% Data-Driven Plugin Engine** (where plugins bundle scenarios, user actions, autonomous actions, and customizations like furniture and clothing), a unique visual style combining 1-bit dithered pixel art with an industrial terminal UI, and dynamic backend orchestration.
+
+> [!IMPORTANT]
+> **Single Source of Truth Rule (Mandatory for All AI Agents & Harnesses)**:  
+> This `Documentation/` directory is the **Single Source of Truth** for the project. Regardless of the agent harness used (Claude Code, Google Antigravity, Devin, Hermes, Cursor, etc.), **whenever a bug is fixed, a technical detail is adjusted, or anything is implemented that diverges from or adds to what is documented here, the corresponding `Documentation/<Domain>/` file MUST be updated in the same session** so the codebase and documentation strictly mirror each other.  
+> See [`../AGENTS.md`](../AGENTS.md), [`../CLAUDE.md`](../CLAUDE.md), and [`../agent_prompts/README.md`](../agent_prompts/README.md) for the chained prompt execution protocol.
 
 ---
 
@@ -40,9 +45,9 @@ Documentation/
 │   └── 06-1bit-dithering-rendering-pipeline.md # Compositing Flame viewport with Flutter UI
 │
 ├── Multiplayer/                           # Shared Kaiju Care & Social Play
-│   ├── 01-shared-kaiju-care-architecture.md # Co-op care logic — primarily for couples; families and friends also supported
-│   ├── 02-group-types-and-targeting.md    # Group personality system & real-time state sync
-│   └── 03-pair-bond-connection.md         # NFC/BLE physical pairing for couple onboarding
+│   ├── 01-shared-kaiju-care-architecture.md # Co-op care logic — primarily for couples; friend groups and solo play also supported
+│   ├── 02-group-types-and-targeting.md    # Group personality system (SOLO, COUPLE, FRIENDS) & real-time state sync
+│   └── 03-pair-bond-connection.md         # One-time physical phone-touch pairing (NFC/BLE) + single-use invite code fallback
 │
 ├── Features/                              # PoC functional specification & future roadmap
 │   ├── 01-core-kaiju-actions.md            # Eat, Sleep, Play as initial user-triggered plugins
@@ -110,22 +115,25 @@ Documentation/
      - `hive_flutter` — Zero-latency local binary storage.
 2. **Unified Visual Style: Tactical 1-Bit Cyber-Specimen OS**:
    - A singular, cohesive aesthetic combining a low-resolution Flame viewport with 1-bit dithered bitmap sprites (using Bayer matrix shaders, with `Desing References/Godzila.webp` as the prime visual standard for Godzilla looming over skylines and breathing dithered atomic breath) and a native-resolution Flutter UI mimicking an industrial diagnostic terminal.
-3. **Multiplayer Shared Kaiju Care**:
-   - **Primarily designed and marketed for couples** who co-manage and nurture a shared giant Kaiju together. Solo play and larger groups (families, friends) are also fully supported, but the product identity and UX are centered on the two-player couple experience.
-4. **Dormant Action & Scenario Plugin Architecture**:
-   - Actions and environments are compiled into the app as modular plugins.
-   - Plugins remain dormant until the backend enables them and supplies runtime parameters.
+3. **Multiplayer Shared Kaiju Care (Couples & Friends)**:
+   - **Primarily designed and marketed for couples (`COUPLE`)** who co-manage and nurture a shared giant Kaiju together, with full support for **friend squads (`FRIENDS`)** and **solo play (`SOLO`)**.
+   - **One-Time Physical Touch Pairing**: To share a Kaiju with a partner or invite a friend to a group, both phones touch once (via NFC/BLE proximity, with a single-use invite code fallback for devices without NFC). From that moment on, all group members see and care for the exact same active Kaiju remotely over the internet.
+4. **100% Data-Driven Plugin Architecture**:
+   - Everything in the Flutter frontend is generic and data-driven.
+   - A **Plugin** is a backend-controlled package that can contain **scenarios, user-triggered actions, autonomous actions, and customizations (furniture, clothing/accessories, skins, palettes)**.
+   - This allows the product team to dynamically create new events, scenarios, actions, or customization items from the backend without modifying the client codebase.
 5. **Dynamic Kaiju Capacity**:
    - No hardcoded 2-kaiju limit in the client!
    - Capacity is governed by available credits and dynamic backend configurations.
-6. **PoC Scope**:
-   - Strictly client-side / offline-first for Day 1 with **Flutter Riverpod** and local persistent storage.
-   - Core actions (Eat a ball of human people, Sleep, Play) implemented as the first 3 user-triggered plugins.
+6. **Phased Progression & PoC Scope**:
+   - **Milestone 1.1 (Initial PoC)**: Strictly client-side / offline-first with **Flutter Riverpod**, **Hive**, the **3 core stats** (`Hunger`, `Energy`, `Happiness`), a local JSON plugin manifest (`Eat`, `Sleep`, `Play`, `Default Room`), Kaiju Store/Switcher, and Palette Customization. (Furniture, Consumable Bags, and Death are excluded).
+   - **Milestone 1.2 (Late Phase 1)**: Introduces **Exhaustion** when vital stats reach 0.
+   - **Phase 2 & 3**: Adds Supabase backend, dynamic plugin sync, progressive stats (`INTEL`, `COMFORT`, `HYDRATION`, `HP`) paired with their corresponding furniture (e.g., desk & chair required for Demolition Study), autonomous City Destruction work, and Clinic Recovery. Permanent Kaiju death (`ERR_SYS`) is pushed as late as possible (Phase 5+).
 7. **In-App Purchases & Argentine Repatriation**:
    - Native integration via Flutter `in_app_purchase` package with direct SWIFT international wires to an Argentine USD bank account, complying with Argentine Central Bank and ARCA/AFIP regulations.
 8. **Unified Ownership Model (Group-of-1)**:
-   - Every user starts in a personal SOLO group. Kaijus belong to groups, not individual users.
+   - Every user starts in a personal `SOLO` group. Kaijus belong to groups (`SOLO`, `COUPLE`, `FRIENDS`), not individual users, and the active Kaiju in the room is synced **per-group**.
    - This architecture enables seamless transition from solo play to multiplayer shared kaiju care.
-9. **Furniture & Habitat Customization**:
-   - Furniture items (oversized beds, chairs, workstations, kitchens, lamps) are purchased by users and placed in group habitat rooms where the giant Kaiju lives.
-   - Cosmetic customizations (palette themes, boot messages) are per-user preferences.
+9. **Furniture & Habitat Customization (Plugin-Driven)**:
+   - Furniture items (oversized beds, chairs, desktop workstations, kitchens, lamps) and Kaiju clothing are delivered as customization plugins, purchased by users, and placed in group habitat rooms. Furniture that modifies or gates a specific stat/action is released in the same phase as that stat/action.
+   - Personal terminal cosmetics (palette themes, boot messages) are per-user preferences.

@@ -2,30 +2,24 @@
 
 ## 1. Relational Schema (PostgreSQL)
 
-To support the multiplayer 'group of 1' ownership model in the future Supabase backend, the database separates catalog definitions from instantiated inventory.
+To support the data-driven plugin architecture and the multiplayer 'group of 1' ownership model in the Supabase backend, furniture catalog definitions live in `customization_plugins` (`category = 'FURNITURE'`), separated from instantiated player inventory (`furniture_instances`).
 
 ```sql
--- Catalog Definitions (Read-Only to Users)
-CREATE TABLE furniture_catalog (
-    id VARCHAR(50) PRIMARY KEY,
-    display_name VARCHAR(100) NOT NULL,
-    price INT NOT NULL,
-    category VARCHAR(50) NOT NULL,
-    stat_modifiers JSONB NOT NULL DEFAULT '{}'::jsonb
-);
+-- Catalog Definitions are managed via public.customization_plugins (category = 'FURNITURE')
+-- See Architecture/05-database-and-auth.md for the full customization_plugins DDL.
 
--- Purchased Inventory
-CREATE TABLE furniture_instances (
+-- Purchased & Placed Furniture Inventory
+CREATE TABLE public.furniture_instances (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    catalog_item_id VARCHAR(50) REFERENCES furniture_catalog(id),
-    purchased_by_user_id UUID NOT NULL REFERENCES auth.users(id),
-    placed_in_group_id UUID NOT NULL REFERENCES groups(id),
+    catalog_item_id TEXT NOT NULL REFERENCES public.customization_plugins(id),
+    purchased_by_user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    placed_in_group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
     position_slot INT,
     purchased_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Indexing for fast lookups in habitats
-CREATE INDEX idx_furniture_group_id ON furniture_instances(placed_in_group_id);
+CREATE INDEX idx_furniture_group_id ON public.furniture_instances(placed_in_group_id);
 ```
 
 ## 2. Ownership & Dissolution Rules
@@ -35,7 +29,7 @@ The Unix Tamagotchi ecosystem groups kaijus, but limits true asset ownership to 
 > [!IMPORTANT]
 > A user's `purchased_by_user_id` **never changes**. This ensures no loss of virtual property when relationships/groups change.
 
-*   **Group Sharing:** All members (SOLO, COUPLE, FAMILY, FRIENDS) in a group can see the furniture in their shared habitat. Any kaiju belonging to the group receives the passive stat modifiers.
+*   **Group Sharing:** All members (`SOLO`, `COUPLE`, `FRIENDS`) in a group can see the furniture in their shared habitat. Any kaiju belonging to the group receives the passive stat modifiers and action unlocks (e.g., `itm_desk` unlocking `destruction_study`).
 *   **Dissolution Protocol:** If a group is dissolved (e.g., a COUPLE breaks up):
     *   The backend triggers a re-assignment query.
     *   `UPDATE furniture_instances SET placed_in_group_id = (user's solo group id) WHERE purchased_by_user_id = user.id`

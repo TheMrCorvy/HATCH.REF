@@ -4,22 +4,21 @@
 The player lifecycle seamlessly flows between solo and multiplayer contexts without losing progression or ownership context.
 
 1. **Registration**: Auto-creation of `SOLO` group.
-2. **Multiplayer**: User invites/joins a shared group (`COUPLE`, `FAMILY`, `FRIENDS`).
+2. **Multiplayer (`COUPLE` or `FRIENDS`)**: User touches phones once with their partner or friend (or shares a single-use invite code) to share their Kaiju in a `COUPLE` or `FRIENDS` group.
 3. **Dissolution/Leaving**: Group disbands, user returns to `SOLO` group (with cloned shared kaijus).
 
 ## 2. Transition Mechanics
 
-### Joining a Group
-When a user joins a multiplayer group, their personal `SOLO` group becomes **dormant**.
-- The existing kaijus in the `SOLO` group stay in the `SOLO` group.
-- The shared multiplayer group has its own distinct set of kaijus.
-- **Standby Mechanics**: While a user is actively viewing a multiplayer group, their `SOLO` group kaijus experience heavily reduced stat decay (e.g., 0.1x normal rate) to prevent punishment for engaging in multiplayer.
+### Sharing a Kaiju & Joining a Group
+When a user touches phones for the first time with their partner (`COUPLE`) or friend (`FRIENDS`) to share their Kaiju:
+- The selected Kaiju from the initiator's `SOLO` group can be transferred directly into the shared `COUPLE` or `FRIENDS` group (and set as its `active_group_kaijus` entry) so both users immediately see and care for that exact same Kaiju online.
+- Any other unshared Kaijus in the user's personal `SOLO` group remain in the `SOLO` group, which enters a **dormant** state (`0.1x` standby stat decay) while the user is actively viewing the shared multiplayer group.
 
 ### Leaving a Group
 When a user leaves (or the group dissolves), they receive clones of the shared kaijus, which are added to their `SOLO` group. The `SOLO` group fully reactivates.
 
 ### Switching Active Groups
-A user can potentially belong to multiple groups (their `SOLO` group + a multiplayer group). The application UI shows **one active group at a time**.
+A user can belong to their `SOLO` group plus a `COUPLE` and/or `FRIENDS` group. The application UI shows **one active group at a time**, and within that group, all members see the **same active Kaiju** (`active_group_kaijus`).
 
 ## 3. User Lifecycle State Diagram
 ```mermaid
@@ -28,14 +27,14 @@ stateDiagram-v2
     
     state ActiveSolo {
         [*] --> ViewSoloRoom
-        ViewSoloRoom --> InteractSoloPets
+        ViewSoloRoom --> InteractSoloKaijus
     }
     
-    ActiveSolo --> ActiveMultiplayer: Join/Switch to Group
+    ActiveSolo --> ActiveMultiplayer: One-Time Touch Pairing / Switch to Group
     
     state ActiveMultiplayer {
         [*] --> ViewSharedRoom
-        ViewSharedRoom --> InteractSharedPets
+        ViewSharedRoom --> InteractSharedKaijus
         note right of ViewSharedRoom
             Solo group enters 
             Dormant state (0.1x decay)
@@ -52,7 +51,7 @@ The Riverpod state management needs to reflect the active group context clearly.
 ```dart
 // lib/models/group_context.dart
 
-enum GroupType { solo, couple, family, friends }
+enum GroupType { solo, couple, friends }
 
 class GroupContext {
   final String groupId;

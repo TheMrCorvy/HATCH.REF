@@ -1,151 +1,140 @@
-# Plugins: 03 Non-User-Triggered Actions
+# Plugins: 03 Non-User-Triggered Actions (Autonomous Plugins)
 
-This document specifies the architecture, scheduling, and deterministic execution of **Non-User-Triggered Actions** (Autonomous Actions) in the **Unix Tamagotchi**.
+This document specifies the data-driven architecture, furniture-gated triggers, scheduling, and deterministic execution of **Non-User-Triggered Actions** (Autonomous Actions) in the **Unix Tamagotchi**.
 
 ---
 
 ## 1. Architectural Concept
 
-Unlike user actions triggered by button taps, **Non-User-Triggered Actions** trigger autonomously based on:
-1. **Circumstantial Conditions**: Kaiju reaching adult age, kaiju sickness, or low stat thresholds.
-2. **Scheduled Working Hours**: Configured time intervals (e.g. 09:00 to 17:00) where the kaiju goes to work to generate credits.
-3. **Automated Lifecycle Routines**: Career development, higher education, or hospital recovery.
+Unlike user actions triggered by button taps, **Non-User-Triggered Actions** trigger autonomously based on backend-configured data rules:
+1. **Circumstantial & Lifecycle Conditions**: Kaiju reaching a target age phase (e.g., `child`/`young` for study, `young`/`adult` for work), Kaiju exhaustion/sickness, or stat thresholds.
+2. **Furniture Prerequisites**: Certain autonomous actions require specific furniture customization plugins to be placed in the group's habitat room! For example, **Demolition Study (`destruction_study`)** requires a desktop workstation and chair (`required_furniture: ["itm_desk", "itm_chair"]`) in the room so the Kaiju can study.
+3. **Scheduled / Elapsed Time Windows**: Autonomous routines evaluate elapsed hours (up to `max_shift_hours`) to award credits or extended stats (`intel`) and apply stat decay.
 
 ```mermaid
 flowchart TD
-    AppResume([App Reopened by Player]) --> ReadTimestamps["Read Last Interaction Timestamp & Current Time"]
-    ReadTimestamps --> CheckAutoActions["Query Active Autonomous Action Plugins (age-eligible only)"]
+    AppResume([Session Sync / App Reopened]) --> ReadTimestamps["Read Last Interaction Timestamp & Current Time"]
+    ReadTimestamps --> CheckAutoActions["Query Enabled Autonomous Action Configs (sorted by priority)"]
 
-    CheckAutoActions --> EvalWork{"Kaiju is ADULT phase\n& plugin priority allows?"}
-    EvalWork -->|Yes| CalcWork["Compute Hours Rampaged\nCredits Earned = hours * bounty_rate\nEnergy Drained = hours * energy_rate"]
-    EvalWork -->|No| CheckSick{"Is Kaiju injured?"}
+    CheckAutoActions --> CheckSick{"Priority 0: Is Kaiju sick/injured?"}
+    CheckSick -->|Yes| SetHospital["Engage 'hospital_recovery'\nSwitch Scenario to 'hospital_bed'"]
+    CheckSick -->|No| EvalEligible{"Check Age Phase, Min Energy\n& Required Furniture in Room"}
 
-    CalcWork --> UpdateStats["Apply Credit & Stat Deltas to Local State"]
-    CheckSick -->|Yes| SetHospital["Switch Scenario to 'hospital_bed'\n(priority 0 — overrides all others)"]
-    CheckSick -->|No| NormalRoom["Keep 'default_room'"]
+    EvalEligible -->|"ADULT/YOUNG: 'city_destruction'"| CalcWork["Compute Hours Rampaged\nCredits = hours * bounty_per_hour * intel_bonus\nDrain Energy & Hunger"]
+    EvalEligible -->|"CHILD/YOUNG + Desk/Chair: 'destruction_study'"| CalcStudy["Compute Study Hours\nGain INTEL stat + Drain Energy & Hunger"]
 
-    UpdateStats --> ShowSummary["Display Notification:\n'> [RAMPAGE] <kaiju> destroyed 4 city sectors and earned 40 credits!'"]
+    CalcWork & CalcStudy --> UpdateStats["Apply Stat & Credit Deltas Atomically"]
+    UpdateStats --> ShowSummary["Display Terminal Log:\n'> [RAMPAGE] <kaiju> destroyed 4 city sectors and earned 48 credits!'"]
 ```
 
 ---
 
-## 2. Autonomous Action Contract (`lib/plugins/interfaces/autonomous_action_plugin.dart`)
+## 2. Generic Autonomous Evaluator (`lib/plugins/executors/generic_autonomous_evaluator.dart`)
+
+Instead of hardcoding classes like `CityDestructionActionPlugin` or `DestructionStudyActionPlugin`, the frontend uses a single data-driven evaluator that interprets the JSON parameters of any `ActionPluginConfig` where `actionType == ActionType.autonomous`:
 
 ```dart
-import '../interfaces/action_plugin.dart';
-import '../../models/pet_state.dart';
-
-abstract class AutonomousActionPlugin extends ActionPlugin {
-  @override
-  ActionType get actionType => ActionType.autonomous;
-
-  /// Checks if conditions are met for this action to engage
-  bool shouldTrigger({
-    required KaijuState kaiju,
-    required Map<String, dynamic> backendParams,
-    required DateTime currentTime,
-  });
-
-  /// Computes deterministic state changes over elapsed time
-  AutonomousExecutionResult computeElapsedProgress({
-    required KaijuState kaiju,
-    required DateTime startTime,
-    required DateTime endTime,
-    required Map<String, dynamic> backendParams,
-  });
-}
+import '../models/action_plugin_config.dart';
+import '../../models/age_phase.dart';
+import '../../models/kaiju_state.dart';
 
 class AutonomousExecutionResult {
   final int creditsEarned;
   final int hungerDelta;
   final int energyDelta;
   final int happinessDelta;
+  final Map<String, int> extendedStatDeltas; // e.g. {'intel': 15}
   final String statusSummary;
   final String? overrideScenarioId;
 
   const AutonomousExecutionResult({
-    required this.creditsEarned,
+    this.creditsEarned = 0,
     this.hungerDelta = 0,
     this.energyDelta = 0,
     this.happinessDelta = 0,
+    this.extendedStatDeltas = const {},
     required this.statusSummary,
     this.overrideScenarioId,
   });
 }
-```
 
----
-
-## 3. Implementation: City Destruction Plugin (`lib/plugins/non_user_triggered_actions/city_destruction_action_plugin.dart`)
-
-```dart
-class CityDestructionActionPlugin extends AutonomousActionPlugin {
-  @override
-  String get id => 'city_destruction';
-
-  @override
-  String get displayName => 'City Rampage';
-
-  @override
-  String get defaultScenarioId => 'metropolis_ruins';
-
-  @override
-  bool shouldTrigger({
-    required KaijuState kaiju,
-    required Map<String, dynamic> backendParams,
-    required DateTime currentTime,
+class GenericAutonomousEvaluator {
+  /// Checks if all data-driven conditions are met for this autonomous action to engage
+  static bool shouldTrigger({
+    required KaijuInstance kaiju,
+    required AgePhase currentPhase,
+    required List<String> placedFurnitureIds,
+    required ActionPluginConfig config,
   }) {
-    // Condition 1: Must be enabled by backend
-    if (backendParams['is_enabled'] != true) return false;
+    if (!config.isEnabled) return false;
+    if (!config.isAgeEligible(currentPhase)) return false;
+    if (!config.hasRequiredFurniture(placedFurnitureIds)) return false;
 
-    // Condition 2: Age gate — city destruction requires ADULT phase
-    if (!isAgeEligible(kaiju.currentPhase)) return false;
+    for (final condition in config.blockingConditions) {
+      if (kaiju.statusFlags[condition] == true) return false;
+    }
 
-    // Condition 3: Sufficient energy
-    if (kaiju.energy < 20) return false;
+    final minEnergy = (config.parameters['min_energy'] as num?)?.toInt() ?? 0;
+    if (kaiju.energy < minEnergy) return false;
+
+    final requiredFlag = config.parameters['required_status_flag'] as String?;
+    if (requiredFlag != null && kaiju.statusFlags[requiredFlag] != true) {
+      return false;
+    }
 
     return true;
   }
 
-  @override
-  AutonomousExecutionResult computeElapsedProgress({
-    required KaijuState kaiju,
+  /// Computes deterministic state changes over elapsed time from JSON rates
+  static AutonomousExecutionResult computeElapsedProgress({
+    required KaijuInstance kaiju,
     required DateTime startTime,
     required DateTime endTime,
-    required Map<String, dynamic> backendParams,
+    required ActionPluginConfig config,
   }) {
-    final bountyPerHr = (backendParams['bounty_per_hour'] as num?)?.toInt() ?? 10;
-    final maxShiftHrs = (backendParams['max_shift_hours'] as num?)?.toDouble() ?? 8.0;
-
+    final params = config.parameters;
+    final maxShiftHrs = (params['max_shift_hours'] as num?)?.toDouble() ?? 8.0;
     final elapsedHours = endTime.difference(startTime).inMinutes / 60.0;
-    final actualHoursWorked = elapsedHours.clamp(0.0, maxShiftHrs);
+    final actualHours = elapsedHours.clamp(0.0, maxShiftHrs);
 
-    final credits = (actualHoursWorked * bountyPerHr).round();
-    final energyDrain = -(actualHoursWorked * 6).round();
-    final hungerDrain = -(actualHoursWorked * 4).round();
+    final bountyPerHr = (params['bounty_per_hour'] as num?)?.toDouble() ?? 0.0;
+    final hungerRatePerHr = (params['hunger_per_hour'] as num?)?.toDouble() ?? 0.0;
+    final energyRatePerHr = (params['energy_per_hour'] as num?)?.toDouble() ?? 0.0;
+    final happinessRatePerHr = (params['happiness_per_hour'] as num?)?.toDouble() ?? 0.0;
+
+    // Optional INTEL bonus multiplier on work payouts (Phase 3+)
+    final intel = kaiju.extendedStats['intel'] ?? 0;
+    final intelScale = (params['intel_bounty_scale'] as num?)?.toDouble() ?? 0.0;
+    final effectiveBounty = bountyPerHr * (1.0 + (intel * intelScale));
+
+    final credits = (actualHours * effectiveBounty).round();
+    final hungerDelta = (actualHours * hungerRatePerHr).round();
+    final energyDelta = (actualHours * energyRatePerHr).round();
+    final happinessDelta = (actualHours * happinessRatePerHr).round();
+
+    // Progressive extended stat deltas (e.g. 'intel_per_hour' for study)
+    final Map<String, int> extDeltas = {};
+    final rawExtRates = params['extended_stat_rates_per_hour'] as Map<String, dynamic>?;
+    if (rawExtRates != null) {
+      rawExtRates.forEach((statKey, rateVal) {
+        extDeltas[statKey] = (actualHours * (rateVal as num).toDouble()).round();
+      });
+    }
+
+    final template = (params['summary_template'] as String?) ??
+        '> [AUTO] {nickname} completed ${config.displayName} (${actualHours.toStringAsFixed(1)}h).';
 
     return AutonomousExecutionResult(
       creditsEarned: credits,
-      energyDelta: energyDrain,
-      hungerDelta: hungerDrain,
-      statusSummary: '${kaiju.nickname} leveled urban sectors over a ${actualHoursWorked.toStringAsFixed(1)}hr rampage and earned $credits credits!',
-      overrideScenarioId: 'metropolis_ruins',
-    );
-  }
-
-  @override
-  ActionResult execute({
-    required KaijuState currentPet,
-    required Map<String, dynamic> backendParams,
-    required DateTime triggeredAt,
-  }) {
-    // Fallback if manually inspected
-    return ActionResult(
-      success: true,
-      message: '${currentPet.nickname} is currently rampaging through the metropolis.',
-      animationSequence: 'atomic_breath_sweep',
-      targetScenarioId: defaultScenarioId,
-      duration: const Duration(seconds: 4),
+      hungerDelta: hungerDelta,
+      energyDelta: energyDelta,
+      happinessDelta: happinessDelta,
+      extendedStatDeltas: extDeltas,
+      statusSummary: template
+          .replaceAll('{nickname}', kaiju.nickname)
+          .replaceAll('{hours}', actualHours.toStringAsFixed(1))
+          .replaceAll('{credits}', credits.toString()),
+      overrideScenarioId: config.targetScenarioId,
     );
   }
 }
@@ -153,74 +142,66 @@ class CityDestructionActionPlugin extends AutonomousActionPlugin {
 
 ---
 
-## 4. Deterministic Background Execution
+## 3. Data-Driven Examples: Study (Furniture-Gated) & City Destruction Work
 
-Rather than running heavy battery-consuming background Dart isolates:
-1. When the player exits the app, the current `DateTime.now()` is saved to local storage.
-2. When the app returns to the foreground (`AppLifecycleState.resumed`), `PluginRegistry` evaluates all autonomous actions against the elapsed time interval.
-3. Rewards and stat adjustments apply instantly, and a terminal dialog welcomes the player back with their Kaiju's demolition feats. Actions will update the Flame viewport to play the appropriate 1-bit dithered sprite animation sequences (e.g. `atomic_breath_sweep` or `stomping_skyscrapers`, as illustrated in `Desing References/Godzila.webp`).
+When **Demolition Study (`destruction_study`)** is introduced in Phase 3 alongside the `intel` stat, its plugin bundle also enables the **Desktop Workstation & Chair (`itm_desk`)** furniture item. The action configuration declares `"required_furniture": ["itm_desk"]`:
+
+```json
+[
+  {
+    "id": "destruction_study",
+    "plugin_id": "study_academy_pack",
+    "display_name": "Demolition Academy",
+    "action_type": "AUTONOMOUS",
+    "target_scenario_id": "default_room",
+    "min_age_phase": "child",
+    "max_age_phase": "young",
+    "required_furniture": ["itm_desk"],
+    "priority": 40,
+    "blocking_conditions": ["is_sick", "is_exhausted"],
+    "parameters": {
+      "min_energy": 15,
+      "max_shift_hours": 6.0,
+      "hunger_per_hour": -3.0,
+      "energy_per_hour": -4.0,
+      "happiness_per_hour": 2.0,
+      "extended_stat_rates_per_hour": {
+        "intel": 5.0
+      },
+      "summary_template": "> [ACADEMY] {nickname} studied {hours}h of urban demolition tactics at WORK_STN."
+    }
+  },
+  {
+    "id": "city_destruction",
+    "plugin_id": "city_rampage_pack",
+    "display_name": "City Rampage",
+    "action_type": "AUTONOMOUS",
+    "target_scenario_id": "metropolis_ruins",
+    "min_age_phase": "young",
+    "max_age_phase": "adult",
+    "required_furniture": [],
+    "priority": 50,
+    "blocking_conditions": ["is_sick", "is_exhausted"],
+    "parameters": {
+      "min_energy": 20,
+      "max_shift_hours": 8.0,
+      "bounty_per_hour": 12.0,
+      "intel_bounty_scale": 0.01,
+      "hunger_per_hour": -4.0,
+      "energy_per_hour": -6.0,
+      "summary_template": "> [RAMPAGE] {nickname} leveled urban sectors over {hours}h and earned {credits} credits!"
+    }
+  }
+]
+```
 
 ---
 
-## 5. Age-Gated Plugin Example: Destruction Study
+## 4. Deterministic Execution in Solo vs. Multiplayer Groups
 
-The `destruction_study` plugin demonstrates how age gates are enforced on the Dart side for juvenile Kaijus learning how to destroy cities. The backend provides the gate as part of the capability manifest; the client enforces it via `isAgeEligible`.
-
-```dart
-class DestructionStudyActionPlugin extends AutonomousActionPlugin {
-  @override
-  String get id => 'destruction_study';
-
-  @override
-  String get displayName => 'Demolition Academy';
-
-  @override
-  String get defaultScenarioId => 'destruction_simulator';
-
-  // Available during child and young phases only
-  @override
-  AgePhase get minAgePhase => AgePhase.child;
-
-  @override
-  AgePhase get maxAgePhase => AgePhase.young;
-
-  @override
-  int get priority => 40;
-
-  @override
-  bool shouldTrigger({
-    required KaijuState kaiju,
-    required Map<String, dynamic> backendParams,
-    required DateTime currentTime,
-  }) {
-    if (backendParams['is_enabled'] != true) return false;
-    if (!isAgeEligible(kaiju.currentPhase)) return false;
-    if (kaiju.energy < 15) return false;
-    return true;
-  }
-
-  @override
-  AutonomousExecutionResult computeElapsedProgress({
-    required KaijuState kaiju,
-    required DateTime startTime,
-    required DateTime endTime,
-    required Map<String, dynamic> backendParams,
-  }) {
-    final studyHours = endTime.difference(startTime).inMinutes / 60.0;
-    final cappedHours = studyHours.clamp(0.0, 6.0);
-    final intelligenceGain = (backendParams['intel_per_hour'] as num?)?.toInt() ?? 5;
-
-    return AutonomousExecutionResult(
-      creditsEarned: 0,
-      hungerDelta: -(cappedHours * 3).round(),
-      energyDelta: -(cappedHours * 4).round(),
-      happinessDelta: (cappedHours * 2).round(),
-      statusSummary:
-          '> [ACADEMY] ${kaiju.nickname} studied ${cappedHours.toStringAsFixed(1)}h of urban demolition tactics. INTEL +${(cappedHours * intelligenceGain).round()}.',
-    );
-  }
-}
-```
-
-> `advanced_demolition` follows the same pattern with `minAgePhase: AgePhase.young`, `maxAgePhase: AgePhase.young`, and a higher `intel_per_hour` reward. See `Features/05-kaiju-lifecycle-and-aging.md` for the full plugin availability matrix.
+1. **Offline PoC (Milestone 1.1)**: Autonomous plugins are disabled (`is_enabled: false`).
+2. **Connected Solo & Multiplayer Groups (Phase 3 & Phase 4)**:
+   - Because a Kaiju in a `COUPLE` or `FRIENDS` group is shared by multiple players, autonomous progress is evaluated **atomically on the server** (via Supabase Edge Function / PostgreSQL function triggered on group state sync or `pg_cron`) using `kaijus.last_interaction_at`.
+   - Stat deltas (`hunger`, `energy`, `happiness`, `extended_stats`) are applied **once** to the shared Kaiju row.
+   - Any `creditsEarned` from an autonomous work shift (`city_destruction`) are credited via `add_credits()` to each member of the group (since credits are per-user and never pooled).
 

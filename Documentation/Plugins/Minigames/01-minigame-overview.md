@@ -10,7 +10,7 @@ This document describes the **Minigame Plugin subsystem** for **Unix Tamagotchi*
 
 A minigame is a self-contained interactive session (30 seconds to 2 minutes) launched from the containment room as a user-triggered action. Unlike core actions (Eat, Sleep, Play) which execute a single animation and immediately apply stat deltas, a minigame opens a **dedicated full-screen Flame viewport** in which the player actively participates.
 
-Minigames are modular **dormant plugins** living in `lib/plugins/minigames/`. The backend controls activation, scheduling, rewards, and difficulty through two tables: the existing `action_plugins` (for lifecycle and scheduling) and a new `minigame_plugins` (for minigame-specific configuration).
+Minigames are parameterized Flame game templates living in `lib/plugins/minigames/` and driven by backend JSON configuration. The backend controls activation, scheduling, rewards, and difficulty through two tables: the existing `action_plugins` (for lifecycle and scheduling) and `minigame_plugins` (for minigame-specific configuration).
 
 ---
 

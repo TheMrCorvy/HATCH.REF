@@ -26,7 +26,7 @@ This document consolidates the security posture of Unix Tamagotchi across client
 | Backend | Kaiju action rate limiting (cooldown enforcement) | Phase 2 |
 | Backend | IAP receipt idempotency via `store_order_id` UNIQUE | Phase 4 |
 | Backend | IAP server-side verification (Google RTDN / Apple App Store V2) | Phase 4 |
-| Pairing | One-time NFC/BLE tokens with 60s TTL | Phase 4 |
+| Pairing | One-time NFC/BLE tokens (and 1-use fallback codes) with 60s TTL | Phase 4 |
 
 ---
 
@@ -64,31 +64,47 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "profiles_self_only" ON public.profiles
     USING (auth.uid() = id);
 
+-- Helper function (SECURITY DEFINER with search_path locked) to avoid infinite RLS recursion on group_members
+CREATE OR REPLACE FUNCTION public.get_user_group_ids(uid UUID)
+RETURNS SETOF UUID
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+    SELECT group_id FROM public.group_members WHERE user_id = uid;
+$$;
+
 -- kaijus: only members of the owning group can read/write
 ALTER TABLE public.kaijus ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "kaijus_group_members_only" ON public.kaijus
-    USING (
-        group_id IN (
-            SELECT group_id FROM public.group_members WHERE user_id = auth.uid()
-        )
-    );
+    USING (group_id IN (SELECT public.get_user_group_ids(auth.uid())));
+
+-- active_group_kaijus: only members of the group can read/switch the group's active Kaiju
+ALTER TABLE public.active_group_kaijus ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "active_group_kaijus_members_only" ON public.active_group_kaijus
+    USING (group_id IN (SELECT public.get_user_group_ids(auth.uid())));
 
 -- group_members: users can only see members of groups they belong to
 ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "group_members_visibility" ON public.group_members
-    USING (
-        group_id IN (
-            SELECT group_id FROM public.group_members WHERE user_id = auth.uid()
-        )
-    );
+    USING (group_id IN (SELECT public.get_user_group_ids(auth.uid())));
 
--- action_plugins / scenario_plugins: read-only for all authenticated users
+-- plugins / scenario_plugins / action_plugins / customization_plugins: read-only for all authenticated users
+ALTER TABLE public.plugins ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "plugin_bundles_read_only" ON public.plugins
+    FOR SELECT USING (auth.role() = 'authenticated');
+
 ALTER TABLE public.action_plugins ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "plugins_read_only" ON public.action_plugins
     FOR SELECT USING (auth.role() = 'authenticated');
 
 ALTER TABLE public.scenario_plugins ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "scenario_plugins_read_only" ON public.scenario_plugins
+    FOR SELECT USING (auth.role() = 'authenticated');
+
+ALTER TABLE public.customization_plugins ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "customization_plugins_read_only" ON public.customization_plugins
     FOR SELECT USING (auth.role() = 'authenticated');
 ```
 
@@ -126,7 +142,8 @@ $$ LANGUAGE plpgsql;
 
 As specified in `Multiplayer/03-pair-bond-connection.md`:
 
-- **Single-use**: Mark `used = true` on first acceptance; reject re-use with `409 CONFLICT`.
+- **Single-use (1 user only)**: Whether exchanged via first-time physical NFC/BLE phone touch or entered as a no-NFC fallback code, a token is marked `used = true` on first acceptance and binds **only 1 user** into the target `COUPLE` or `FRIENDS` group. Re-use returns `409 CONFLICT`.
+- **First-time pairing only**: Once bonded, group membership is persisted in `group_members` and members never need to touch phones again.
 - **60-second TTL**: Enforced server-side. Expired tokens return `410 GONE`.
 - **Server-generated only**: Tokens are never computed on the client.
 - **Not logged**: Excluded from analytics, crash reporting, and FCM pipelines.
@@ -135,7 +152,10 @@ As specified in `Multiplayer/03-pair-bond-connection.md`:
 CREATE TABLE public.pair_bond_tokens (
     token TEXT PRIMARY KEY,
     initiator_user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    target_group_id UUID REFERENCES public.groups(id) ON DELETE CASCADE,
+    group_type TEXT NOT NULL CHECK (group_type IN ('COUPLE', 'FRIENDS')),
     used BOOLEAN NOT NULL DEFAULT false,
+    redeemed_by_user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '60 seconds'
 );
@@ -162,14 +182,20 @@ Hive should only contain game state: kaiju stats, credit balance, and inventory.
 
 ## 7. Plugin Management — Admin Access Control
 
-The game operations manager who toggles `action_plugins.is_enabled` must authenticate via the Supabase `service_role` key. This key must **never** be shipped inside the Flutter client binary.
+The game operations manager who toggles `plugins.is_enabled`, `action_plugins.is_enabled`, `scenario_plugins.is_enabled`, or `customization_plugins.is_enabled` must authenticate via the Supabase `service_role` key. This key must **never** be shipped inside the Flutter client binary.
 
 ```sql
 -- Only service_role can mutate plugin configuration tables
+CREATE POLICY "plugin_bundles_admin_write" ON public.plugins
+    FOR ALL USING (auth.role() = 'service_role');
+
 CREATE POLICY "plugins_admin_write" ON public.action_plugins
     FOR ALL USING (auth.role() = 'service_role');
 
 CREATE POLICY "scenario_plugins_admin_write" ON public.scenario_plugins
+    FOR ALL USING (auth.role() = 'service_role');
+
+CREATE POLICY "customization_plugins_admin_write" ON public.customization_plugins
     FOR ALL USING (auth.role() = 'service_role');
 ```
 

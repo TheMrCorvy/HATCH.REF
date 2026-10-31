@@ -10,7 +10,7 @@ This document specifies the manual kaiju rename feature: its UX behavior, valida
 | :--- | :--- |
 | **PoC availability** | 🔴 Not available — `[ RENAME ]` button is not rendered |
 | **Phase introduced** | Phase 2 (Supabase backend) |
-| **Who can rename** | The kaiju's owner only |
+| **Who can rename** | Any member of the Kaiju's owning group (`SOLO`, `COUPLE`, `FRIENDS`) |
 | **Rename frequency** | Unlimited (no cooldown in base design) |
 | **Auto-generated name** | Assigned at adoption; persists until player renames |
 | **Group sync** | 🟢 Synced globally — all group members see the updated name in real-time |
@@ -125,31 +125,33 @@ Content-Type: application/json
 | :--- | :--- | :--- |
 | `200 OK` | `{ "nickname": "STEEL_BALL_RUNNER" }` | Rename successful |
 | `400 Bad Request` | `{ "error": "VALIDATION_FAILED", "detail": "..." }` | Validation rule violated |
-| `403 Forbidden` | `{ "error": "NOT_OWNER" }` | Authenticated user is not the kaiju's owner |
-| `404 Not Found` | `{ "error": "PET_NOT_FOUND" }` | `kaiju_id` does not exist |
+| `403 Forbidden` | `{ "error": "NOT_GROUP_MEMBER" }` | Authenticated user is not a member of the kaiju's owning group |
+| `404 Not Found` | `{ "error": "KAIJU_NOT_FOUND" }` | `kaiju_id` does not exist |
 
 **Row-Level Security (RLS) policy:**
 ```sql
--- Only the kaiju's owning group member can rename it
-CREATE POLICY "owner_can_rename_pet"
-ON kaijus
+-- Any member of the kaiju's owning group can rename it
+CREATE POLICY "group_members_can_rename_kaiju"
+ON public.kaijus
 FOR UPDATE
 USING (
-    owner_id = auth.uid()
+    group_id IN (
+        SELECT group_id FROM public.group_members WHERE user_id = auth.uid()
+    )
 );
 ```
 
 ### 4.2 Name Change Audit Log (Optional, Phase 3+)
 
-For future anti-abuse tracking, a `pet_name_history` table can be introduced:
+For future anti-abuse tracking, a `kaiju_name_history` table can be introduced:
 
 ```sql
-CREATE TABLE pet_name_history (
+CREATE TABLE public.kaiju_name_history (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    kaiju_id      UUID NOT NULL REFERENCES kaijus(id) ON DELETE CASCADE,
+    kaiju_id    UUID NOT NULL REFERENCES public.kaijus(id) ON DELETE CASCADE,
     old_name    TEXT NOT NULL,
     new_name    TEXT NOT NULL,
-    changed_by  UUID NOT NULL REFERENCES profiles(id),
+    changed_by  UUID NOT NULL REFERENCES public.profiles(id),
     changed_at  TIMESTAMPTZ DEFAULT NOW()
 );
 ```
@@ -164,19 +166,19 @@ When a rename is committed:
 
 ```mermaid
 sequenceDiagram
-    participant Owner as Group Member (Owner)
+    participant Member as Group Member
     participant API as Supabase Edge Function
     participant DB as PostgreSQL
     participant RT as Supabase Realtime
     participant Others as Other Group Members
 
-    Owner->>API: PATCH /kaijus/{id}/name { nickname: "STEEL_BALL_RUNNER" }
+    Member->>API: PATCH /kaijus/{id}/name { nickname: "STEEL_BALL_RUNNER" }
     API->>DB: UPDATE kaijus SET nickname = 'STEEL_BALL_RUNNER' WHERE id = {id}
     DB-->>API: OK
-    API->>RT: broadcast("pet_renamed", { kaiju_id, new_name })
-    RT-->>Others: pet_renamed event received
-    Others->>Others: Update local Riverpod KaijuState.nickname
-    API-->>Owner: 200 OK { nickname: "STEEL_BALL_RUNNER" }
+    API->>RT: broadcast("kaiju_renamed", { kaiju_id, new_name })
+    RT-->>Others: kaiju_renamed event received
+    Others->>Others: Update local Riverpod KaijuInstance.nickname
+    API-->>Member: 200 OK { nickname: "STEEL_BALL_RUNNER" }
 ```
 
 **Terminal log broadcast (all clients):**
@@ -192,18 +194,18 @@ sequenceDiagram
 
 ### 6.1 Riverpod State Update
 
-The rename triggers a targeted update to the `KaijuState` provider:
+The rename triggers a targeted update to the `KaijuStateNotifier` provider:
 
 ```dart
 // In the rename notifier
-Future<void> renamePet(String kaijuId, String newName) async {
+Future<void> renameKaiju(String kaijuId, String newName) async {
   final validated = KaijuNameValidator.validate(newName);
   if (!validated.isValid) throw KaijuNameValidationException(validated.error);
 
-  await _petsRepository.updateNickname(kaijuId, newName);
+  await _kaijusRepository.updateNickname(kaijuId, newName);
 
   state = state.copyWith(
-    kaijus: state.kaijus.map((p) => p.id == kaijuId ? p.copyWith(nickname: newName) : p).toList(),
+    ownedKaijus: state.ownedKaijus.map((k) => k.id == kaijuId ? k.copyWith(nickname: newName) : k).toList(),
   );
 }
 ```

@@ -6,12 +6,12 @@ This document details the unified design system for the **Unix Tamagotchi**, imp
 
 ## 1. Design System Philosophy
 
-The design is strictly single-theme. All components, layouts, and typography revolve around an industrial diagnostic terminal style, heavily utilizing monospace text and bracketed UI actions.
+The design uses a unified **Industrial Diagnostic Terminal** layout, typography (`VT323`), and 1-bit dithered aesthetic. While the structural theme is unified, the semantic color tokens (`background`, `foreground`, `accent`) are dynamically driven by the active `PALETTE` customization plugin (defaulting to **Terminal Khaki**, with unlockable palettes such as **Phosphor Green**, **Amber CRT**, and **Blueprint Ice** — see [Customization/01-customization-overview.md](../Customization/01-customization-overview.md)). All widgets must read colors from `Theme.of(context)` or `AppPalette` tokens rather than hardcoding hex literals, and the active `background`/`foreground` colors are passed directly to `bayer_dither.frag` via `uColorLight` and `uColorDark`.
 
 ```mermaid
 flowchart TD
-    ThemeRoot["Riverpod Theme Provider"]
-    ThemeData["Unified Terminal Theme\n- Font: VT323\n- Palette: Khaki, Charcoal, Copper\n- UI: Bracket Buttons, Hazard Stripes\n- Borders: Monospace structures"]
+    ThemeRoot["Riverpod Theme Provider\n(Reads active PALETTE customization plugin)"]
+    ThemeData["Unified Terminal Theme\n- Font: VT323\n- Default Palette: Khaki, Charcoal, Copper\n- UI: Bracket Buttons, Hazard Stripes\n- Shader Uniforms: uColorLight / uColorDark"]
 
     ThemeRoot --> ThemeData
 ```
@@ -40,7 +40,7 @@ The visual language relies on a strict 3-color palette plus one emergency color 
 
 ### Terminal UI Language
 - **Buttons**: Bracket-style syntax with monospace formatting, e.g., `[ EAT ]`, `[ ACQUIRE ]`, `[ CONFIG ]`.
-- **System Diagnostics**: Labels and headers use rigid diagnostic naming conventions like `SYS_DIAG`, `SUB_SYS: TITAN-01`, `STORAGE_MGR // V.02`, `PID: 8832`, `SECURED_SESSION`.
+- **System Diagnostics**: Labels and headers use rigid diagnostic naming conventions like `SYS_DIAG`, `SUB_SYS: TITAN-01`, `SWAP_MGR // V.02`, `PID: 8832`, `SECURED_SESSION`.
 - **Visual Benchmark**: The rendering aesthetic directly mirrors `Desing References/Godzila.webp`, displaying a massive Kaiju looming over city skylines with atomic breath rendered using ordered Bayer matrix dithering.
 - **Decorations**: Hazard caution stripes (diagonal black/cream) mark decorative borders and warnings. Camera reticles (`┌ ┐ └ ┘`) denote viewports.
 

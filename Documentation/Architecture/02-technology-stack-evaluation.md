@@ -19,7 +19,7 @@ The application demands a hybrid rendering model: ~70% of the experience consist
 1. **App-Heavy Layout Architecture**: Building complex scrollable store catalogs, inventory lists, and evolution history screens in Godot's UI system would require 3-4x more effort. Flutter's widget system natively solves these UI challenges.
 2. **Flame Engine Integration**: Flame embeds seamlessly into Flutter, providing a lightweight game loop, sprite animation management, and access to Dart's `FragmentProgram` API for custom GLSL shaders without the overhead of Unity or Godot.
 3. **1-Bit Dithering Pipeline**: Flame allows rendering the kaiju scene to an off-screen low-resolution canvas, applying our custom Bayer matrix dither shader, and upscaling to the native UI via nearest-neighbor filtering.
-4. **Dart 3 Soundness**: Dart 3 pattern matching and records make building the dormant plugin architecture robust and compile-time safe.
+4. **Dart 3 Soundness**: Dart 3 pattern matching and records make building the generic data-driven plugin architecture robust and compile-time safe.
 
 ---
 
@@ -69,4 +69,4 @@ To achieve the "Tactical 1-Bit Cyber-Specimen OS" look, we leverage Flutter's `F
 | **Realtime WebSockets** | 🏆 PostgreSQL CDC Realtime | Custom WebSocket server | Firestore snapshots |
 | **Self-Hosting** | 🏆 Fully Dockerized | Custom Docker container | ❌ Proprietary Cloud |
 
-**Verdict**: **Supabase** delivers standard PostgreSQL tables with Row-Level Security, ready-to-use Social Auth, and Realtime WebSockets, while allowing managers to edit the `action_plugins` and `scenario_plugins` tables directly via the Supabase Studio dashboard.
+**Verdict**: **Supabase** delivers standard PostgreSQL tables with Row-Level Security, ready-to-use Social Auth, Storage buckets for remote sprite sheets, and Realtime WebSockets, while allowing product managers to edit the `plugins`, `action_plugins`, `scenario_plugins`, and `customization_plugins` tables directly via the Supabase Studio dashboard without requiring client code changes.

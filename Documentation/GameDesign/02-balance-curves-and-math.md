@@ -4,15 +4,28 @@ This document defines the mathematical formulas, decay rates, and deterministic 
 
 ---
 
-## 1. Stat Dynamics Matrix
+## 1. Stat Dynamics Matrix (PoC Core vs. Later Phases)
 
-Each digital Kaiju specimen possesses 3 primary attributes bounded strictly between $[0, 100]$:
+### 1.1 PoC Core Stats (Phase 1)
+In the initial PoC (Milestone 1.1), each digital Kaiju specimen possesses **3 primary attributes** bounded strictly between $[0, 100]$:
 
 | Attribute | Normal Decay Rate (Active) | Standby Decay Rate (Inactive) | Replenished By | Depleted By |
 | :--- | :--- | :--- | :--- | :--- |
-| **Hunger ($H$)** | $-5\text{ points / hour}$ | $-0.5\text{ points / hour}$ | **Eat Action** ($+25$) (Ball of humans) | Natural metabolism, Play ($-15$), Rampage |
+| **Hunger / Saturation ($H$)** | $-5\text{ points / hour}$ | $-0.5\text{ points / hour}$ | **Eat Action** ($+25$) (Ball of humans) | Natural metabolism, Play ($-15$), Rampage |
 | **Energy ($E$)** | $-4\text{ points / hour}$ | $-0.2\text{ points / hour}$ | **Sleep Action** ($+35$) (Dormancy) | Awake time, Play ($-20$), Eat ($-5$) |
-| **Happiness ($M$)**| $-6\text{ points / hour}$ | $-0.5\text{ points / hour}$ | **Play Action** ($+30$), Eat ($+5$) | Natural boredom |
+| **Happiness / Joy ($M$)**| $-6\text{ points / hour}$ | $-0.5\text{ points / hour}$ | **Play Action** ($+30$), Eat ($+5$) | Natural boredom |
+
+> **Milestone 1.2 (Exhaustion State)**: Once Milestone 1.2 is enabled after the initial PoC, if `Energy == 0` or `Hunger == 0`, the `is_exhausted` flag is set to `true`. An exhausted Kaiju cannot execute `Play` or `Crush Tanks` until its Energy and Hunger are restored above $20$ via `Sleep` and `Eat`.
+
+### 1.2 Progressive Extended Stats (Phase 3+)
+Additional stats are stored in `kaijus.extended_stats` and are introduced **only when their paired actions and furniture plugins ship**:
+
+| Extended Stat | Phase Introduced | Paired Action / Mechanic | Paired Furniture Prerequisite / Modifier |
+| :--- | :---: | :--- | :--- |
+| **Intellect (`intel`)** | Phase 3 | `destruction_study`, `advanced_demolition` (increases `city_destruction` credit bounty by $+1\%$ per point) | Requires `itm_desk` (`WORK_STN` desktop & chair) placed in room |
+| **Comfort (`comfort`)** | Phase 3 | Reduces passive `energy` & `happiness` decay rates | Modified by `itm_couch` (`COUCH_MOD`) |
+| **Hydration (`hydration`)**| Phase 3 | Secondary metabolic stat alongside `hunger` | Modified by `itm_disp` (`HYDRA_DISP`) |
+| **Health (`hp`)** | Phase 3 | Depleted by prolonged exhaustion or rampage hazards; triggers `hospital_recovery` when critical | Modified by `itm_pod` (`SLEEP_POD`) & `itm_kit` (`KITCH_UNIT`) |
 
 ---
 

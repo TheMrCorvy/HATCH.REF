@@ -1,6 +1,6 @@
 # Plugins: 02 User-Triggered Actions
 
-This document specifies the architecture and implementation of **User-Triggered Action Plugins** in the **Unix Tamagotchi**.
+This document specifies the data-driven architecture and generic execution of **User-Triggered Action Plugins** in the **Unix Tamagotchi**.
 
 ---
 
@@ -8,12 +8,14 @@ This document specifies the architecture and implementation of **User-Triggered 
 
 User-triggered actions represent interactions initiated directly by the player tapping a terminal button in the UI.
 
-In the initial PoC, **Eat**, **Sleep**, and **Play** are refactored into the first three user-triggered plugins. In future updates, seasonal events or special abilities (such as **Crush Tanks** or **Search for Relic**) reside dormant in `lib/plugins/user_triggered_actions/` and only appear as interactive buttons in the UI when the backend activates them.
+Everything is **data-driven**:
+- In the initial PoC (Milestone 1.1), **Eat**, **Sleep**, and **Play** are defined in the bundled JSON manifest (`poc_default_manifest.json`) and executed by `GenericUserActionExecutor`.
+- In Phase 2+, seasonal events or special abilities (such as **Crush Tanks** or **Search for Relic**) are created and enabled in the backend `action_plugins` table by the product team. They automatically appear as interactive buttons in the UI without any client code changes.
 
 ```mermaid
 flowchart LR
     Backend["Backend Capability Manifest"] -->|"actions: [eat, sleep, play, crush_tank]"| Registry["PluginRegistry"]
-    Registry -->|"Filters Enabled Actions"| UIRow["Dynamic Action Button Bar"]
+    Registry -->|"Filters Enabled & Eligible Actions"| UIRow["Dynamic Action Button Bar"]
     UIRow --> Btn1["[ EAT ]"]
     UIRow --> Btn2["[ SLEEP ]"]
     UIRow --> Btn3["[ PLAY ]"]
@@ -31,26 +33,30 @@ Instead of hardcoding static buttons in the containment room, the screen dynamic
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../plugins/plugin_registry.dart';
-import '../../../ui/widgets/terminal_bracket_button.dart';
+import '../../../models/age_phase.dart';
+import '../../../core/widgets/retro_button.dart';
+import '../../../state/kaiju_state_notifier.dart';
 
 class DynamicActionButtonBar extends ConsumerWidget {
   const DynamicActionButtonBar({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final enabledActions = PluginRegistry().getEnabledUserActions();
+    final enabledActions = PluginRegistry().getEnabledUserActions(
+      kaijuPhase: AgePhase.child, // Resolved dynamically in Phase 3+
+    );
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: enabledActions.map((plugin) {
+        children: enabledActions.map((actionConfig) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: TerminalBracketButton(
-              label: plugin.displayName.toUpperCase(),
+            child: RetroButton(
+              label: actionConfig.displayName.toUpperCase(),
               onPressed: () {
-                ref.read(petStateProvider.notifier).executeAction(plugin);
+                ref.read(gameStateProvider.notifier).executePluginAction(actionConfig);
               },
             ),
           );
@@ -63,107 +69,114 @@ class DynamicActionButtonBar extends ConsumerWidget {
 
 ---
 
-## 3. Implementation: PoC Core Action Plugins
+## 3. Generic User Action Executor (`lib/plugins/executors/generic_user_action_executor.dart`)
 
-Actions return results containing data like `animationSequence`, which tells the Flame viewport which 1-bit dithered sprite animation sequence to play.
-
-### A. Eat Action Plugin (`lib/plugins/user_triggered_actions/eat_action_plugin.dart`)
+Rather than writing a separate Dart class for every action (`EatActionPlugin`, `CrushTankActionPlugin`), a single generic interpreter evaluates the JSON parameters of any `ActionPluginConfig`:
 
 ```dart
-import '../interfaces/action_plugin.dart';
-import '../../models/pet_state.dart';
+import '../models/action_plugin_config.dart';
+import '../../models/kaiju_state.dart';
 
-class EatActionPlugin extends ActionPlugin {
-  @override
-  String get id => 'eat';
-
-  @override
-  String get displayName => 'Eat';
-
-  @override
-  ActionType get actionType => ActionType.userTriggered;
-
-  @override
-  String get defaultScenarioId => 'default_room';
-
-  @override
-  ActionResult execute({
-    required KaijuState currentPet,
-    required Map<String, dynamic> backendParams,
+class GenericUserActionExecutor {
+  static ActionResult execute({
+    required KaijuInstance currentKaiju,
+    required ActionPluginConfig config,
     required DateTime triggeredAt,
   }) {
-    // Dynamic override of food replenishment value if backend specifies it
-    final hungerBonus = (backendParams['hunger_bonus'] as num?)?.toInt() ?? 25;
-    final energyCost = (backendParams['energy_cost'] as num?)?.toInt() ?? 5;
-    final targetScenario = (backendParams['scenario_id'] as String?) ?? defaultScenarioId;
+    final params = config.parameters;
+
+    // 1. Check blocking status flags (e.g. 'is_exhausted' in Milestone 1.2+, 'is_sick' in Phase 3+)
+    for (final condition in config.blockingConditions) {
+      if (currentKaiju.statusFlags[condition] == true) {
+        return ActionResult(
+          success: false,
+          message: '> [ALERT] ${currentKaiju.nickname} cannot perform ${config.displayName} ($condition).',
+          animationSequence: 'idle',
+          targetScenarioId: currentKaiju.activeScenarioId,
+          duration: Duration.zero,
+        );
+      }
+    }
+
+    // 2. Check minimum energy prerequisite if configured
+    final minEnergy = (params['min_energy'] as num?)?.toInt() ?? 0;
+    if (currentKaiju.energy < minEnergy) {
+      final alertMsg = (params['low_energy_message'] as String?) ??
+          '> [ALERT] ${currentKaiju.nickname} is too exhausted for ${config.displayName}! (Needs $minEnergy% energy)';
+      return ActionResult(
+        success: false,
+        message: alertMsg.replaceAll('{nickname}', currentKaiju.nickname),
+        animationSequence: 'idle',
+        targetScenarioId: currentKaiju.activeScenarioId,
+        duration: Duration.zero,
+      );
+    }
+
+    // 3. Read stat & credit deltas from JSON parameters
+    final hungerDelta = (params['hunger_delta'] as num?)?.toInt() ?? 0;
+    final energyDelta = (params['energy_delta'] as num?)?.toInt() ?? 0;
+    final happinessDelta = (params['happiness_delta'] as num?)?.toInt() ?? 0;
+    final creditReward = (params['credit_reward'] as num?)?.toInt() ?? 0;
+    final animationSeq = (params['animation_sequence'] as String?) ?? 'idle';
+    final durationMs = (params['duration_ms'] as num?)?.toInt() ?? 3000;
+    final targetScenario = (params['scenario_id'] as String?) ?? config.targetScenarioId;
+
+    final rawMessage = (params['success_message'] as String?) ??
+        'Executed ${config.displayName} on ${currentKaiju.nickname}.';
 
     return ActionResult(
       success: true,
-      message: 'Fed ${currentPet.nickname} a ball of human people. Hunger +$hungerBonus%',
-      hungerDelta: hungerBonus,
-      energyDelta: -energyCost,
-      happinessDelta: 5,
-      animationSequence: 'eating_humans',
+      message: rawMessage.replaceAll('{nickname}', currentKaiju.nickname),
+      hungerDelta: hungerDelta,
+      energyDelta: energyDelta,
+      happinessDelta: happinessDelta,
+      creditsEarned: creditReward,
+      animationSequence: animationSeq,
       targetScenarioId: targetScenario,
-      duration: const Duration(milliseconds: 3500),
+      duration: Duration(milliseconds: durationMs),
     );
   }
 }
 ```
 
-### B. Event Action Plugin: Crush Tanks (`lib/plugins/user_triggered_actions/crush_tank_action_plugin.dart`)
+### Example Data Configurations (PoC & Event Actions)
 
-This plugin resides dormant in the app. When a military defense seasonal event goes live, the backend enables it:
-
-```dart
-class CrushTankActionPlugin extends ActionPlugin {
-  @override
-  String get id => 'crush_tank';
-
-  @override
-  String get displayName => 'Crush Tanks';
-
-  @override
-  ActionType get actionType => ActionType.userTriggered;
-
-  @override
-  String get defaultScenarioId => 'metropolis_ruins';
-
-  @override
-  ActionResult execute({
-    required KaijuState currentPet,
-    required Map<String, dynamic> backendParams,
-    required DateTime triggeredAt,
-  }) {
-    // Prerequisite: Kaiju must have sufficient energy
-    final minEnergy = (backendParams['min_energy'] as num?)?.toInt() ?? 30;
-    if (currentPet.energy < minEnergy) {
-      return ActionResult(
-        success: false,
-        message: '${currentPet.nickname} is too depleted to crush tanks! (Needs $minEnergy% energy)',
-        animationSequence: 'idle',
-        targetScenarioId: defaultScenarioId,
-        duration: Duration.zero,
-      );
+```json
+[
+  {
+    "id": "eat",
+    "plugin_id": "core_base",
+    "display_name": "Eat",
+    "action_type": "USER_TRIGGERED",
+    "target_scenario_id": "default_room",
+    "parameters": {
+      "hunger_delta": 25,
+      "energy_delta": -5,
+      "happiness_delta": 5,
+      "animation_sequence": "eating",
+      "duration_ms": 3500,
+      "success_message": "Fed {nickname} a ball of human people. Hunger +25%"
     }
-
-    // Backend can override target scenario (e.g. if the event is set in an Arctic Outpost!)
-    final targetScenario = (backendParams['scenario_id'] as String?) ?? defaultScenarioId;
-    final happinessGain = (backendParams['happiness_gain'] as num?)?.toInt() ?? 40;
-    final energyDrain = (backendParams['energy_drain'] as num?)?.toInt() ?? 25;
-    final creditReward = (backendParams['credit_reward'] as num?)?.toInt() ?? 10;
-
-    return ActionResult(
-      success: true,
-      message: '${currentPet.nickname} pulverized incoming military tanks! Joy +$happinessGain%, Salvaged $creditReward credits!',
-      hungerDelta: -20,
-      energyDelta: -energyDrain,
-      happinessDelta: happinessGain,
-      creditsEarned: creditReward,
-      animationSequence: 'tank_crush_stomp',
-      targetScenarioId: targetScenario,
-      duration: const Duration(seconds: 4),
-    );
+  },
+  {
+    "id": "crush_tank",
+    "plugin_id": "military_defense_event",
+    "display_name": "Crush Tanks",
+    "action_type": "USER_TRIGGERED",
+    "target_scenario_id": "metropolis_ruins",
+    "min_age_phase": "young",
+    "max_age_phase": "adult",
+    "blocking_conditions": ["is_sick", "is_exhausted"],
+    "parameters": {
+      "min_energy": 25,
+      "hunger_delta": -20,
+      "energy_delta": -25,
+      "happiness_delta": 40,
+      "credit_reward": 25,
+      "animation_sequence": "tank_crush_stomp",
+      "duration_ms": 4000,
+      "success_message": "{nickname} pulverized incoming military tanks! Joy +40%, Salvaged 25 credits!"
+    }
   }
-}
+]
 ```

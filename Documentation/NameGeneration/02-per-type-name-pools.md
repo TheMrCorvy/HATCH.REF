@@ -204,7 +204,7 @@ METAMORPHIC_CHITIN
 
 ## 5. Extending Pools for New Titan Types
 
-When a new `kaiju_type` is registered in `pet_catalog`, a matching name pool must be created. Follow this checklist:
+When a new `kaiju_type` is registered in `kaiju_catalog`, a matching name pool must be created. Follow this checklist:
 
 1. **Define the archetype** — 2-3 sentences describing the kaiju's personality and power theme.
 2. **Select 3–5 source Stands** from JoJo's Bizarre Adventure that match the archetype. Prefer Stands with:
@@ -216,7 +216,7 @@ When a new `kaiju_type` is registered in `pet_catalog`, a matching name pool mus
    - At least 3 rare (3-token) names.
    - 0–1 legendary (3–5-token) names.
 4. **Add synthetic lore suffixes** where needed to reach the required count: `_VOID`, `_CORE`, `_PULSE`, `_LOOP`, `_NODE`, `_SIGNAL`, `_TRACE`, `_ECHO`, `_VECTOR`, `_GLITCH`, `_HACK`, `_CASCADE`, `_NULL`, `_PIERCE`, `_LOCK`, `_BURST`, `_DRIFT`, `_FROST`, `_HUM`, `_BLOOM`.
-5. **Add to the PoC Dart map** in `lib/core/naming/pet_name_generator.dart` and to the `name_pools` SQL table migration.
+5. **Add to the PoC Dart map** in `lib/core/naming/kaiju_name_generator.dart` and to the `name_pools` SQL table migration.
 
 ### Suffix Reference Table
 

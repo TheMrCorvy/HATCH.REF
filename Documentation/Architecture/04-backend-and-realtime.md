@@ -18,22 +18,22 @@ sequenceDiagram
 
     Note over Player,ClientSDK: App Launch & Handshake
     Player->>ClientSDK: Fetch Capability Manifest
-    ClientSDK->>Postgres: SELECT * FROM action_plugins, scenario_plugins
-    Postgres-->>ClientSDK: Returns active plugins & parameters
-    ClientSDK-->>Player: Populates PluginRegistry
+    ClientSDK->>Postgres: SELECT * FROM plugins, scenario_plugins, action_plugins, customization_plugins
+    Postgres-->>ClientSDK: Returns active plugin bundles & data configs
+    ClientSDK-->>Player: Populates Data-Driven PluginRegistry
 
-    Note over Manager,Player: Dynamic Operation (No App Update)
-    Manager->>Postgres: UPDATE action_plugins SET is_enabled = true WHERE id = 'city_destruction'
+    Note over Manager,Player: Dynamic Operation (Zero Code Changes)
+    Manager->>Postgres: INSERT / UPDATE plugins & action_plugins (e.g. 'city_destruction' or new event pack)
     Postgres-->>Realtime: Logical Replication Change Event
     Realtime-->>Player: Broadcast 'plugin:updated'
-    Player->>Player: Injects [ CITY RAMPAGE ] bracket button into UI automatically!
+    Player->>Player: Generic engine renders new scenario, customization, or [ CITY RAMPAGE ] button automatically!
 ```
 
 ---
 
 ## 2. Dynamic Plugin Synchronization in Flutter
 
-When the app launches or reconnects, a Riverpod provider queries the capability manifest and synchronizes the local `PluginRegistry`:
+When the app launches or reconnects, a Riverpod provider queries the capability manifest (including parent plugin bundles, scenarios, user/autonomous actions, and customizations such as furniture, clothing, and palettes) and synchronizes the local `PluginRegistry`:
 
 ```dart
 // lib/state/plugin_sync_provider.dart
@@ -43,15 +43,23 @@ import '../plugins/plugin_registry.dart';
 
 final pluginSyncProvider = FutureProvider<void>((ref) async {
   final supabase = Supabase.instance.client;
+  final now = DateTime.now().toIso8601String();
 
-  // 1. Fetch enabled scenarios
+  // 1. Fetch enabled parent plugin bundles within valid time windows
+  final pluginBundlesResponse = await supabase
+      .from('plugins')
+      .select()
+      .eq('is_enabled', true)
+      .or('valid_from.is.null,valid_from.lte.$now')
+      .or('valid_until.is.null,valid_until.gte.$now');
+
+  // 2. Fetch enabled scenarios
   final scenarioResponse = await supabase
       .from('scenario_plugins')
       .select()
       .eq('is_enabled', true);
 
-  // 2. Fetch enabled actions within valid time windows
-  final now = DateTime.now().toIso8601String();
+  // 3. Fetch enabled actions (user-triggered & autonomous) within valid time windows
   final actionResponse = await supabase
       .from('action_plugins')
       .select()
@@ -59,10 +67,18 @@ final pluginSyncProvider = FutureProvider<void>((ref) async {
       .or('valid_from.is.null,valid_from.lte.$now')
       .or('valid_until.is.null,valid_until.gte.$now');
 
-  // 3. Update the Flutter PluginRegistry
+  // 4. Fetch enabled customizations (furniture, clothing, skins, palettes)
+  final customizationResponse = await supabase
+      .from('customization_plugins')
+      .select()
+      .eq('is_enabled', true);
+
+  // 5. Update the generic Flutter PluginRegistry
   PluginRegistry().applyBackendManifest(
-    activeActions: (actionResponse as List).map((e) => BackendActionConfig.fromJson(e)).toList(),
-    activeScenarios: (scenarioResponse as List).map((e) => BackendScenarioConfig.fromJson(e)).toList(),
+    activeBundles: (pluginBundlesResponse as List).map((e) => PluginBundleConfig.fromJson(e)).toList(),
+    activeActions: (actionResponse as List).map((e) => ActionPluginConfig.fromJson(e)).toList(),
+    activeScenarios: (scenarioResponse as List).map((e) => ScenarioPluginConfig.fromJson(e)).toList(),
+    activeCustomizations: (customizationResponse as List).map((e) => CustomizationPluginConfig.fromJson(e)).toList(),
   );
 });
 ```

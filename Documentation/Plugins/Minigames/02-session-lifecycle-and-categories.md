@@ -59,7 +59,7 @@ flowchart LR
   "score_threshold": 50,         // Minimum score to PASS
   "lives": 3,                    // Attempts before FAIL
   "obstacle_density": "medium",  // Drives Flame scene config
-  "pet_sprite_override": null    // null = use active kaiju sprite
+  "kaiju_sprite_override": null  // null = use active kaiju sprite
 }
 ```
 
@@ -140,13 +140,13 @@ The `ghost_pool_strategy` column on `minigame_plugins` defines how the backend s
 ```jsonc
 {
   "schema_version": 1,
-  "minigame_id": "relay_race",
+  "minigame_id": "skyline_demolition_race",
   "total_duration_ms": 60000,
   "events": [
-    { "t": 0,    "action": "start" },
-    { "t": 1240, "action": "jump" },
-    { "t": 2880, "action": "collect_relic", "value": 1 },
-    { "t": 59800,"action": "finish", "score": 74 }
+    { "t": 0,     "action": "start" },
+    { "t": 1240,  "action": "stomp_skyscraper" },
+    { "t": 2880,  "action": "atomic_sweep", "value": 1 },
+    { "t": 59800, "action": "finish", "score": 74 }
   ]
 }
 ```
@@ -199,7 +199,7 @@ The in-session HUD maintains the terminal aesthetic:
 
 ```
 ┌─────────────────────────────────────────┐
-│ [RELAY_RACE]    TIME: 00:42   SCORE: 32 │
+│ [DEMOLITION_RACE] TIME: 00:42 SCORE: 32 │
 │ ─────────────────────────────────────── │
 │                                         │
 │         [Flame scene renders here]      │

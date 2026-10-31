@@ -8,10 +8,10 @@ This document specifies the screen navigation architecture, dynamic action bar i
 
 ```mermaid
 flowchart TD
-    AppLaunch([Flutter App Launch]) --> CheckPets{Are any kaijus owned?}
+    AppLaunch([Flutter App Launch]) --> CheckKaijus{Are any kaijus owned?}
 
-    CheckPets -->|No: Empty Inventory| StoreScreen["02: Kaiju Store Screen\n(Acquire kaiju with 240 credits)"]
-    CheckPets -->|Yes: Active Kaiju Selected| RoomScreen["01: Kaiju Room Screen\n(Flame Viewport + Flutter UI overlay)"]
+    CheckKaijus -->|No: Empty Inventory| StoreScreen["02: Kaiju Store Screen\n(Acquire kaiju with 240 credits)"]
+    CheckKaijus -->|Yes: Active Kaiju Selected| RoomScreen["01: Kaiju Room Screen\n(Flame Viewport + Flutter UI overlay)"]
 
     subgraph BottomNav["Persistent Bottom Nav Bar"]
         NavRoom["[01:ROOM]"]

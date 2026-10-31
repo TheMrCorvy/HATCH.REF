@@ -34,11 +34,11 @@ FUNCTION processStorePurchase(currentCredits, ownedKaijus, catalogItem, customNi
   IF currentCredits < catalogItem.priceCredits THEN
     RETURN Failure("Insufficient credits! Need " + catalogItem.priceCredits + ", available: " + currentCredits + ".")
 
-  // Determine nickname
+  // Determine nickname (uses JoJo-inspired per-type pool from NameGeneration/01)
   IF customNickname IS PROVIDED AND NOT EMPTY THEN
     nickname = uppercase(customNickname)
   ELSE
-    nickname = uppercase(catalogItem.kaijuType) + "_0" + (count(ownedKaijus) + 1)
+    nickname = generateKaijuName(catalogItem.kaijuType)
 
   // Create new kaiju instance
   newKaiju = CREATE KaijuInstance WITH:

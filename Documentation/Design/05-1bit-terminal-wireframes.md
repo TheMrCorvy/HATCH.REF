@@ -74,28 +74,32 @@ MEMORY: 51KB/64KB  SECURED_SESSION  PID: 8832
 
 ---
 
-## 3. Inventory Screen (STORAGE_MGR)
+## 3. Kaiju Switcher / Roster Screen (SWAP_MGR)
 
-Managing items and consumables.
+Maps to `[03:SWAP]` in the persistent bottom navigation bar. Displays all Kaijus owned by the active group (`SOLO`, `COUPLE`, or `FRIENDS`) and allows switching the group's active Kaiju in the room (`active_group_kaijus`) or customizing its name (`[ RENAME ]` in Phase 2+). Note: Consumable item bags are excluded from the game design; all feeding, sleeping, and playing occur via direct action plugins in the room.
 
 ```text
 ==================================================
-SYS: STORAGE_MGR // INVENTORY         CAP: 14/50
+SYS: SWAP_MGR // SPECIMEN ROSTER       OWNED: 02
 ==================================================
 
-ITEM_01: HUMAN_SPHERE_BALL
-QTY: 14
-[ > FEED_KAIJU ]    [ > DISCARD ]
+┌──────────────────────────────────────────────┐
+│ * ACTIVE SPECIMEN IN HABITAT                 │
+│ NAME: KRONOS-7          TYPE: GODZILLA       │
+│ SATUR: 80%   ENERGY: 60%   JOY: 100%         │
+│                                              │
+│ [ * DEPLOYED ]                [ > RENAME ]   │
+└──────────────────────────────────────────────┘
 
-ITEM_02: CAFFEINE_STIM
-QTY: 3
-[ > USE_ITEM ]    [ > DISCARD ]
+┌──────────────────────────────────────────────┐
+│ STANDBY SPECIMEN                             │
+│ NAME: MECHA-X           TYPE: CYBER_GODZILLA │
+│ SATUR: 75%   ENERGY: 90%   JOY: 70%          │
+│                                              │
+│ [ > DEPLOY_TO_ROOM ]          [ > RENAME ]   │
+└──────────────────────────────────────────────┘
 
-ITEM_03: BANDAGE_KIT
-QTY: 1
-[ > USE_ITEM ]    [ > DISCARD ]
-
-> STORAGE CAPACITY OPTIMAL.
+> ROSTER SYNCED WITH ACTIVE GROUP.
 --------------------------------------------------
 MEMORY: 50KB/64KB  SECURED_SESSION  PID: 8832
 ==================================================
@@ -173,7 +177,11 @@ MEMORY: 55KB/64KB  SECURED_SESSION  PID: 8832
 ## 6. Critical Failure (ERR_SYS)
 
 > [!NOTE]
-> **Phase 2+ Feature**: This screen is not included in the initial PoC. Kaijus do not die or reach critical failure states in Phase 1. This wireframe serves as a visual reference for future implementation.
+> **Progressive Failure Roadmap**:
+> - **Milestone 1.1 (Initial PoC)**: No failure states; stats clamp at `0`.
+> - **Milestone 1.2 (Late Phase 1)**: **Kaiju Exhaustion** when vital stats reach `0` (Kaiju enters a non-destructive exhausted state until cared for).
+> - **Phase 3**: **Clinic Recovery (`hospital_recovery`)** for severe exhaustion/injury.
+> - **Phase 5+ (Late Future)**: **Permanent Death (`ERR_SYS`)** (below) is pushed as late as possible in the roadmap.
 
 Death or critical state (Rendered entirely with the Crimson emergency palette).
 
@@ -204,6 +212,9 @@ WARNING: ACTION CANNOT BE UNDONE.
 ---
 
 ## 7. Furniture Store (STORE_MGR)
+
+> [!NOTE]
+> **Phase 2+ Feature**: The Furniture Store (`STORE_MGR`) is excluded from the Phase 1 PoC (which uses static `default_room` furniture props) and launches in Phase 2 alongside `customization_plugins` (`FURNITURE`). Furniture items that modify or unlock Phase 3 extended stats/actions (such as `WORK_STN` / `itm_desk` for `INTEL` and `Demolition Study`) are released in Phase 3 alongside their corresponding stat.
 
 Scrollable catalog for habitat customization.
 

@@ -1,84 +1,89 @@
 # Plugins: 01 Plugin Architecture Overview
 
-This document specifies the core architecture for the **Dormant Plugin System** in the **Unix Tamagotchi**, explaining how action plugins and scenario plugins are organized in the Flutter codebase and controlled dynamically from the backend.
+This document specifies the core architecture for the **100% Data-Driven Plugin System** in the **Unix Tamagotchi**, explaining how plugins (which bundle scenarios, user-triggered actions, autonomous actions, and customizations like furniture and clothing) are defined in the backend and interpreted generically by the Flutter frontend without requiring codebase modifications.
 
 ---
 
-## 1. Architectural Philosophy: Dormant Plugins
+## 1. Architectural Philosophy: Data-Driven Plugin Bundles
 
-In traditional mobile apps, adding a new minigame, seasonal action, or custom room environment requires compiling a new binary, passing app store review, and forcing users to update.
+In traditional mobile apps, adding a new event, seasonal action, room environment, furniture piece, or Kaiju clothing item requires writing new client classes, compiling a new binary, passing app store review, and forcing users to update.
 
-In **Unix Tamagotchi**, all capabilities are implemented as **modular plugins** residing dormant within the Flutter client codebase. The backend controls:
-1. **Activation State**: Whether the plugin is currently enabled (`is_enabled: true`).
+In **Unix Tamagotchi**, the Flutter frontend is **100% generic and data-driven**:
+- A **Plugin** is a logical package/bundle (`plugins` table) managed by the product team that can contain any combination of:
+  1. **Scenarios** (`scenario_plugins`): Visual room environments, background/foreground sprite layers, z-index priorities, and anchor points.
+  2. **User-Triggered Actions** (`action_plugins` where `action_type = 'USER_TRIGGERED'`): Interactive terminal buttons, prerequisites (energy, age phase, required furniture), stat deltas, credit rewards, animation triggers, and target scenarios.
+  3. **Autonomous Actions** (`action_plugins` where `action_type = 'AUTONOMOUS'`): Time- or condition-triggered routines (e.g., City Rampage work shifts, Demolition Academy study, Clinic recovery) with hourly stat/credit formulas, furniture prerequisites (e.g., desk & chair required to study), and priority rules.
+  4. **Customizations** (`customization_plugins`): Habitat **Furniture**, Kaiju **Clothing/Accessories**, **Skins**, **Room Palette Themes**, and **Boot Messages**, including prices, required stats, passive stat modifiers, and sprite/shader rendering metadata.
+
+The backend controls:
+1. **Activation State**: Whether the plugin bundle or individual item is enabled (`is_enabled: true`).
 2. **Availability Window**: Specific dates and times when the plugin is active (`valid_from`, `valid_until`).
-3. **Execution Parameters**: Dynamic variables passed to the plugin (e.g. payout rates, difficulty, energy drain).
-4. **Target Scenario Binding**: Which environment scenario the kaiju will transition to when the action is executed.
+3. **Execution & Rendering Parameters**: Dynamic JSON payloads (payout rates, stat deltas, required furniture, remote sprite sheet URLs, coordinates) interpreted directly by the frontend's generic executors.
+4. **Target Scenario Binding**: Which environment scenario the Kaiju transitions to when an action is executed.
 
 ```mermaid
 flowchart TD
-    subgraph Codebase["Flutter App Codebase (lib/plugins/)"]
-        DormantActions["Dormant User Actions\n(Crush Tanks, Item Search, Eat Ball of Humans, Play)"]
-        DormantAuto["Dormant Autonomous Actions\n(City Rampage Work, Demolition Study)"]
-        DormantScenarios["Dormant Scenarios\n(Terminal Habitat Room, Metropolis Ruins, Clinic Ward)"]
-        Registry["PluginRegistry (Service Locator)"]
-        DormantActions --> Registry
-        DormantAuto --> Registry
-        DormantScenarios --> Registry
+    subgraph Backend["Backend Management (Supabase / Product Team)"]
+        ParentPlugin["plugins Table\n(Event / Feature Bundles)"]
+        ActionTable["action_plugins Table\n(User & Autonomous Actions)"]
+        ScenarioTable["scenario_plugins Table\n(Dynamic Environments)"]
+        CustomTable["customization_plugins Table\n(Furniture, Clothing, Palettes)"]
+        Manager["Product Team / Game Ops\n(Creates events & tunes JSON data)"]
+        Manager --> ParentPlugin
+        ParentPlugin --> ActionTable
+        ParentPlugin --> ScenarioTable
+        ParentPlugin --> CustomTable
     end
 
-    subgraph Backend["Backend Management (Supabase / Config)"]
-        ActionTable["action_plugins Table"]
-        ScenarioTable["scenario_plugins Table"]
-        Manager["Game Operations Manager\n(Toggles is_enabled & params)"]
-        Manager --> ActionTable
-        Manager --> ScenarioTable
+    subgraph Codebase["Flutter Client (lib/plugins/ — 100% Generic Engine)"]
+        Registry["PluginRegistry (Manifest Loader & Cache)"]
+        ExecUser["GenericUserActionExecutor"]
+        ExecAuto["GenericAutonomousEvaluator"]
+        ExecScene["GenericScenarioBuilder"]
+        ExecCustom["GenericCustomizationRenderer"]
+        Registry --> ExecUser
+        Registry --> ExecAuto
+        Registry --> ExecScene
+        Registry --> ExecCustom
     end
 
-    Backend -->|Pushes Capability Manifest| Registry
-    Registry --> ActiveEngine["Active Game Engine & UI Renderer"]
+    Backend -->|Pushes JSON Capability Manifest + Asset URLs| Registry
+    ExecUser & ExecAuto & ExecScene & ExecCustom --> ActiveEngine["Active Flame Viewport & Terminal UI"]
 ```
 
 ---
 
 ## 2. Codebase Directory Organization
 
-Inside the Flutter application (`lib/` or `packages/tamagotchi_core/lib/`):
+Inside the Flutter application (`lib/plugins/`), no specific event or action is hardcoded as a standalone class (except parameterized interactive minigame templates in Phase 5+). Instead, the directory houses data models and generic interpreters:
 
 ```
 lib/plugins/
-├── plugin_registry.dart                  # Centralized registry & discovery map
-├── interfaces/                           # Core abstract contracts
-│   ├── action_plugin.dart                # Base contract for all actions
-│   ├── user_action_plugin.dart           # Contract for user-tapped actions
-│   ├── autonomous_action_plugin.dart     # Contract for automated/time-based actions
-│   └── scenario_plugin.dart              # Contract for visual rooms & environments
+├── plugin_registry.dart                        # Centralized manifest loader, cache & query API
+├── models/                                     # Immutable JSON-serializable data configs
+│   ├── plugin_bundle_config.dart               # Parent plugin package metadata & schedule
+│   ├── action_plugin_config.dart               # User-triggered & autonomous action rules/deltas
+│   ├── scenario_plugin_config.dart             # Layer definitions, sprite URLs & anchor points
+│   └── customization_plugin_config.dart        # Furniture, clothing, skin & palette definitions
 │
-├── user_triggered_actions/               # User-initiated interactions
-│   ├── eat_action_plugin.dart            # Core action: Devour ball of human people (PoC)
-│   ├── sleep_action_plugin.dart          # Core action: Kaiju slumber / dormancy (PoC)
-│   ├── play_action_plugin.dart           # Core action: Demolition practice / smash toys (PoC)
-│   ├── crush_tank_action_plugin.dart     # Event action (Crush Tanks)
-│   └── scavenge_action_plugin.dart       # Event action (Search for Relic)
+├── executors/                                  # Generic data-driven runtime interpreters
+│   ├── generic_user_action_executor.dart       # Evaluates prerequisites & computes ActionResult
+│   ├── generic_autonomous_evaluator.dart       # Evaluates time-elapsed work, study & recovery
+│   ├── generic_scenario_builder.dart           # Builds Flame Component tree from JSON layers
+│   └── generic_customization_renderer.dart     # Renders room furniture, Kaiju clothing & palettes
 │
-├── non_user_triggered_actions/           # Autonomous / Condition-triggered actions
-│   ├── city_destruction_action_plugin.dart # Adult Kaiju rampage destroying cities (earns credits)
-│   ├── destruction_study_action_plugin.dart # Kaiju studying urban demolition tactics
-│   └── hospital_recovery_plugin.dart     # Injured Kaiju recovering in containment clinic
-│
-└── scenarios/                            # Dynamic room environments & layouts
-    ├── default_terminal_room.dart        # Habitat room with bed, chair, desk, kitchen (PoC)
-    ├── metropolis_ruins_scenario.dart    # Urban cityscape demolition environment
-    ├── hospital_bed_scenario.dart        # Medical recovery environment
-    └── containment_silo_scenario.dart    # Sub-zero containment silo environment
+└── minigames/                                  # Parameterized Flame minigame engines (Phase 5+)
 ```
+
+> **Phase 1 (Offline PoC) Note**: During the offline PoC, `PluginRegistry` loads a bundled local JSON file (`assets/manifests/poc_default_manifest.json`) containing the initial 3 actions (`eat`, `sleep`, `play`), `default_room` scenario, and palette presets. In Phase 2+, the exact same generic engine loads the manifest from Supabase!
 
 ---
 
-## 3. Core Dart Contracts
+## 3. Core Dart Data Contracts
 
 ### A. Age Phase Enum (`lib/models/age_phase.dart`)
 
-All age-gate logic references this enum. During the PoC, every kaiju starts at `AgePhase.child` as a static value; the real computation is introduced in Phase 2 via `Features/05-kaiju-lifecycle-and-aging.md`. Starting at `child` ensures the three core PoC actions (Eat, Sleep, Play) are all unlocked from day one.
+All age-gate logic references this enum. During the PoC, every Kaiju starts at `AgePhase.child` as a static value; real aging computation is introduced in Phase 3 via `Features/05-kaiju-lifecycle-and-aging.md`. Starting at `child` ensures the three core PoC actions (Eat, Sleep, Play) are all unlocked from day one.
 
 ```dart
 /// Ordered by lifecycle progression — ordinal comparisons are intentional.
@@ -91,44 +96,60 @@ extension AgePhaseName on AgePhase {
 
 ---
 
-### B. Base Action Contract (`lib/plugins/interfaces/action_plugin.dart`)
+### B. Data-Driven Action Config & Generic Executor (`lib/plugins/models/action_plugin_config.dart`)
 
 ```dart
 import 'package:flutter/foundation.dart';
 import '../../models/age_phase.dart';
+import '../../models/kaiju_state.dart';
 
-enum ActionType { userTriggered, autonomous }
+enum ActionType { userTriggered, autonomous, minigame }
 
-abstract class ActionPlugin {
-  String get id;             // Unique identifier matching backend key (e.g. 'city_destruction')
-  String get displayName;    // User-facing label (e.g. 'City Rampage')
-  ActionType get actionType; // User-triggered or autonomous
-  String get defaultScenarioId; // Default scenario (e.g. 'metropolis_ruins')
+@immutable
+class ActionPluginConfig {
+  final String id;                // e.g. 'eat', 'crush_tank', 'city_destruction', 'destruction_study'
+  final String? pluginId;         // Parent plugin bundle ID
+  final String displayName;       // User-facing terminal button label
+  final ActionType actionType;    // userTriggered | autonomous | minigame
+  final bool isEnabled;
+  final DateTime? validFrom;
+  final DateTime? validUntil;
+  final String targetScenarioId;  // e.g. 'default_room', 'metropolis_ruins'
+  final AgePhase? minAgePhase;
+  final AgePhase? maxAgePhase;
+  final List<String> requiredFurniture; // e.g. ['itm_desk', 'itm_chair'] for study
+  final int priority;             // Lower value = higher precedence (0 overrides all)
+  final List<String> blockingConditions; // e.g. ['is_sick', 'is_exhausted']
+  final Map<String, dynamic> parameters; // Stat deltas, hourly rates, messages, animation key, duration
 
-  // Age gates — null means no restriction on that bound
-  AgePhase? get minAgePhase => null;
-  AgePhase? get maxAgePhase => null;
+  const ActionPluginConfig({
+    required this.id,
+    this.pluginId,
+    required this.displayName,
+    required this.actionType,
+    this.isEnabled = true,
+    this.validFrom,
+    this.validUntil,
+    required this.targetScenarioId,
+    this.minAgePhase,
+    this.maxAgePhase,
+    this.requiredFurniture = const [],
+    this.priority = 50,
+    this.blockingConditions = const [],
+    this.parameters = const {},
+  });
 
-  // Priority — lower value = higher priority (0 overrides everything)
-  // Used by the PluginRegistry to resolve conflicts between autonomous plugins.
-  // TBD: exact values finalized in Features/05-kaiju-lifecycle-and-aging.md
-  int get priority => 50;
-
-  /// Returns false if the kaiju's current phase is outside this plugin's age gate.
-  bool isAgeEligible(AgePhase petPhase) {
+  bool isAgeEligible(AgePhase kaijuPhase) {
     final min = minAgePhase;
     final max = maxAgePhase;
-    if (min != null && petPhase.index < min.index) return false;
-    if (max != null && petPhase.index > max.index) return false;
+    if (min != null && kaijuPhase.index < min.index) return false;
+    if (max != null && kaijuPhase.index > max.index) return false;
     return true;
   }
 
-  /// Executes the action given the current kaiju state and backend-provided parameters
-  ActionResult execute({
-    required KaijuState currentPet,
-    required Map<String, dynamic> backendParams,
-    required DateTime triggeredAt,
-  });
+  bool hasRequiredFurniture(List<String> placedFurnitureIds) {
+    return requiredFurniture.every((reqId) => placedFurnitureIds.contains(reqId));
+  }
 }
 
 class ActionResult {
@@ -137,6 +158,7 @@ class ActionResult {
   final int hungerDelta;
   final int energyDelta;
   final int happinessDelta;
+  final Map<String, int> extendedStatDeltas; // e.g. {'intel': 10} in Phase 3+
   final int creditsEarned;
   final String animationSequence;
   final String targetScenarioId;
@@ -148,6 +170,7 @@ class ActionResult {
     this.hungerDelta = 0,
     this.energyDelta = 0,
     this.happinessDelta = 0,
+    this.extendedStatDeltas = const {},
     this.creditsEarned = 0,
     required this.animationSequence,
     required this.targetScenarioId,
@@ -156,34 +179,85 @@ class ActionResult {
 }
 ```
 
-### B. Scenario Plugin Contract (`lib/plugins/interfaces/scenario_plugin.dart`)
+---
+
+### C. Data-Driven Scenario Config (`lib/plugins/models/scenario_plugin_config.dart`)
 
 ```dart
 import 'package:flame/components.dart';
 
-abstract class ScenarioPlugin {
-  String get id; // e.g. 'hospital_bed', 'metropolis_ruins'
-  String get displayName;
+class ScenarioLayerConfig {
+  final String spriteAssetOrUrl;
+  final Vector2 position;
+  final Vector2 size;
+  final int priority; // Z-index (0-20 bg, 21-49 props/furniture behind Kaiju, 50 Kaiju, 51+ foreground)
 
-  /// Builds the 1-bit dithered scene for the Flame engine viewport.
-  /// Returns a Flame Component (e.g., a PositionComponent or a Scene) containing
-  /// the background sprites, props, and environment objects. The rendering
-  /// pipeline applies the Bayer dithering shader to this entire scene graph.
-  Component buildScene({
-    required Map<String, dynamic> scenarioParams,
-    required Component kaijuComponent,
+  const ScenarioLayerConfig({
+    required this.spriteAssetOrUrl,
+    required this.position,
+    required this.size,
+    required this.priority,
   });
+}
 
-  /// The coordinate layout for where the kaiju sprite is anchored within the scene.
-  Vector2 get petAnchorPoint;
+class ScenarioPluginConfig {
+  final String id; // e.g. 'default_room', 'hospital_bed', 'metropolis_ruins'
+  final String? pluginId;
+  final String displayName;
+  final bool isEnabled;
+  final Vector2 kaijuAnchorPoint;
+  final List<ScenarioLayerConfig> layers;
+  final Map<String, dynamic> parameters;
+
+  const ScenarioPluginConfig({
+    required this.id,
+    this.pluginId,
+    required this.displayName,
+    this.isEnabled = true,
+    required this.kaijuAnchorPoint,
+    this.layers = const [],
+    this.parameters = const {},
+  });
 }
 ```
 
 ---
 
-## 4. Central Plugin Registry (`lib/plugins/plugin_registry.dart`)
+### D. Data-Driven Customization Config (`lib/plugins/models/customization_plugin_config.dart`)
 
-The `PluginRegistry` maintains all compiled plugins. At runtime, the backend manifest informs the registry which plugins are currently permitted:
+```dart
+enum CustomizationCategory { furniture, clothing, skin, palette, bootMessage }
+
+class CustomizationPluginConfig {
+  final String id; // e.g. 'itm_desk', 'clothing_mech_visor', 'palette_amber'
+  final String? pluginId;
+  final CustomizationCategory category;
+  final String displayName;
+  final int priceCredits;
+  final bool isEnabled;
+  final String? requiredStat; // Item is only active if this stat is enabled in current game phase
+  final Map<String, num> statModifiers; // e.g. {'intel': 25, 'happiness': -10}
+  final Map<String, dynamic> renderData; // Sprite URL, slot position, z-priority, or shader hex colors
+
+  const CustomizationPluginConfig({
+    required this.id,
+    this.pluginId,
+    required this.category,
+    required this.displayName,
+    this.priceCredits = 0,
+    this.isEnabled = true,
+    this.requiredStat,
+    this.statModifiers = const {},
+    this.renderData = const {},
+  });
+}
+```
+
+---
+
+## 4. Central Data-Driven Plugin Registry (`lib/plugins/plugin_registry.dart`)
+
+The `PluginRegistry` stores the active data configurations loaded from the local PoC JSON manifest (Phase 1) or the Supabase backend (Phase 2+):
 
 ```dart
 class PluginRegistry {
@@ -191,51 +265,47 @@ class PluginRegistry {
   factory PluginRegistry() => _instance;
   PluginRegistry._internal();
 
-  final Map<String, ActionPlugin> _actionPlugins = {};
-  final Map<String, ScenarioPlugin> _scenarioPlugins = {};
+  final Map<String, ActionPluginConfig> _actions = {};
+  final Map<String, ScenarioPluginConfig> _scenarios = {};
+  final Map<String, CustomizationPluginConfig> _customizations = {};
 
-  // Active configurations provided by backend
-  final Map<String, Map<String, dynamic>> _activeActionConfigs = {};
-  final Map<String, Map<String, dynamic>> _activeScenarioConfigs = {};
-
-  void registerAction(ActionPlugin plugin) {
-    _actionPlugins[plugin.id] = plugin;
-  }
-
-  void registerScenario(ScenarioPlugin plugin) {
-    _scenarioPlugins[plugin.id] = plugin;
-  }
-
-  /// Syncs active states from backend capability manifest
+  /// Syncs active configurations from local PoC JSON or backend capability manifest
   void applyBackendManifest({
-    required List<BackendActionConfig> activeActions,
-    required List<BackendScenarioConfig> activeScenarios,
+    required List<ActionPluginConfig> activeActions,
+    required List<ScenarioPluginConfig> activeScenarios,
+    required List<CustomizationPluginConfig> activeCustomizations,
   }) {
-    _activeActionConfigs.clear();
-    for (final act in activeActions) {
-      if (act.isEnabled && act.isValidNow()) {
-        _activeActionConfigs[act.id] = act.parameters;
-      }
-    }
+    _actions
+      ..clear()
+      ..addEntries(activeActions.where((a) => a.isEnabled).map((a) => MapEntry(a.id, a)));
 
-    _activeScenarioConfigs.clear();
-    for (final sc in activeScenarios) {
-      if (sc.isEnabled) {
-        _activeScenarioConfigs[sc.id] = sc.parameters;
-      }
-    }
+    _scenarios
+      ..clear()
+      ..addEntries(activeScenarios.where((s) => s.isEnabled).map((s) => MapEntry(s.id, s)));
+
+    _customizations
+      ..clear()
+      ..addEntries(activeCustomizations.where((c) => c.isEnabled).map((c) => MapEntry(c.id, c)));
   }
 
-  /// Returns only action plugins that are enabled by the backend
-  List<ActionPlugin> getEnabledUserActions() {
-    return _actionPlugins.values.where((plugin) {
-      return plugin.actionType == ActionType.userTriggered &&
-          _activeActionConfigs.containsKey(plugin.id);
+  /// Returns user-triggered actions eligible for the Kaiju's current age and room furniture
+  List<ActionPluginConfig> getEnabledUserActions({
+    required AgePhase kaijuPhase,
+    List<String> placedFurnitureIds = const [],
+  }) {
+    return _actions.values.where((action) {
+      return action.actionType == ActionType.userTriggered &&
+          action.isAgeEligible(kaijuPhase) &&
+          action.hasRequiredFurniture(placedFurnitureIds);
     }).toList();
   }
 
-  ScenarioPlugin getScenario(String id) {
-    return _scenarioPlugins[id] ?? _scenarioPlugins['default_room']!;
+  ScenarioPluginConfig getScenario(String id) {
+    return _scenarios[id] ?? _scenarios['default_room']!;
+  }
+
+  List<CustomizationPluginConfig> getCustomizationsByCategory(CustomizationCategory category) {
+    return _customizations.values.where((c) => c.category == category).toList();
   }
 }
 ```

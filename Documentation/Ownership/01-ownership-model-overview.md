@@ -6,26 +6,25 @@ Every user in the Unix Tamagotchi ecosystem gets a personal `SOLO` group upon re
 ### Core Principle
 **Kaijus belong to GROUPS, not to individual users.** 
 
-This unified 'group of 1' ownership model reconciles solo and multiplayer gameplay. Instead of separate `kaijus` and `shared_pets` concepts, all kaijus exist within a group context.
+This unified 'group of 1' ownership model reconciles solo and multiplayer gameplay. Instead of separate `kaijus` and `shared_kaijus` concepts, all kaijus exist within a group context.
 
 ## 2. Group Types
 The `group_type` dictates not only capacity but also subtle shifts in kaiju personality and behavior.
 
-> **Marketing Note**: The game is **primarily marketed as a couple experience**. `COUPLE` is the flagship group type. `SOLO`, `FAMILY`, and `FRIENDS` are fully supported but are not the product's primary audience.
+> **Marketing Note**: The game is **primarily marketed as a couple experience (`COUPLE`)**, while also supporting **friend groups (`FRIENDS`)** and **solo play (`SOLO`)**.
 
 | Type | Capacity | Description |
 |---|---|---|
 | `SOLO` | 1 member | Auto-created upon registration. The foundation of ownership. |
 | `COUPLE` | 2 members | **Primary marketed experience.** Intimate sharing, synchronized push notifications. |
-| `FAMILY` | 2-6 members | Shared responsibility, asynchronous care schedules. |
-| `FRIENDS` | 2-6 members | Casual interaction, competitive care mechanics. |
+| `FRIENDS` | 2-6 members | Cooperative friend squad care, shared rampage challenges. |
 
 ## 3. Ownership State Machine
 ```mermaid
 stateDiagram-v2
     [*] --> Solo: Registration (Auto-create SOLO group)
-    Solo --> Multiplayer: Join/Create Group
-    Multiplayer --> Solo: Leave/Dissolve Group
+    Solo --> Multiplayer: Touch Phones Once / Redeem Single-Use Code (COUPLE or FRIENDS)
+    Multiplayer --> Solo: Leave/Dissolve Group (Clone Kaijus)
     Multiplayer --> Multiplayer: Switch Active Group
     Solo --> [*]: Account Deletion
 ```
@@ -37,7 +36,8 @@ This replaces the old `profiles -> kaijus` direct relationship.
 erDiagram
     PROFILES ||--o{ GROUP_MEMBERS : "is member of"
     GROUPS ||--o{ GROUP_MEMBERS : "contains"
-    GROUPS ||--o{ PETS : "owns"
+    GROUPS ||--o{ KAIJUS : "owns"
+    GROUPS ||--o| ACTIVE_GROUP_KAIJUS : "displays active"
     
     PROFILES {
         uuid id PK
@@ -60,7 +60,7 @@ erDiagram
         timestamp joined_at
     }
     
-    PETS {
+    KAIJUS {
         uuid id PK
         uuid group_id FK
         string kaiju_type FK
@@ -68,6 +68,9 @@ erDiagram
         int hunger
         int energy
         int happiness
+        jsonb extended_stats
+        jsonb status_flags
+        int age_in_days
         timestamp last_interaction_at
         timestamp created_at
     }
@@ -75,37 +78,38 @@ erDiagram
 
 ## 5. Unified Schema DDL
 ```sql
--- Groups Table
-CREATE TABLE groups (
+-- Groups Table (SOLO, COUPLE, FRIENDS)
+CREATE TABLE public.groups (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
-    admin_id UUID REFERENCES profiles(id),
-    group_type TEXT NOT NULL CHECK (group_type IN ('SOLO', 'COUPLE', 'FAMILY', 'FRIENDS')),
+    admin_id UUID REFERENCES public.profiles(id),
+    group_type TEXT NOT NULL CHECK (group_type IN ('SOLO', 'COUPLE', 'FRIENDS')),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Group Members Table
--- PARENT/CHILD are dialogue labels for FAMILY groups; they do not alter app permissions
-CREATE TABLE group_members (
-    group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    role TEXT NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('ADMIN', 'MEMBER', 'PARENT', 'CHILD')),
+CREATE TABLE public.group_members (
+    group_id UUID REFERENCES public.groups(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    role TEXT NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('ADMIN', 'MEMBER')),
     joined_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (group_id, user_id)
 );
 
--- Kaijus Table (Unified)
-CREATE TABLE kaijus (
+-- Kaijus Table (Unified — matches Architecture/05-database-and-auth.md)
+CREATE TABLE public.kaijus (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    kaiju_type TEXT NOT NULL,
+    group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
+    kaiju_type TEXT NOT NULL REFERENCES public.kaiju_catalog(kaiju_type),
     nickname TEXT NOT NULL,
-    hunger INTEGER DEFAULT 100,
-    energy INTEGER DEFAULT 100,
-    happiness INTEGER DEFAULT 100,
-    spritesheet_data JSONB,
-    last_interaction_at TIMESTAMPTZ DEFAULT NOW(),
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    hunger INTEGER NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
+    energy INTEGER NOT NULL DEFAULT 80 CHECK (energy BETWEEN 0 AND 100),
+    happiness INTEGER NOT NULL DEFAULT 80 CHECK (happiness BETWEEN 0 AND 100),
+    extended_stats JSONB NOT NULL DEFAULT '{}'::jsonb,
+    status_flags JSONB NOT NULL DEFAULT '{}'::jsonb,
+    age_in_days INTEGER NOT NULL DEFAULT 0,
+    last_interaction_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 

@@ -26,7 +26,7 @@ flowchart LR
 
 ---
 
-## 2. Dart State Models (`lib/models/`)
+## 2. Dart State Models (`lib/models/kaiju_state.dart`)
 
 ```dart
 import 'package:flutter/foundation.dart';
@@ -35,11 +35,13 @@ import 'package:flutter/foundation.dart';
 class KaijuInstance {
   final String id;
   final String groupId; // maps to groups.id; 'solo_<userId>' during PoC offline phase
-  final String petType; // 'godzilla' | 'cyber_godzilla'
+  final String kaijuType; // 'godzilla' | 'cyber_godzilla'
   final String nickname;
-  final int hunger;     // 0 - 100
-  final int energy;     // 0 - 100
-  final int happiness;  // 0 - 100
+  final int hunger;     // 0 - 100 (PoC core stat)
+  final int energy;     // 0 - 100 (PoC core stat)
+  final int happiness;  // 0 - 100 (PoC core stat)
+  final Map<String, int> extendedStats; // Post-PoC stats: intel, comfort, hydration, hp, lume
+  final Map<String, bool> statusFlags;  // Milestone 1.2+: is_exhausted; Phase 3+: is_sick
   final int ageInDays;
   final String currentActionState; // 'idle' | 'eating' | 'sleeping' | 'playing' | 'destroying_city'
   final String activeScenarioId;   // e.g. 'default_room' | 'metropolis_ruins'
@@ -48,11 +50,13 @@ class KaijuInstance {
   const KaijuInstance({
     required this.id,
     required this.groupId,
-    required this.petType,
+    required this.kaijuType,
     required this.nickname,
     this.hunger = 80,
     this.energy = 80,
     this.happiness = 80,
+    this.extendedStats = const {},
+    this.statusFlags = const {},
     this.ageInDays = 0,
     this.currentActionState = 'idle',
     this.activeScenarioId = 'default_room',
@@ -63,6 +67,8 @@ class KaijuInstance {
     int? hunger,
     int? energy,
     int? happiness,
+    Map<String, int>? extendedStats,
+    Map<String, bool>? statusFlags,
     int? ageInDays,
     String? currentActionState,
     String? activeScenarioId,
@@ -71,11 +77,13 @@ class KaijuInstance {
     return KaijuInstance(
       id: id,
       groupId: groupId,
-      petType: petType,
+      kaijuType: kaijuType,
       nickname: nickname,
       hunger: hunger ?? this.hunger,
       energy: energy ?? this.energy,
       happiness: happiness ?? this.happiness,
+      extendedStats: extendedStats ?? this.extendedStats,
+      statusFlags: statusFlags ?? this.statusFlags,
       ageInDays: ageInDays ?? this.ageInDays,
       currentActionState: currentActionState ?? this.currentActionState,
       activeScenarioId: activeScenarioId ?? this.activeScenarioId,
@@ -87,124 +95,125 @@ class KaijuInstance {
 
 ---
 
-## 3. Riverpod State Notifier Implementation (`lib/state/pet_state_notifier.dart`)
+## 3. Riverpod State Notifier Implementation (`lib/state/kaiju_state_notifier.dart`)
 
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/pet_state.dart';
-import '../plugins/interfaces/action_plugin.dart';
-import '../plugins/plugin_registry.dart';
+import '../models/kaiju_state.dart';
+import '../plugins/models/action_plugin_config.dart';
+import '../plugins/executors/generic_user_action_executor.dart';
 
 class GameState {
   final int credits;
-  final List<KaijuInstance> ownedPets;
-  final String? activePetId;
+  final List<KaijuInstance> ownedKaijus;
+  final String? activeKaijuId; // Synced per-group in Phase 4 multiplayer
 
   const GameState({
     required this.credits,
-    required this.ownedPets,
-    this.activePetId,
+    required this.ownedKaijus,
+    this.activeKaijuId,
   });
 
-  KaijuInstance? get activePet {
-    if (activePetId == null || ownedPets.isEmpty) return null;
-    return ownedPets.firstWhere(
-      (p) => p.id == activePetId,
-      orElse: () => ownedPets.first,
+  KaijuInstance? get activeKaiju {
+    if (activeKaijuId == null || ownedKaijus.isEmpty) return null;
+    return ownedKaijus.firstWhere(
+      (k) => k.id == activeKaijuId,
+      orElse: () => ownedKaijus.first,
     );
   }
 }
 
-class GameNotifier extends StateNotifier<GameState> {
-  GameNotifier()
+class KaijuStateNotifier extends StateNotifier<GameState> {
+  KaijuStateNotifier()
       : super(const GameState(
           credits: 240, // Starting PoC balance
-          ownedPets: [],
-          activePetId: null,
+          ownedKaijus: [],
+          activeKaijuId: null,
         ));
 
   /// Purchase a kaiju: Dynamic capacity (no hardcoded 2-kaiju limit)
-  bool buyPet({
-    required String petType,
+  bool buyKaiju({
+    required String kaijuType,
     required String nickname,
     required int price,
+    String groupId = 'solo_local',
   }) {
     if (state.credits < price) {
       return false; // Insufficient credits
     }
 
-    final newPet = KaijuInstance(
-      id: 'pet_${DateTime.now().millisecondsSinceEpoch}',
-      petType: petType,
+    final newKaiju = KaijuInstance(
+      id: 'kaiju_${DateTime.now().millisecondsSinceEpoch}',
+      groupId: groupId,
+      kaijuType: kaijuType,
       nickname: nickname,
       lastInteractionTimestamp: DateTime.now(),
     );
 
     state = GameState(
       credits: state.credits - price,
-      ownedPets: [...state.ownedPets, newPet],
-      activePetId: state.activePetId ?? newPet.id,
+      ownedKaijus: [...state.ownedKaijus, newKaiju],
+      activeKaijuId: state.activeKaijuId ?? newKaiju.id,
     );
 
     return true;
   }
 
-  void switchActivePet(String petId) {
-    if (state.ownedPets.any((p) => p.id == petId)) {
+  void switchActiveKaiju(String kaijuId) {
+    if (state.ownedKaijus.any((k) => k.id == kaijuId)) {
       state = GameState(
         credits: state.credits,
-        ownedPets: state.ownedPets,
-        activePetId: petId,
+        ownedKaijus: state.ownedKaijus,
+        activeKaijuId: kaijuId,
       );
     }
   }
 
-  /// Executes an Action Plugin dynamically
-  void executePluginAction(ActionPlugin plugin) {
-    final kaiju = state.activePet;
+  /// Executes a data-driven Action Plugin configuration dynamically
+  void executePluginAction(ActionPluginConfig actionConfig) {
+    final kaiju = state.activeKaiju;
     if (kaiju == null) return;
 
-    final backendParams = PluginRegistry().getActiveParamsForAction(plugin.id);
-    final result = plugin.execute(
-      currentPet: kaiju,
-      backendParams: backendParams,
+    final result = GenericUserActionExecutor.execute(
+      currentKaiju: kaiju,
+      config: actionConfig,
       triggeredAt: DateTime.now(),
     );
 
     if (!result.success) return;
 
     // Apply stat deltas
-    final updatedPet = kaiju.copyWith(
+    final updatedKaiju = kaiju.copyWith(
       hunger: (kaiju.hunger + result.hungerDelta).clamp(0, 100),
       energy: (kaiju.energy + result.energyDelta).clamp(0, 100),
       happiness: (kaiju.happiness + result.happinessDelta).clamp(0, 100),
-      currentActionState: result.animationTrigger,
+      currentActionState: result.animationSequence,
       activeScenarioId: result.targetScenarioId,
       lastInteractionTimestamp: DateTime.now(),
     );
 
     state = GameState(
       credits: state.credits + result.creditsEarned,
-      ownedPets: state.ownedPets.map((p) => p.id == kaiju.id ? updatedPet : p).toList(),
-      activePetId: state.activePetId,
+      ownedKaijus: state.ownedKaijus.map((k) => k.id == kaiju.id ? updatedKaiju : k).toList(),
+      activeKaijuId: state.activeKaijuId,
     );
 
     // Reset action state to idle after duration
     Future.delayed(result.duration, () {
-      final current = state.activePet;
-      if (current != null && current.id == updatedPet.id) {
-        final resetPet = current.copyWith(currentActionState: 'idle');
+      final current = state.activeKaiju;
+      if (current != null && current.id == updatedKaiju.id) {
+        final resetKaiju = current.copyWith(currentActionState: 'idle');
         state = GameState(
           credits: state.credits,
-          ownedPets: state.ownedPets.map((p) => p.id == current.id ? resetPet : p).toList(),
-          activePetId: state.activePetId,
+          ownedKaijus: state.ownedKaijus.map((k) => k.id == current.id ? resetKaiju : k).toList(),
+          activeKaijuId: state.activeKaijuId,
         );
       }
     });
   }
 }
 
-final gameStateProvider = StateNotifierProvider<GameNotifier, GameState>((ref) {
-  return GameNotifier();
+final gameStateProvider = StateNotifierProvider<KaijuStateNotifier, GameState>((ref) {
+  return KaijuStateNotifier();
 });
 ```

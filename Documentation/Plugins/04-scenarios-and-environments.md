@@ -1,103 +1,91 @@
 # Plugins: 04 Scenarios and Environments
 
-This document specifies the architecture, rendering engine, and composability rules for **Scenario Plugins** in the **Unix Tamagotchi**.
+This document specifies the data-driven architecture, generic Flame scene builder, and composability rules for **Scenario Plugins** in the **Unix Tamagotchi**.
 
 ---
 
-## 1. Architectural Concept: Decoupled Scenarios
+## 1. Architectural Concept: Data-Driven Decoupled Scenarios
 
-In traditional kaiju games, rooms are static background images. In **Unix Tamagotchi**, scenarios are independent plugins residing in `lib/plugins/scenarios/`.
+In traditional kaiju games, rooms are static hardcoded scenes. In **Unix Tamagotchi**, scenarios are data-driven configurations (`ScenarioPluginConfig`) interpreted by `GenericScenarioBuilder`.
 
 Scenarios are **completely decoupled from actions**:
-- An action (e.g., "City Rampage" or "Crush Tanks") can specify which scenario to load (e.g., "Metropolis Ruins" or "Containment Ward").
-- Crucially, the backend can **rebind actions to different scenarios dynamically** via parameters. For example, if a special event features city destruction in a futuristic skyline or containment inside an arctic silo, the backend overrides the action's target scenario to `"metropolis_ruins"` or `"hospital_bed"` without modifying a single line of Flutter code.
+- An action (e.g., "City Rampage" or "Crush Tanks") specifies which `target_scenario_id` to load (e.g., `"metropolis_ruins"` or `"hospital_bed"`).
+- Crucially, the product team can **create brand-new scenarios or rebind actions to different scenarios dynamically** via backend JSON parameters. For example, if a seasonal event features city destruction in a futuristic skyline or containment inside an arctic silo, the backend defines the new scenario's sprite layers and overrides the action's `target_scenario_id` without modifying a single line of Flutter code.
 
 ```mermaid
 flowchart TD
     Action["Action: 'city_destruction'"]
-    BackendOverride{"Backend specifies\nscenario_id"}
+    BackendOverride{"Backend specifies\ntarget_scenario_id"}
 
     Action --> BackendOverride
-    BackendOverride -->|"scenario_id: 'metropolis_ruins'"| Ruins["Metropolis Ruins Scenario\n(Skyscrapers, dithered smoke, rubble sprites\nmatching Desing References/Godzila.webp)"]
-    BackendOverride -->|"scenario_id: 'hospital_bed'"| Hospital["Hospital Bed Scenario\n(Containment clinic, vital monitor, bed sprites)"]
-    BackendOverride -->|"scenario_id: 'default_room'"| Room["Default Terminal Habitat Room\n(Kaiju room with bed, chair, desk, kitchen)"]
+    BackendOverride -->|"target_scenario_id: 'metropolis_ruins'"| Ruins["Metropolis Ruins Scenario\n(Skyscrapers, dithered smoke, rubble sprites\nmatching Desing References/Godzila.webp)"]
+    BackendOverride -->|"target_scenario_id: 'hospital_bed'"| Hospital["Hospital Bed Scenario\n(Containment clinic, vital monitor, bed sprites)"]
+    BackendOverride -->|"target_scenario_id: 'default_room'"| Room["Default Terminal Habitat Room\n(Kaiju room with furniture slots)"]
 ```
 
 ---
 
 ## 2. Unified 1-Bit Dithered Scene Rendering
 
-Every scenario plugin generates a scene for the Flame engine viewport. The rendering pipeline operates in two stages:
-1. **Low-Resolution Compositing**: The scenario builds a scene graph of `SpriteComponent` and `PositionComponent` objects representing the background, environment props, and the kaiju. These are drawn at a low virtual resolution (e.g., 256x256).
+Every scenario configuration generates a scene for the Flame engine viewport via `GenericScenarioBuilder`. The rendering pipeline operates in two stages:
+1. **Low-Resolution Compositing**: `GenericScenarioBuilder` constructs a scene graph of `SpriteComponent` and `PositionComponent` objects from the scenario's JSON `layers` array (background, environment props, placed group furniture, the Kaiju + any equipped clothing layers, and foreground effects) at a low virtual resolution (e.g., 256×256).
 2. **Post-Processing Pipeline**: A global Fragment Shader is applied to the viewport, processing the scene using an ordered Bayer matrix to achieve the signature 1-bit dithered shading. The final output is upscaled using nearest-neighbor filtering to provide crisp, chunky pixels underneath the Flutter native-resolution UI layer.
 
 ---
 
-## 3. Implementation: Hospital Bed Scenario (`lib/plugins/scenarios/hospital_bed_scenario.dart`)
+## 3. Generic Scenario Builder (`lib/plugins/executors/generic_scenario_builder.dart`)
+
+Instead of writing separate Dart classes for `HospitalBedScenarioPlugin` or `MetropolisRuinsScenarioPlugin`, `GenericScenarioBuilder` reads any `ScenarioPluginConfig` JSON payload and assembles the Flame component tree dynamically:
 
 ```dart
 import 'package:flame/components.dart';
-import '../interfaces/scenario_plugin.dart';
+import '../models/scenario_plugin_config.dart';
+import '../models/customization_plugin_config.dart';
 
-class HospitalBedScenarioPlugin extends ScenarioPlugin {
-  @override
-  String get id => 'hospital_bed';
-
-  @override
-  String get displayName => 'Hospital Bed Recovery';
-
-  @override
-  Vector2 get petAnchorPoint => Vector2(128, 160); // Centered on the bed sprite
-
-  @override
-  Component buildScene({
-    required Map<String, dynamic> scenarioParams,
+class GenericScenarioBuilder {
+  /// Builds a complete 1-bit dithered Flame scene graph from data configuration
+  static Component buildScene({
+    required ScenarioPluginConfig scenarioConfig,
     required Component kaijuComponent,
+    required List<CustomizationPluginConfig> placedFurniture,
+    required Sprite Function(String assetOrUrl) spriteLoader,
   }) {
-    final showVitalMonitor = scenarioParams['vital_monitor'] ?? true;
-    final ivDripLevel = scenarioParams['iv_drip_level'] ?? 'FULL';
-
-    // Root node for the scenario graph
     final sceneRoot = PositionComponent(position: Vector2.zero());
 
-    // Background tiles (e.g., medical ward wall)
-    sceneRoot.add(SpriteComponent(
-      sprite: Sprite(/* load clinic_wall.png */),
-      position: Vector2.zero(),
-      size: Vector2(256, 256),
-      priority: 0, // Background layer
-    ));
-
-    // The hospital bed prop
-    sceneRoot.add(SpriteComponent(
-      sprite: Sprite(/* load bed.png */),
-      position: Vector2(64, 140),
-      size: Vector2(128, 64),
-      priority: 10,
-    ));
-
-    // Optional Vital Monitor prop
-    if (showVitalMonitor) {
+    // 1. Add all scenario layers (backgrounds at priority 0-20, props at 21-49, foreground at 51-100)
+    for (final layer in scenarioConfig.layers) {
       sceneRoot.add(SpriteComponent(
-        sprite: Sprite(/* load vital_monitor.png */),
-        position: Vector2(20, 100),
-        size: Vector2(32, 32),
-        priority: 5,
+        sprite: spriteLoader(layer.spriteAssetOrUrl),
+        position: layer.position,
+        size: layer.size,
+        priority: layer.priority,
       ));
     }
 
-    // Anchor the kaiju sprite onto the bed
-    kaijuComponent.position = petAnchorPoint;
-    kaijuComponent.priority = 20; // Ensure kaiju renders above the bed
-    sceneRoot.add(kaijuComponent);
+    // 2. If this scenario supports room furniture (e.g. 'default_room'), render placed furniture (priority 21-49)
+    if (scenarioConfig.parameters['supports_furniture'] == true) {
+      for (final item in placedFurniture) {
+        final spriteUrl = item.renderData['sprite_url'] as String?;
+        if (spriteUrl == null) continue;
+        final x = (item.renderData['x'] as num?)?.toDouble() ?? 0.0;
+        final y = (item.renderData['y'] as num?)?.toDouble() ?? 0.0;
+        final w = (item.renderData['width'] as num?)?.toDouble() ?? 32.0;
+        final h = (item.renderData['height'] as num?)?.toDouble() ?? 32.0;
+        final z = (item.renderData['priority'] as num?)?.toInt() ?? 30;
 
-    // Optional foreground IV Drip prop that overlaps the kaiju
-    sceneRoot.add(SpriteComponent(
-      sprite: Sprite(/* load iv_drip_$ivDripLevel.png */),
-      position: Vector2(160, 120),
-      size: Vector2(16, 64),
-      priority: 30, // Rendered on top of the kaiju
-    ));
+        sceneRoot.add(SpriteComponent(
+          sprite: spriteLoader(spriteUrl),
+          position: Vector2(x, y),
+          size: Vector2(w, h),
+          priority: z.clamp(21, 49),
+        ));
+      }
+    }
+
+    // 3. Anchor the Kaiju sprite at the scenario's configured kaijuAnchorPoint (priority 50)
+    kaijuComponent.position = scenarioConfig.kaijuAnchorPoint;
+    kaijuComponent.priority = 50;
+    sceneRoot.add(kaijuComponent);
 
     return sceneRoot;
   }
@@ -106,87 +94,43 @@ class HospitalBedScenarioPlugin extends ScenarioPlugin {
 
 ---
 
-## 4. Implementation: Metropolis Ruins Scenario (`lib/plugins/scenarios/metropolis_ruins_scenario.dart`)
+## 4. Example Data Configurations: `hospital_bed` & `metropolis_ruins`
 
-```dart
-import 'package:flame/components.dart';
-import '../interfaces/scenario_plugin.dart';
-
-class MetropolisRuinsScenarioPlugin extends ScenarioPlugin {
-  @override
-  String get id => 'metropolis_ruins';
-
-  @override
-  String get displayName => 'Metropolis Ruins Destruction Zone';
-
-  @override
-  Vector2 get petAnchorPoint => Vector2(128, 160);
-
-  @override
-  Component buildScene({
-    required Map<String, dynamic> scenarioParams,
-    required Component kaijuComponent,
-  }) {
-    final sceneRoot = PositionComponent(position: Vector2.zero());
-
-    // Metropolis shattered skyline background (matching Desing References/Godzila.webp)
-    sceneRoot.add(SpriteComponent(
-      sprite: Sprite(/* load metropolis_skyline.png */),
-      position: Vector2.zero(),
-      size: Vector2(256, 256),
-      priority: 0,
-    ));
-
-    // Crumbling skyscraper prop behind Kaiju
-    sceneRoot.add(SpriteComponent(
-      sprite: Sprite(/* load crumbling_skyscraper.png */),
-      position: Vector2(30, 80),
-      size: Vector2(80, 160),
-      priority: 5,
-    ));
-
-    // Position the giant Kaiju towering over ruins
-    kaijuComponent.position = petAnchorPoint;
-    kaijuComponent.priority = 10;
-    sceneRoot.add(kaijuComponent);
-
-    // Foreground rubble, crushed vehicles, and Bayer-dithered smoke
-    sceneRoot.add(SpriteComponent(
-      sprite: Sprite(/* load rubble_smoke_foreground.png */),
-      position: Vector2(0, 180),
-      size: Vector2(256, 76),
-      priority: 55,
-    ));
-
-    return sceneRoot;
+```json
+[
+  {
+    "id": "hospital_bed",
+    "plugin_id": "clinic_recovery_pack",
+    "display_name": "Clinic Recovery Ward",
+    "is_enabled": true,
+    "kaiju_anchor_point": { "x": 128, "y": 160 },
+    "parameters": {
+      "supports_furniture": false,
+      "vital_monitor": true,
+      "iv_drip_level": "FULL"
+    },
+    "layers": [
+      { "sprite": "scenarios/clinic_wall.png", "x": 0, "y": 0, "w": 256, "h": 256, "priority": 0 },
+      { "sprite": "scenarios/vital_monitor.png", "x": 20, "y": 100, "w": 32, "h": 32, "priority": 5 },
+      { "sprite": "scenarios/bed.png", "x": 64, "y": 140, "w": 128, "h": 64, "priority": 10 },
+      { "sprite": "scenarios/iv_drip_full.png", "x": 160, "y": 120, "w": 16, "h": 64, "priority": 60 }
+    ]
+  },
+  {
+    "id": "metropolis_ruins",
+    "plugin_id": "city_rampage_pack",
+    "display_name": "Metropolis Ruins Destruction Zone",
+    "is_enabled": true,
+    "kaiju_anchor_point": { "x": 128, "y": 160 },
+    "parameters": {
+      "supports_furniture": false,
+      "skyline_theme": "TOKYO_1954"
+    },
+    "layers": [
+      { "sprite": "scenarios/metropolis_skyline.png", "x": 0, "y": 0, "w": 256, "h": 256, "priority": 0 },
+      { "sprite": "scenarios/crumbling_skyscraper.png", "x": 30, "y": 80, "w": 80, "h": 160, "priority": 15 },
+      { "sprite": "scenarios/rubble_smoke_foreground.png", "x": 0, "y": 180, "w": 256, "h": 76, "priority": 65 }
+    ]
   }
-}
-```
-
----
-
-## 5. Scene Layer Compositing Algorithm
-
-Instead of manipulating multi-line text strings, the **Unix Tamagotchi** relies on Flame's component graph `priority` system (z-index) to compose the scene and ensure depth sorting.
-
-```dart
-void compositeScene({
-  required Component sceneRoot,
-  required Component kaijuComponent,
-  required Vector2 anchorPoint,
-}) {
-  // 1. Establish kaiju anchor position
-  kaijuComponent.position = anchorPoint;
-  
-  // 2. Set default kaiju z-index to a middle layer
-  kaijuComponent.priority = 50; 
-  
-  // 3. Add to the scene root. The Flame engine automatically sorts
-  // components by their priority field during the render loop.
-  // - Backgrounds (Priority: 0 - 20)
-  // - Environment Props behind kaiju (Priority: 21 - 49)
-  // - kaiju sprite (Priority: 50)
-  // - Foreground Props / Effects (Priority: 51 - 100)
-  sceneRoot.add(kaijuComponent);
-}
+]
 ```

@@ -9,18 +9,20 @@ The Furniture Store module (accessible via `STORE_MGR // FURNITURE.DAT`) adheres
 >
 > In keeping with the retro-surreal Tamagotchi concept, giant Kaijus (like Godzilla) reside inside their terminal habitat room alongside their furniture — an oversized bed (`SLEEP_POD`), chair/couch (`COUCH_MOD`), desktop workstation (`WORK_STN`), kitchen (`KITCH_UNIT`), lamp (`NEON_LAMP`), and hydration dispenser (`HYDRA_DISP`). The furniture serves as functional, scaled furnishings for the massive titan living in the room.
 
-## 2. Furniture Catalog
+## 2. Furniture Catalog & Progressive Phase Rollout
 
-The current Proof of Concept (PoC) catalog features six distinct items categorized into Comfort, Utility, and Decorative.
+> **Phase Scope Rule**: Furniture is **excluded from the Phase 1 PoC** (which only implements the 3 core stats `Hunger`, `Energy`, and `Happiness`). Furniture is delivered via the data-driven **Customization Plugin** system (`customization_plugins` where `category = 'FURNITURE'`) starting in **Phase 2**.
+>
+> Crucially, **any furniture item that modifies or gates a specific stat that does not exist yet is implemented and enabled only in the phase when that stat is implemented**. For example, when **Demolition Study (`destruction_study`)** and the **`INTEL` stat** are introduced in **Phase 3**, the Desktop Workstation & Chair (`WORK_STN`) is enabled so the Kaiju has a desk and chair to study at.
 
-| Item ID | Display Name | ASCII Icon | Price (C) | Stat Modifiers | Category |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `itm_couch` | `COUCH_MOD` | `[===]` | 450 | +15 COMFORT // -5 ENERGY | Comfort |
-| `itm_pod` | `SLEEP_POD` | `( Z )` | 800 | +40 ENERGY // +10 HP | Comfort |
-| `itm_desk` | `WORK_STN` | `+---+` | 320 | +25 INTEL // -10 JOY | Utility |
-| `itm_kit` | `KITCH_UNIT` | `[|O|]` | 1200 | +30 SATUR // +5 HP | Utility |
-| `itm_lamp` | `NEON_LAMP` | `  |  ` | 150 | +10 JOY // +2 LUME | Decorative |
-| `itm_disp` | `HYDRA_DISP` | `[ ~ ]` | 280 | +20 HYDRA // +5 SATUR | Utility |
+| Item ID | Display Name | ASCII Icon | Price (C) | Stat Modifiers / Action Gate | Category | Target Phase & Required Stat |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `itm_pod` | `SLEEP_POD` | `( Z )` | 800 | +40 ENERGY (Core) // +10 HP (Phase 3) | Comfort | **Phase 2** (Core `energy`) |
+| `itm_kit` | `KITCH_UNIT` | `[|O|]` | 1200 | +30 SATUR (Core) // +5 HP (Phase 3) | Utility | **Phase 2** (Core `hunger`) |
+| `itm_lamp` | `NEON_LAMP` | `  |  ` | 150 | +10 JOY (Core) // +2 LUME (Phase 3) | Decorative | **Phase 2** (Core `happiness`) |
+| `itm_desk` | `WORK_STN` (Desk & Chair) | `+---+` | 320 | Unlocks `destruction_study` // +25 INTEL // -10 JOY | Utility | **Phase 3** (Requires `intel` stat & Study plugin) |
+| `itm_couch` | `COUCH_MOD` | `[===]` | 450 | +15 COMFORT // -5 ENERGY | Comfort | **Phase 3** (Requires `comfort` stat) |
+| `itm_disp` | `HYDRA_DISP` | `[ ~ ]` | 280 | +20 HYDRA // +5 SATUR | Utility | **Phase 3** (Requires `hydration` stat) |
 
 ## 3. Storage Capacity System
 

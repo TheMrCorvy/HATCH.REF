@@ -2,6 +2,9 @@
 
 This document provides Flutter widget implementations for the unified UI component system used across the **Unix Tamagotchi**, strictly adhering to the industrial terminal aesthetic.
 
+> [!IMPORTANT]
+> **Palette Token Rule**: While the reference snippets below show the default Terminal Khaki (`#C5BEAA`), Charcoal (`#141512`), and Copper (`#B85E2B`) values for readability, production widget code must read colors from `Theme.of(context).colorScheme` / `AppPalette` tokens so that unlocking or switching a `PALETTE` customization plugin automatically updates all terminal widgets and shader uniforms.
+
 ---
 
 ## 1. `<RetroButton>` (Terminal Action Button)

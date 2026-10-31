@@ -2,29 +2,29 @@
 
 ## 1. Scenario Rendering Integration
 
-The furniture system is deeply integrated into the existing dormant plugin architecture. Furniture items are passed to scenarios as part of their instantiation parameters.
+The furniture system is deeply integrated into the data-driven plugin architecture. Furniture items are defined as `customization_plugins` (`category = 'FURNITURE'`) and passed to `GenericScenarioBuilder` when rendering any scenario that has `supports_furniture: true` (such as `default_room`).
 
 ```mermaid
 sequenceDiagram
     participant RM as RoomManager (Riverpod)
-    participant SP as ScenarioParams
-    participant DTR as default_terminal_room
+    participant PR as PluginRegistry
+    participant GSB as GenericScenarioBuilder
     participant SG as Flame SceneGraph
     
-    RM->>SP: inject activeGroupFurniture
-    SP->>DTR: buildScene(params)
+    RM->>PR: resolve activeGroupFurniture configs
+    PR->>GSB: buildScene(scenarioConfig, placedFurniture)
     
     rect rgb(20, 20, 20)
-    note right of DTR: 1-Bit Rendering Loop
-    DTR->>SG: render BackgroundLayer (z: 0-20)
-    DTR->>SG: render FurnitureComponents (z: 21-49)
-    DTR->>SG: render KaijuTitan (z: 50)
+    note right of GSB: 1-Bit Rendering Loop
+    GSB->>SG: render BackgroundLayer (z: 0-20)
+    GSB->>SG: render FurnitureComponents (z: 21-49)
+    GSB->>SG: render KaijuTitan + Clothing (z: 50)
     end
 ```
 
 ## 2. Placement Mechanics & Slots
 
-The `default_terminal_room.dart` scene uses a hardcoded slot grid for the 12-unit capacity limit.
+The `default_room` scenario uses a data-driven slot grid for the 12-unit capacity limit.
 
 *   **Z-Index Layering:** Background objects operate between `priority = 0` to `20`. Furniture items (bed, couch, desktop workstation, kitchen) are added dynamically with `priority = 21` to `49`, depending on their Y-axis (isometric/pseudo-3D depth sorting). The giant Kaiju titan (e.g., Godzilla) is rendered at `priority = 50`.
 *   **Sprite Application:** Items are instantiated as `SpriteComponent` entities inheriting the 1-bit dithered shader/palette rules.

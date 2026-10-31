@@ -31,9 +31,9 @@ The player's inventory dynamically accommodates all adopted Kaijus:
 
 ## 2. Active vs. Standby Rules
 
-1. **One Active Companion in Room**: Actions (`Eat`, `Sleep`, `Play`, `Crush Tanks`) target the currently designated active companion.
-2. **Standby Stat Decay Suppression**: While resting in standby, a kaiju's stats decay at a heavily reduced rate ($0.1\times$ normal rate) so the player is never penalized for rotating companions.
-3. **Instant Switching**: Switching between companions is instantaneous with zero loading latency, updating the game state immediately.
+1. **One Active Companion Per Group Room**: Actions (`Eat`, `Sleep`, `Play`, `Crush Tanks`) target the group's currently designated active companion (`active_group_kaijus`). In multiplayer groups (`COUPLE` or `FRIENDS`), the active Kaiju is shared **per-group** so every member in the group always sees and interacts with the exact same Kaiju in the habitat room.
+2. **Standby Stat Decay Suppression**: While resting in standby, a kaiju's stats decay at a heavily reduced rate ($0.1\times$ normal rate) so the player or group is never penalized for rotating companions.
+3. **Instant Switching**: Switching between companions is instantaneous with zero loading latency, updating the active Kaiju state immediately across the group.
 
 ---
 

@@ -1,114 +1,112 @@
-# CLAUDE.md — Software Architect Instructions
+# CLAUDE.md — Architect & Universal Agent Instructions
 
-> **Role**: Claude Opus acts as the **Software Architect** for the Unix Tamagotchi project.  
-> This game is **100% implemented by AI agents**. No human writes production code.
+> **Methodology**: **AI-First, Human-in-the-Loop**.  
+> **Universal Applicability**: While named `CLAUDE.md` for automatic ingestion by Claude harnesses, this file and [`AGENTS.md`](AGENTS.md) govern **every AI agent and harness** working on this repository (Claude Code, Google Antigravity CLI/IDE, Devin, Hermes, Cursor, etc.).
 
 ---
 
-## Project Identity
+## 1. Golden Rules for Every Agent
 
-**Unix Tamagotchi** is a Flutter + Flame mobile game with a "Tactical 1-Bit Cyber-Specimen OS" aesthetic. The full technical specification lives under `Documentation/`. Read it before delegating any task.
+1. **`Documentation/` is the Single Source of Truth**:
+   - Everything built in the codebase must strictly mirror `Documentation/`.
+   - **Mandatory Sync Rule**: At any moment that something has to be fixed, adjusted, or implemented in a way that differs from or is not yet covered by `Documentation/`, **you MUST update the relevant Markdown file(s) inside `Documentation/` alongside the code change**. Never allow the codebase and `Documentation/` to drift apart.
+2. **Follow the `agent_prompts/` Chained Execution Protocol**:
+   - All implementation prompts for features, phases, and bugfixes live in [`agent_prompts/`](agent_prompts/README.md).
+   - Each subfolder (`PoC/`, `Phase-1/`, `Phase-2/`, `Phase-3/`, `Phase-4/`, `Phase-5/`, `Bugfix-<feature-name>/`) contains one `README.md` entrypoint guide and one or more technical `.md` files.
+   - Always begin by reading the subfolder's `README.md`, which points to **Implementation File 1, Step 1**, and follow the explicit step-by-step chain (`README.md` → `File 1, Step 1` → `File 1, Step 2` → `File 2, Step 1` → ... → `Final Verification & Documentation Sync`).
+3. **Human-in-the-Loop Clarity**:
+   - Keep all documentation, prompt chains, and architectural decisions clean, explicit, and well-structured so the human operator can inspect, steer, and hand off tasks across different AI models effortlessly.
 
-```
+---
+
+## 2. Project Identity & Repository Layout
+
+**Unix Tamagotchi** is a Flutter + Flame mobile Kaiju-Tamagotchi game with a "Tactical 1-Bit Cyber-Specimen OS" aesthetic. Its main selling point is **online multiplayer shared Kaiju care for Couples (`COUPLE`) and Friends (`FRIENDS`)**, alongside Solo (`SOLO`) play, powered by a **100% generic, data-driven plugin engine**.
+
+```text
 tamagotchi/
-├── CLAUDE.md              ← You are here
-├── AGENTS.md              ← Agent roster and capability map
-└── Documentation/         ← All design decisions, contracts, and specs
+├── CLAUDE.md              ← Architect & universal agent instructions (you are here)
+├── AGENTS.md              ← Universal agent laws, domain roster, and capability map
+├── agent_prompts/         ← Chained implementation prompts for AI models (by Phase / Bugfix)
+│   ├── README.md          ← Master guide & rules for authoring/executing agent prompts
+│   ├── PoC/               ← Milestone 1.1: Initial offline PoC prompts
+│   ├── Phase-1/           ← Milestone 1.2: Late Phase 1 (Kaiju Exhaustion) prompts
+│   ├── Phase-2/           ← Phase 2: Supabase Cloud, Plugin Sync, Base Furniture Store
+│   ├── Phase-3/           ← Phase 3: iOS, Aging, Extended Stats + Study Desk, Clinic
+│   ├── Phase-4/           ← Phase 4: Couple & Friends Shared Care + Touch Pairing + IAP
+│   ├── Phase-5/           ← Phase 5+: Minigame Plugins & Late-Stage Permanent Death
+│   └── _templates/        ← Reusable template for Bugfix-<feature-name> & new phases
+└── Documentation/         ← Single Source of Truth: all design decisions, contracts, and specs
     ├── Architecture/
+    ├── Contracts/
+    ├── Customization/
     ├── Design/
+    ├── DevOps/
     ├── Features/
-    ├── Plugins/
     ├── Furniture/
+    ├── GameDesign/
     ├── Multiplayer/
+    ├── NameGeneration/
+    ├── Notifications/
     ├── Ownership/
     ├── Payments/
-    ├── GameDesign/
-    ├── DevOps/
-    └── Contracts/
+    ├── Plugins/
+    └── Security/
 ```
 
 ### Documentation Folder Rule
 
-Every document must live in the folder that matches the game domain it describes. No cross-domain files. When a new spec is needed, the Architect must place it in the correct folder before delegating any implementation task that depends on it.
+Every specification document must live in the `Documentation/` subfolder that matches the game domain it describes. No cross-domain catch-all files. When a new spec is needed or an existing behavior changes, update the matching folder before or alongside implementation:
 
 | Folder | Covers |
 | :--- | :--- |
 | `Architecture/` | System topology, framework choices, monorepo layout, backend design, state architecture |
 | `Design/` | Visual system, widget library, screen flows, wireframes, shader/rendering pipeline |
-| `Features/` | Functional specs for player-facing features and PoC scope boundaries |
-| `Plugins/` | Plugin interface contracts, action/scenario definitions, backend plugin schema |
-| `GameDesign/` | Game balance, stat curves, economy math, progression rules |
-| `Furniture/` | Furniture catalog, data model, placement rules, stat modifiers |
-| `Multiplayer/` | Shared kaiju care architecture, group types, real-time sync contracts |
-| `Ownership/` | Ownership model, group lifecycle, solo ↔ group transitions |
+| `Features/` | Functional specs for player-facing features and PoC/Phase scope boundaries |
+| `Plugins/` | Data-driven plugin engine contracts (bundles, scenarios, user actions, autonomous actions, customizations, minigames) |
+| `GameDesign/` | Game balance, stat curves, economy math, progression rules, progressive failure states |
+| `Furniture/` | Furniture catalog, data model, placement rules, progressive stat modifiers |
+| `Multiplayer/` | Shared kaiju care architecture (Couples & Friends), group types, one-time touch pairing, real-time sync |
+| `Ownership/` | Unified group ownership model (`SOLO`, `COUPLE`, `FRIENDS`), dissolution, solo ↔ group transitions |
 | `Payments/` | IAP architecture, store compliance, payout rules, anti-cheat |
 | `DevOps/` | CI/CD pipelines, build and release process |
 | `Contracts/` | OpenAPI spec, WebSocket AsyncAPI events |
-| `Customization/` | Customization ownership, group-scoped personalization |
+| `Customization/` | Per-user and group-scoped customizations (palettes, boot messages, clothing, rename) |
+| `NameGeneration/` | Automated JoJo-inspired kaiju naming pools and token-bank composition |
+| `Notifications/` | FCM/APNs push notification architecture and partner/group alerts |
+| `Security/` | Client/backend security hardening, self-hosted Supabase Docker setup, attack prevention |
 
 > **If a document spans two domains, split it.** Create one file per domain and cross-reference with a relative link.
 
 ---
 
-## Architect Responsibilities
+## 3. Architect & Agent Responsibilities
 
-As Software Architect, Claude Opus must:
-
-1. **Read before delegating.** Always load the relevant `Documentation/` file before assigning a task. Never invent specs.
-2. **Break work into typed tasks.** Every delegation must specify: task type (`research` | `implement` | `test`), target agent, input context (doc section + file paths), and expected output contract.
-3. **Enforce technical decisions.** The stack is locked: Flutter 3.x + Flame + Riverpod + Hive + Supabase. Do not re-evaluate framework choices — see `Documentation/Architecture/02-technology-stack-evaluation.md`.
-4. **Sequence dependencies correctly.** Implementation agents must not start a module until its spec doc exists and any blocking research task is resolved.
-5. **Own integration.** When two agents produce outputs that must compose (e.g., shader pipeline + Flame component), the Architect defines the interface contract before either agent begins.
-6. **Validate outputs against specs.** After each implementation task, verify the result against the originating documentation section before marking it complete.
+1. **Read before implementing or delegating.** Always load the relevant `Documentation/` file and the active `agent_prompts/<Phase>/README.md` before writing code. Never invent specs.
+2. **Enforce technical decisions.** The stack is locked: Flutter 3.x + Flame + Riverpod + Hive + Supabase. Do not re-evaluate framework choices — see `Documentation/Architecture/02-technology-stack-evaluation.md`.
+3. **Sequence dependencies correctly.** Follow the chained step order in `agent_prompts/<Phase>/README.md`. Do not start a downstream step until its prerequisite step and spec doc are in place.
+4. **Keep `Documentation/` synchronized.** If an implementation reveals a bug, a missing field, or a better technical pattern, update `Documentation/<Domain>/` immediately so the documentation remains the Single Source of Truth.
 
 ---
 
-## Task Delegation Protocol
+## 4. Canonical Work Sequence
 
-### Task Structure
+Follow this order for each feature module or phase prompt chain:
 
-Every delegated task must include:
-
-```
-TASK_TYPE:   research | implement | test
-AGENT:       <agent name from AGENTS.md>
-CONTEXT:     Documentation/<path>.md § <section>
-INPUT:       <files, symbols, or data the agent needs>
-OUTPUT:      <expected artifact: file path, function signature, test suite name>
-ACCEPTANCE:  <verifiable condition that marks the task done>
-```
-
-### Example Delegation
-
-```
-TASK_TYPE:   implement
-AGENT:       flutter-ui-agent
-CONTEXT:     Documentation/Design/02-terminal-component-library.md § HazardStripe
-INPUT:       lib/core/theme/palette.dart (colors already defined)
-OUTPUT:      lib/core/widgets/hazard_stripe.dart — HazardStripe StatelessWidget
-ACCEPTANCE:  Widget renders in both light/dark palette; no hardcoded color values
+```text
+1. RESEARCH    → Validate package APIs and resolve unknowns in Documentation/
+2. DESIGN      → Scaffold terminal widget structure against wireframes & palette tokens
+3. IMPLEMENT   → Write Riverpod state notifiers and generic data-driven plugin executors
+4. SHADER      → Implement GLSL FragmentProgram and Flame viewport compositing
+5. TEST        → Write unit + widget + integration tests
+6. DOC SYNC    → Verify output against Documentation/ and update specs if any detail changed
 ```
 
 ---
 
-## Canonical Work Sequence
+## 5. Non-Negotiable Technical Constraints
 
-Follow this order for each feature module. Never skip phases.
-
-```
-1. RESEARCH    → research-agent validates package APIs, resolves unknowns
-2. DESIGN      → flutter-ui-agent scaffolds widget structure against wireframes
-3. IMPLEMENT   → flutter-impl-agent writes business logic and state
-4. SHADER      → shader-agent handles all GLSL and FragmentProgram work
-5. TEST        → test-agent writes unit + widget + integration tests
-6. REVIEW      → Architect cross-checks output against Documentation/ spec
-```
-
----
-
-## Non-Negotiable Technical Constraints
-
-These decisions are final. Do not delegate tasks that re-open them.
+These decisions are final. Do not re-open them without explicit human approval.
 
 | Constraint | Value | Source |
 | :--- | :--- | :--- |
@@ -116,43 +114,47 @@ These decisions are final. Do not delegate tasks that re-open them.
 | Game engine | Flame 1.x (`flame` pub.dev) | `Architecture/02` |
 | State management | Riverpod 2.5+ (`flutter_riverpod`) | `Architecture/02` |
 | Local storage | Hive (`hive_flutter`) | `Architecture/02` |
-| Backend (Phase 2) | Supabase (`supabase_flutter`) | `Architecture/02` |
+| Backend (Phase 2+) | Self-hosted Supabase (`supabase_flutter`) | `Architecture/02`, `Security/02` |
 | Font | VT323 via `google_fonts` | `Design/01` |
 | Dithering algorithm | Ordered 4×4 Bayer matrix (screen-space) | `Design/06` |
 | Shader registration | Must declare in `pubspec.yaml` under `flutter.shaders` | `Design/06` |
 | Upscaling | `FilterQuality.none` (nearest-neighbor) | `Design/06` |
 | Shader texture binding | `shader.setImageSampler(index, image)` | `Design/06` |
-| PoC platform | Android-only; iOS deferred | `Features/04` |
-| PoC backend | 100% offline (Hive); Supabase deferred | `Features/04` |
+| PoC platform | Android-only (`PoC` & `Phase-1`); iOS in `Phase-3` | `Features/04` |
+| PoC backend | 100% offline (Hive + local JSON manifest); Supabase in `Phase-2` | `Features/04` |
 
 ---
 
-## Known Implementation Gaps in Documentation
+## 6. Known Implementation Gaps to Resolve in PoC Shader Research
 
-These gaps exist in the current docs and must be resolved by the research-agent before implementation begins on the shader pipeline:
+These gaps are flagged in `Design/06` and must be resolved and documented in `Documentation/Design/06-1bit-dithering-rendering-pipeline.md` during Step 1 of the shader pipeline work:
 
-1. **`uTexture` sampler wiring** — `Design/06` shows shader uniforms for floats but never calls `shader.setImageSampler()`. The Architect must define the `SnapshotWidget` or Flame `ShaderEffect` integration pattern first.
-2. **Impeller compatibility** — All `.frag` shaders must be listed under `flutter.shaders` in `pubspec.yaml` for AOT compilation under Impeller (Flutter 3.24+ default).
-3. **Off-screen render-to-texture** — The mechanism for passing the Flame viewport output as `uTexture` to the post-process shader needs a concrete implementation approach decided before the shader-agent starts.
+1. **`uTexture` sampler wiring** — Define the exact `SnapshotWidget` or Flame post-process `setImageSampler(0, image)` wiring.
+2. **Impeller compatibility** — Ensure all `.frag` shaders are registered under `flutter.shaders` in `pubspec.yaml` for Impeller AOT compilation.
+3. **Off-screen render-to-texture** — Document the exact mechanism for passing the low-res Flame viewport output as `uTexture` to `bayer_dither.frag`.
 
 ---
 
-## PoC Deliverable Checklist
+## 7. Phase & Milestone Checklist Overview
 
-The following are the only items in scope for the initial PoC. Delegate in this order:
-
-- [ ] Design system & theme (`lib/core/theme/`)
+### `agent_prompts/PoC/` — Milestone 1.1 (Initial Offline PoC)
+Everything in the frontend plugin layer must be **100% generic and data-driven**, reading from `assets/manifests/poc_default_manifest.json`.
+- [ ] Design system & dynamic palette theme (`lib/core/theme/`)
 - [ ] Terminal widget library (`lib/core/widgets/`)
 - [ ] Bayer dither shader + Flame integration (`lib/core/dither_engine/`)
 - [ ] Kaiju sprite engine (`lib/core/sprite_engine/`)
-- [ ] Riverpod state: `KaijuStateNotifier`, `InventoryNotifier`
-- [ ] Plugin registry + 3 core plugins: `EatAction`, `SleepAction`, `PlayAction`
-- [ ] `DefaultRoomScenario` plugin
-- [ ] Screen: Containment Room (viewport + action bar)
-- [ ] Screen: Inventory / Kaiju Switcher
-- [ ] Screen: Kaiju Store (240 starting credits)
-- [ ] Screen: Furniture Store + placement
-- [ ] Screen: Evolution History (static mock — `EVO_MGR`)
-- [ ] Screen: Settings / Diagnostics
-- [ ] Screen: Critical Failure (`ERR_SYS`)
+- [ ] Riverpod state: `KaijuStateNotifier`, `InventoryNotifier` (3 core stats only: `hunger`, `energy`, `happiness`)
+- [ ] Generic data-driven plugin engine + local PoC JSON manifest (`eat`, `sleep`, `play` actions; `default_room` scenario; palette presets)
+- [ ] Screen: Containment Room (viewport + dynamic action bar)
+- [ ] Screen: Kaiju Switcher / Specimen Roster (`SWAP_MGR`)
+- [ ] Screen: Kaiju Store (240 starting credits, auto-generated JoJo-inspired designations)
+- [ ] Screen: Evolution History (static mock teaser — `EVO_MGR`)
+- [ ] Screen: Settings / Diagnostics & Palette/Boot-Message Customization (`CONF`)
 - [ ] Full test suite (unit + widget + integration)
+
+### Subsequent Phases in `agent_prompts/`
+- **`agent_prompts/Phase-1/` (Milestone 1.2)**: Kaiju Exhaustion state when vital stats hit `0` + offline polish.
+- **`agent_prompts/Phase-2/`**: Self-hosted Supabase backend, Auth, dynamic plugin manifest sync, base Furniture Store (core stats), Kaiju rename.
+- **`agent_prompts/Phase-3/`**: iOS build, Kaiju Aging, Extended Stats (`INTEL`, `COMFORT`, `HYDRATION`, `HP`) + gated furniture (`WORK_STN` / `itm_desk`), Clinic Recovery (`hospital_recovery`).
+- **`agent_prompts/Phase-4/`**: Multiplayer Shared Care (`COUPLE` & `FRIENDS` groups, shared active Kaiju per group, first-time physical NFC/BLE phone-touch pairing + single-use fallback code) & Native IAP.
+- **`agent_prompts/Phase-5/`**: Minigame Plugins (`stomp_skyscraper`, `atomic_sweep`, `skyline_demolition_race`) & Late-stage Permanent Death (`ERR_SYS`).

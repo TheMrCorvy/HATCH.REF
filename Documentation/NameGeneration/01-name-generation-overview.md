@@ -55,7 +55,7 @@ Names consist of **2 to 5 uppercase tokens** separated by underscores, following
 In the PoC, there is **no backend call** for name generation. Each kaiju type has a pre-composed list of valid names embedded directly in the Dart source. One name is randomly selected at adoption time and persisted to Hive.
 
 ```dart
-// lib/core/naming/pet_name_generator.dart  (PoC implementation)
+// lib/core/naming/kaiju_name_generator.dart  (PoC implementation)
 
 import 'dart:math';
 
@@ -98,11 +98,11 @@ String generateKaijuName(String kaijuType) {
 }
 ```
 
-**Integration point with store:** The `processStorePurchase` function (documented in [Features/02-kaiju-store-and-credits.md](../Features/02-kaiju-store-and-credits.md)) currently falls back to `GODZILLA_01` / `CYBER_01` style identifiers when no `customNickname` is provided. In the implementation, this fallback **must be replaced** with a call to `generateKaijuName(catalogItem.kaijuType)`.
+**Integration point with store:** The `processStorePurchase` function (documented in [Features/02-kaiju-store-and-credits.md](../Features/02-kaiju-store-and-credits.md)) uses `generateKaijuName(catalogItem.kaijuType)` when no `customNickname` is provided.
 
 ```
 // BEFORE (legacy fallback):
-nickname = uppercase(catalogItem.kaijuType) + "_0" + (count(ownedPets) + 1)
+nickname = uppercase(catalogItem.kaijuType) + "_0" + (count(ownedKaijus) + 1)
 
 // AFTER (name generation):
 nickname = generateKaijuName(catalogItem.kaijuType)
@@ -145,7 +145,7 @@ The `name_pools` table stores the same curated entries currently hardcoded in Da
 ```sql
 CREATE TABLE name_pools (
     id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    kaiju_type      TEXT NOT NULL REFERENCES pet_catalog(kaiju_type) ON DELETE CASCADE,
+    kaiju_type    TEXT NOT NULL REFERENCES kaiju_catalog(kaiju_type) ON DELETE CASCADE,
     name          TEXT NOT NULL,
     token_count   SMALLINT NOT NULL,       -- number of underscore-separated tokens
     rarity        TEXT DEFAULT 'common',   -- 'common' | 'rare' | 'legendary'
@@ -191,7 +191,7 @@ CREATE TABLE name_tokens (
 -- Per-type affinity: how likely a token is to appear for a given kaiju type (0.0 – 1.0)
 CREATE TABLE name_token_affinity (
     token_id    UUID NOT NULL REFERENCES name_tokens(id) ON DELETE CASCADE,
-    kaiju_type    TEXT NOT NULL REFERENCES pet_catalog(kaiju_type) ON DELETE CASCADE,
+    kaiju_type  TEXT NOT NULL REFERENCES kaiju_catalog(kaiju_type) ON DELETE CASCADE,
     weight      NUMERIC(3,2) NOT NULL DEFAULT 0.5,  -- 0.00 to 1.00
     PRIMARY KEY (token_id, kaiju_type)
 );
@@ -263,8 +263,8 @@ The kaiju designation is rendered at several locations in the terminal UI, alway
 | Main screen header | `SUB_SYS: [NAME]` | `SUB_SYS: CRAZY_DIAMOND_PULSE` |
 | Vitals panel label | `VITALS.[STAT]` | unchanged by name |
 | Log messages | `> [ALERT] [NAME] is too exhausted to play!` | `> [ALERT] CRAZY_DIAMOND_PULSE is too exhausted to play!` |
-| Viewport overlay | `STAT: IDLE_ID_004` + `TYPE: [pet_type_label]` | unchanged by name |
-| Kaiju inventory list | `[NAME] — [pet_type_label]` | `CRAZY_DIAMOND_PULSE — GODZILLA` |
+| Viewport overlay | `STAT: IDLE_ID_004` + `TYPE: [kaiju_type_label]` | unchanged by name |
+| Kaiju inventory list | `[NAME] — [kaiju_type_label]` | `CRAZY_DIAMOND_PULSE — GODZILLA` |
 
 ---
 

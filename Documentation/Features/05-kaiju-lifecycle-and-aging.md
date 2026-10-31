@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-> **PoC Status**: Aging is **deferred to Phase 2+** (requires the Supabase backend). During the PoC, all Kaijus remain in a static phase. The `age_in_days` field exists in the model but does not increment. Phase thresholds and durations come from the backend (`kaiju_lifecycle_config` table, per kaiju type) and are never hardcoded in the client.
+> **PoC Status**: Aging is **deferred to Phase 3** (requires the Supabase backend and progressive stat system). During the PoC, all Kaijus remain in a static phase (`child`). The `age_in_days` field exists in the model but does not increment. Phase thresholds and durations come from the backend (`kaiju_lifecycle_config` table, per kaiju type) and are never hardcoded in the client.
 
 The Unix Tamagotchi Kaiju lifecycle is divided into **5 sequential phases**. Each phase unlocks or locks specific plugins, changes the Kaiju's animations and personality responses, and affects the rate at which stats decay. The total lifespan of a Kaiju titan is open-ended — an elder Kaiju does not die, it simply enters a stable late-life state with altered behavior.
 
@@ -24,18 +24,18 @@ The Unix Tamagotchi Kaiju lifecycle is divided into **5 sequential phases**. Eac
 
 ## 3. Plugin Availability Matrix
 
-The backend can override any cell in this matrix via the `min_age_phase` / `max_age_phase` fields on `action_plugins`. This table represents the **default intended design**.
+The backend can override any cell in this matrix via the `min_age_phase`, `max_age_phase`, and `required_furniture` fields on `action_plugins`. This table represents the **default intended design**.
 
-| Plugin | Baby | Child | Young | Adult | Elder |
-|---|---|---|---|---|---|
-| `eat` (Ball of Humans) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `sleep` (Dormancy) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `play` (Smash Toys) | ❌ | ✅ | ✅ | ✅ | ✅ |
-| `destruction_study` (Demolition Academy) | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `advanced_demolition` (Advanced Demolition) | ❌ | ❌ | ✅ | ❌ | ❌ |
-| `city_destruction` (City Rampage Work) | ❌ | ❌ | ✅ | ✅ | ❌ |
-| `crush_tank` (Crush Tanks) | ❌ | ❌ | ✅ | ✅ | ❌ |
-| `hospital_recovery` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Plugin | Baby | Child | Young | Adult | Elder | Furniture Prerequisite |
+|---|---|---|---|---|---|---|
+| `eat` (Ball of Humans) | ✅ | ✅ | ✅ | ✅ | ✅ | None |
+| `sleep` (Dormancy) | ✅ | ✅ | ✅ | ✅ | ✅ | None |
+| `play` (Smash Toys) | ❌ | ✅ | ✅ | ✅ | ✅ | None |
+| `destruction_study` (Demolition Academy) | ❌ | ✅ | ✅ | ❌ | ❌ | `itm_desk` (Workstation & Chair) |
+| `advanced_demolition` (Advanced Demolition) | ❌ | ❌ | ✅ | ❌ | ❌ | `itm_desk` (Workstation & Chair) |
+| `city_destruction` (City Rampage Work) | ❌ | ❌ | ✅ | ✅ | ❌ | None |
+| `crush_tank` (Crush Tanks) | ❌ | ❌ | ✅ | ✅ | ❌ | None |
+| `hospital_recovery` | ✅ | ✅ | ✅ | ✅ | ✅ | None |
 
 ---
 

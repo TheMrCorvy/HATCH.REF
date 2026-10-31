@@ -4,15 +4,19 @@
 
 ## 1. High Concept & Creative Vision
 
-**Unix Tamagotchi** is a retro digital companion **primarily marketed toward couples** — two partners sharing, nurturing, and managing a giant Kaiju specimen (inspired by the Godzillaverse) together. Families, friend groups, and solo players are also fully supported, but the game's identity, onboarding, and social features are centered on the couple experience.
+**Unix Tamagotchi** is a retro digital companion **primarily marketed toward couples** — two partners sharing, nurturing, and managing a giant Kaiju specimen (inspired by the Godzillaverse) together. Friend groups (`FRIENDS`) and solo players (`SOLO`) are also fully supported, while the game's flagship identity, onboarding, and social features are centered on the online shared care experience for couples and friends.
 
-Instead of ordinary domestic animals, the companions are towering **Kaijus from the Godzillaverse** rendered in hand-crafted **1-bit dithered pixel art sprites** (taking direct visual inspiration from `Desing References/Godzila.webp`, featuring Godzilla looming over city skylines and unleashing dithered atomic breath). In a delightful retro-surreal contrast, the giant Kaiju lives inside an authentic monospace terminal habitat equipped with an oversized bed, chair/couch, desktop workstation, and kitchen. Its daily routine includes devouring compressed balls of human people for sustenance, going to work to destroy cities, and attending academy studies to master urban demolition techniques.
+Instead of ordinary domestic animals, the companions are towering **Kaijus from the Godzillaverse** rendered in hand-crafted **1-bit dithered pixel art sprites** (taking direct visual inspiration from `Desing References/Godzila.webp`, featuring Godzilla looming over city skylines and unleashing dithered atomic breath). In a delightful retro-surreal contrast, the giant Kaiju lives inside an authentic monospace terminal habitat equipped with an oversized bed, chair/couch, desktop workstation, and kitchen. Its daily routine includes devouring compressed balls of human people for sustenance, going to work to destroy cities, and sitting at its desktop workstation to master urban demolition techniques.
 
 ### Key Pillars
 1. **Authentic Hacker Aesthetic**: Monospace typography (`VT323`), ANSI block characters (`█ ▓ ▒ ░`), prompt syntax (`[ > ACTION ]`), and retro hardware audio beeps.
-2. **Stress-Free Companion (PoC Focus)**: In the initial version, the Kaiju does not die or abandon the player. The game serves as a cozy, charming terminal mobile companion.
+2. **Progressive Stakes (No Early Permadeath)**:
+   - **Milestone 1.1 (Initial PoC)**: Stress-free companion where stats clamp at 0 and the Kaiju never dies.
+   - **Milestone 1.2 (Late Phase 1)**: Introduces **Exhaustion** when vital stats reach 0 (requiring rest/feeding to recover).
+   - **Phase 3**: Introduces **Clinic Recovery (`hospital_recovery`)** when a Kaiju suffers prolonged exhaustion or rampage injury.
+   - **Phase 5+ (Late Future)**: Permanent Kaiju death (`ERR_SYS`) is pushed as late as possible.
 3. **Unified 1-Bit Dithered Aesthetic**: A cohesive visual language combining the tactile Game Boy DMG style with a Macintosh-inspired industrial diagnostic terminal layout, shaded dynamically with Bayer matrix dithering as exemplified in `Desing References/Godzila.webp`.
-4. **Collaborative Kaiju Care (Couple-First)**: Support for multiplayer group mechanics (in future phases) where two players — primarily a romantic couple — share responsibility and co-parent the same giant Kaiju. Larger groups (families, friends) are supported but are not the primary marketing focus.
+4. **Collaborative Kaiju Care (Couples & Friends)**: Support for online multiplayer group mechanics where a romantic couple (`COUPLE`) or a squad of friends (`FRIENDS`) touch phones once to bond and from then on share responsibility for the exact same giant Kaiju online.
 
 ---
 

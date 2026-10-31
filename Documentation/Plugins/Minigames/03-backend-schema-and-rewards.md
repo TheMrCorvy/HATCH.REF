@@ -57,7 +57,7 @@ CREATE TABLE public.minigame_plugins (
 CREATE TABLE public.minigame_ghost_recordings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     minigame_id TEXT NOT NULL REFERENCES public.minigame_plugins(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     kaiju_id UUID NOT NULL REFERENCES public.kaijus(id) ON DELETE CASCADE,
     score INTEGER,
     result TEXT NOT NULL CHECK (result IN ('PASS', 'FAIL')),

@@ -1,6 +1,6 @@
 # Architecture: 03 Monorepo & Project Structure
 
-This document details the monorepo and directory layout for the **Unix Tamagotchi**, accommodating the **Flutter mobile application**, the **dormant plugin subsystem**, and the **Supabase backend services**.
+This document details the monorepo and directory layout for the **Unix Tamagotchi**, accommodating the **Flutter mobile application**, the **data-driven plugin subsystem**, and the **Supabase backend services**.
 
 ---
 
@@ -12,30 +12,41 @@ tamagotchi/
 │   ├── mobile/                           # Primary Flutter Mobile Application
 │   │   ├── android/                      # Native Android project (Gradle, Keystore)
 │   │   ├── ios/                          # Native iOS project (Xcode, Podfile)
+│   │   ├── assets/
+│   │   │   ├── manifests/
+│   │   │   │   └── poc_default_manifest.json # Bundled PoC plugin manifest (offline Phase 1)
+│   │   │   ├── fonts/
+│   │   │   ├── shaders/
+│   │   │   └── sprites/
 │   │   ├── lib/
 │   │   │   ├── main.dart                 # Application entry point & Riverpod Scope
 │   │   │   ├── app.dart                  # MaterialApp, themes & routes
 │   │   │   │
-│   │   │   ├── plugins/                  # DORMANT ACTION & SCENARIO PLUGINS
-│   │   │   │   ├── plugin_registry.dart  # Central plugin registry
-│   │   │   │   ├── interfaces/           # Plugin abstract contracts
-│   │   │   │   ├── user_triggered_actions/   # Eat (Human Ball), Sleep, Play
-│   │   │   │   ├── non_user_triggered_actions/ # City Destruction, Demolition Study
-│   │   │   │   └── scenarios/            # Terminal Room, Metropolis Ruins, Containment
+│   │   │   ├── plugins/                  # GENERIC DATA-DRIVEN PLUGIN ENGINE
+│   │   │   │   ├── plugin_registry.dart  # Central data-driven plugin registry & manifest loader
+│   │   │   │   ├── models/               # Data models: PluginBundle, ScenarioConfig, ActionConfig, CustomizationConfig
+│   │   │   │   ├── executors/            # Generic interpreters (no hardcoded event classes)
+│   │   │   │   │   ├── generic_user_action_executor.dart    # Executes user-tapped actions from JSON rules
+│   │   │   │   │   ├── generic_autonomous_evaluator.dart    # Evaluates autonomous work/study/recovery from JSON
+│   │   │   │   │   ├── generic_scenario_builder.dart        # Builds Flame scenes dynamically from layer configs
+│   │   │   │   │   └── generic_customization_renderer.dart  # Renders furniture, clothing layers & palettes
+│   │   │   │   └── minigames/            # Parameterized Flame minigame templates (Phase 5+)
 │   │   │   │
 │   │   │   ├── features/                 # Screen feature modules
-│   │   │   │   ├── room/                 # Kaiju Room viewport & action bar
+│   │   │   │   ├── room/                 # Kaiju Room viewport & dynamic action bar
 │   │   │   │   ├── store/                # Dynamic Kaiju store & credits
-│   │   │   │   ├── switch/               # Kaiju switcher & inventory
-│   │   │   │   └── multiplayer/          # Shared Kaiju care logic
+│   │   │   │   ├── switch/               # Kaiju switcher & specimen roster
+│   │   │   │   └── multiplayer/          # Shared Kaiju care (Couples & Friends) & pairing logic
 │   │   │   │
 │   │   │   ├── core/                     # Core utilities & design system
 │   │   │   │   ├── theme/                # Industrial Terminal Palette & Styling
 │   │   │   │   ├── widgets/              # Bracket Buttons, Hazard Stripes
+│   │   │   │   ├── sprite_engine/        # Kaiju spritesheet loader & animation engine
+│   │   │   │   ├── naming/               # JoJo-inspired Kaiju name generator
 │   │   │   │   └── dither_engine/        # Flame Game component & Shaders
 │   │   │   │
 │   │   │   └── state/                    # Riverpod State Notifiers
-│   │   │       ├── pet_state_notifier.dart
+│   │   │       ├── kaiju_state_notifier.dart
 │   │   │       └── inventory_notifier.dart
 │   │   │
 │   │   └── pubspec.yaml                  # Flutter dependencies & assets
